@@ -4,7 +4,7 @@
   {"name":"Sobek Secure Wrap","domain":"sobek-secure-wrap.vercel.app","url":"https://sobek-secure-wrap.vercel.app","repository":"NoraioPro/sobek-secure-wrap","status":"live"},
   {"name":"Pristine Silk","domain":"pixel-perfect-match-neon.vercel.app","url":"https://pixel-perfect-match-neon.vercel.app","repository":"NoraioPro/Pristine-Silk","status":"live"},
   {"name":"SocialOrc","domain":"socialorc.vercel.app","url":"https://socialorc.vercel.app","repository":"NoraioPro/socialorc","status":"live"},
-  {"name":"AI Automation Website","domain":"v0-ai-automation-website-wheat-six.vercel.app","url":"https://v0-ai-automation-website-wheat-six.vercel.app","repository":null,"status":"preview"},
+  {"name":"AI Automation Website","domain":"No active deployment","url":null,"repository":null,"status":"pending"},
   {"name":"Primero","domain":"primero-dental-clinics.vercel.app","url":"https://primero-dental-clinics.vercel.app","repository":"NoraioPro/Primero","status":"live"},
   {"name":"Menu Master","domain":"www.yemenzaad.no","url":"https://www.yemenzaad.no","repository":"NoraioPro/yemen-zaad","status":"live"},
   {"name":"Luxury Beauty","domain":"luxury-beauty-ten.vercel.app","url":"https://luxury-beauty-ten.vercel.app","repository":"NoraioPro/luxury-beauty","status":"live"},
@@ -22,6 +22,6 @@
   {"name":"WOW Zone Launchpad","domain":"wow-zone-launchpad.vercel.app","url":"https://wow-zone-launchpad.vercel.app","repository":"NoraioPro/wow-zone-launchpad","status":"live"},
   {"name":"Hydrogen Intelligence Hub","domain":"www.h2greens.com","url":"https://www.h2greens.com","repository":"NoraioPro/hydrogen-intelligence-hub","status":"live"},
   {"name":"Angles Global Fresh Hub","domain":"angles-global-fresh-hub-three.vercel.app","url":"https://angles-global-fresh-hub-three.vercel.app","repository":"NoraioPro/angles-global-fresh-hub","status":"live"},
-  {"name":"Time2 Staff AI Enhancement","domain":"v0-time2-staff-ai-enhancement.vercel.app","url":"https://v0-time2-staff-ai-enhancement.vercel.app","repository":null,"status":"preview"},
+  {"name":"Time2 Staff AI Enhancement","domain":"No active deployment","url":null,"repository":null,"status":"pending"},
   {"name":"Galaxy Guide Buddy","domain":"galaxy-guide-buddy-rho.vercel.app","url":"https://galaxy-guide-buddy-rho.vercel.app","repository":"NoraioPro/galaxy-guide-buddy","status":"live"}
 ]
