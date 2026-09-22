@@ -20,7 +20,8 @@ for (const ref of unique) {
   }
 }
 
-const external = unique.filter((ref) => /^https?:\/\//i.test(ref) && !ref.includes('github.com/'));
+const external = [...new Set([...html.matchAll(/<a\b[^>]*\bhref=["'](https?:\/\/[^"']+)["']/gi)].map((match) => match[1]))]
+  .filter((ref) => !ref.includes('github.com/'));
 async function check(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);

@@ -6,6 +6,9 @@
   const count = document.getElementById('repo-count');
   const empty = document.getElementById('repo-empty');
   const forkSection = document.querySelector('.fork-section');
+  const initialParams = new URLSearchParams(location.search);
+  search.value = initialParams.get('q') || '';
+  owner.value = initialParams.get('owner') || '';
   const toggle = document.createElement('button');
   toggle.className = 'show-repositories';
   toggle.type = 'button';
@@ -31,6 +34,11 @@
     toggle.hidden = filtering || rows.length <= 18;
     toggle.textContent = expanded ? 'Show fewer repositories ↑' : `Show all ${rows.length} repositories ↓`;
     toggle.setAttribute('aria-expanded', String(expanded));
+    const params = new URLSearchParams(location.search);
+    search.value.trim() ? params.set('q', search.value.trim()) : params.delete('q');
+    owner.value ? params.set('owner', owner.value) : params.delete('owner');
+    const query = params.toString();
+    history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
   }
   toggle.addEventListener('click', () => { expanded = !expanded; filter(); if (!expanded) document.getElementById('project-index').scrollIntoView({block:'start'}); });
   search.addEventListener('input', filter);
