@@ -1,67 +1,51 @@
 (() => {
   const root = document.documentElement;
-  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const progress = document.querySelector('.progress-bar span');
-  const header = document.querySelector('.header');
-  const hero = document.querySelector('.hero');
-  const heroArt = document.querySelector('.hero-art');
-  const aura = document.querySelector('.cursor-aura');
-
+  const preference = matchMedia('(prefers-reduced-motion: reduce)');
+  const motionButton = document.getElementById('motion-toggle');
+  let paused = preference.matches;
+  function applyMotion() {
+    root.classList.toggle('motion-paused', paused);
+    motionButton.textContent = paused ? 'Resume motion ▷' : 'Pause motion Ⅱ';
+    motionButton.setAttribute('aria-pressed', String(paused));
+  }
+  motionButton.addEventListener('click', () => { paused = !paused; applyMotion(); });
+  preference.addEventListener('change', event => { paused = event.matches; applyMotion(); });
+  applyMotion();
+  document.addEventListener('visibilitychange', () => root.classList.toggle('scene-paused', document.hidden));
+  let scrollQueued = false;
   const updateScroll = () => {
-    const max = document.documentElement.scrollHeight - innerHeight;
+    scrollQueued = false;
+    const max = root.scrollHeight - innerHeight;
     root.style.setProperty('--scroll-progress', max > 0 ? `${scrollY / max * 100}%` : '0%');
-    header?.classList.toggle('is-scrolled', scrollY > 24);
-    if (!reduced && heroArt && scrollY < innerHeight * 1.2) {
-      heroArt.style.setProperty('--hero-y', `${scrollY * .14}px`);
-    }
+    document.querySelector('.header').classList.toggle('is-scrolled', scrollY > 24);
   };
-  addEventListener('scroll', updateScroll, { passive: true });
+  addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(updateScroll); } }, { passive: true });
   updateScroll();
-
-  if (!reduced && matchMedia('(pointer:fine)').matches) {
-    addEventListener('pointermove', event => {
-      root.style.setProperty('--pointer-x', `${event.clientX}px`);
-      root.style.setProperty('--pointer-y', `${event.clientY}px`);
-      if (hero) {
-        const x = (event.clientX / innerWidth - .5) * 12;
-        const y = (event.clientY / innerHeight - .5) * 8;
-        hero.style.setProperty('--tilt-x', `${x}px`);
-        hero.style.setProperty('--tilt-y', `${y}px`);
-      }
-    }, { passive: true });
-    aura?.classList.add('is-active');
-  }
-
-  const revealTargets = document.querySelectorAll('main > section, .project, .deployment-card, .repo-row, .focus-list > div');
-  if ('IntersectionObserver' in window && !reduced) {
-    const observer = new IntersectionObserver(entries => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible');
-          observer.unobserve(entry.target);
-        }
-      }
-    }, { threshold: .08, rootMargin: '0px 0px -7% 0px' });
-    revealTargets.forEach((element, index) => {
-      element.classList.add('reveal');
-      element.style.setProperty('--reveal-order', index % 6);
-      observer.observe(element);
-    });
-  } else revealTargets.forEach(element => element.classList.add('is-visible'));
-
-  const sections = [...document.querySelectorAll('main section[id]')];
-  const navLinks = [...document.querySelectorAll('.header nav a[href^="#"]')];
+  const menu = document.querySelector('.menu-toggle');
+  const nav = document.getElementById('main-nav');
+  function closeMenu() { nav.classList.remove('menu-open'); menu.setAttribute('aria-expanded', 'false'); }
+  menu.addEventListener('click', () => { const open = nav.classList.toggle('menu-open'); menu.setAttribute('aria-expanded', String(open)); });
+  nav.addEventListener('click', event => { if (event.target.closest('a')) closeMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && nav.classList.contains('menu-open')) { closeMenu(); menu.focus(); } });
   if ('IntersectionObserver' in window) {
-    const sectionObserver = new IntersectionObserver(entries => {
-      const current = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!current) return;
-      navLinks.forEach(link => link.classList.toggle('is-active', link.hash === `#${current.target.id}`));
-    }, { rootMargin: '-25% 0px -60% 0px', threshold: [0, .2, .6] });
-    sections.forEach(section => sectionObserver.observe(section));
+    const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); reveal.unobserve(entry.target); }
+    }), { threshold: .05 });
+    if (!preference.matches) document.querySelectorAll('.frontiers-heading,.frontier-copy,.project,.deployment-card,.focus-list>div').forEach(element => { element.classList.add('reveal'); reveal.observe(element); });
+    const scenes = new IntersectionObserver(entries => entries.forEach(entry => entry.target.classList.toggle('scene-paused', !entry.isIntersecting)), { rootMargin: '100px' });
+    document.querySelectorAll('.hero,.frontier-panel').forEach(element => scenes.observe(element));
   }
-
   document.querySelectorAll('.project').forEach(project => project.addEventListener('toggle', () => {
-    if (!project.open) return;
-    document.querySelectorAll('.project[open]').forEach(other => { if (other !== project) other.open = false; });
+    if (project.open) document.querySelectorAll('.project[open]').forEach(other => { if (other !== project) other.open = false; });
+  }));
+  document.querySelectorAll('[data-repo-query]').forEach(link => link.addEventListener('click', () => {
+    const search = document.getElementById('repo-search');
+    document.getElementById('repo-owner').value = '';
+    search.value = link.dataset.repoQuery;
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+  }));
+  document.querySelectorAll('[data-project]').forEach(link => link.addEventListener('click', event => {
+    const project = [...document.querySelectorAll('.project')].find(item => item.querySelector('.project-name').textContent.startsWith(link.dataset.project));
+    if (project) { event.preventDefault(); project.open = true; project.classList.add('is-visible'); project.scrollIntoView({ behavior: paused ? 'instant' : 'smooth', block: 'center' }); }
   }));
 })();
