@@ -110,13 +110,25 @@
     }));
   });
   document.querySelectorAll('[data-portrait-field]').forEach(field => {
-    field.addEventListener('pointermove', event => {
-      const rect = field.getBoundingClientRect();
+    const tracker = field.closest('.hero') || field;
+    let pending = false;
+    let lastX = 0;
+    let lastY = 0;
+    const updateHead = () => {
+      field.style.setProperty('--head-x', `${-lastY * 13}deg`);
+      field.style.setProperty('--head-y', `${lastX * 18}deg`);
+      field.style.setProperty('--portrait-glow-x', `${68 + lastX * 16}%`);
+      field.style.setProperty('--portrait-glow-y', `${44 + lastY * 12}%`);
+      pending = false;
+    };
+    tracker.addEventListener('pointermove', event => {
+      const rect = tracker.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width - .5;
       const y = (event.clientY - rect.top) / rect.height - .5;
-      field.style.setProperty('--head-x', `${-y * 10}deg`);
-      field.style.setProperty('--head-y', `${x * 15}deg`);
+      lastX = x;
+      lastY = y;
+      if (!pending) { pending = true; requestAnimationFrame(updateHead); }
     });
-    field.addEventListener('pointerleave', () => { field.style.setProperty('--head-x', '0deg'); field.style.setProperty('--head-y', '0deg'); });
+    tracker.addEventListener('pointerleave', () => { lastX = 0; lastY = 0; if (!pending) { pending = true; requestAnimationFrame(updateHead); } });
   });
 })();
