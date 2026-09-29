@@ -51,10 +51,10 @@
   },
   {
     "name": "Menu Master",
-    "domain": "www.yemenzaad.no",
-    "url": "https://www.yemenzaad.no",
+    "domain": "Deployment currently unavailable",
+    "url": null,
     "repository": "NoraioPro/yemen-zaad",
-    "status": "live"
+    "status": "unavailable"
   },
   {
     "name": "Luxury Beauty",
