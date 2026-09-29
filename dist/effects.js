@@ -109,4 +109,14 @@
       status.textContent = mode === 'calibrate' ? 'CALIBRATING / ACTIVE' : 'VISION / READY';
     }));
   });
+  document.querySelectorAll('[data-portrait-field]').forEach(field => {
+    field.addEventListener('pointermove', event => {
+      const rect = field.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - .5;
+      const y = (event.clientY - rect.top) / rect.height - .5;
+      field.style.setProperty('--portrait-x', `${x * -14}px`);
+      field.style.setProperty('--portrait-y', `${y * -10}px`);
+    });
+    field.addEventListener('pointerleave', () => { field.style.setProperty('--portrait-x', '0px'); field.style.setProperty('--portrait-y', '0px'); });
+  });
 })();
