@@ -114,9 +114,9 @@
       const rect = field.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width - .5;
       const y = (event.clientY - rect.top) / rect.height - .5;
-      field.style.setProperty('--portrait-x', `${x * -14}px`);
-      field.style.setProperty('--portrait-y', `${y * -10}px`);
+      field.style.setProperty('--head-x', `${-y * 10}deg`);
+      field.style.setProperty('--head-y', `${x * 15}deg`);
     });
-    field.addEventListener('pointerleave', () => { field.style.setProperty('--portrait-x', '0px'); field.style.setProperty('--portrait-y', '0px'); });
+    field.addEventListener('pointerleave', () => { field.style.setProperty('--head-x', '0deg'); field.style.setProperty('--head-y', '0deg'); });
   });
 })();
