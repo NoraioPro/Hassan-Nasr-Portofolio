@@ -92,4 +92,21 @@
     addEventListener('resize', restart, { passive: true });
     restart();
   });
+  document.querySelectorAll('[data-robotics-console]').forEach(consoleField => {
+    const status = consoleField.querySelector('[data-robot-status]');
+    consoleField.addEventListener('pointermove', event => {
+      const rect = consoleField.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - .5;
+      const y = (event.clientY - rect.top) / rect.height - .5;
+      consoleField.style.setProperty('--robot-x', `${-y * 9}deg`);
+      consoleField.style.setProperty('--robot-y', `${x * 12}deg`);
+    });
+    consoleField.addEventListener('pointerleave', () => { consoleField.style.setProperty('--robot-x', '0deg'); consoleField.style.setProperty('--robot-y', '0deg'); });
+    consoleField.querySelectorAll('[data-robot-mode]').forEach(button => button.addEventListener('click', () => {
+      const mode = button.dataset.robotMode;
+      consoleField.dataset.robotMode = mode;
+      consoleField.querySelectorAll('[data-robot-mode]').forEach(control => control.setAttribute('aria-pressed', String(control === button)));
+      status.textContent = mode === 'calibrate' ? 'CALIBRATING / ACTIVE' : 'VISION / READY';
+    }));
+  });
 })();
