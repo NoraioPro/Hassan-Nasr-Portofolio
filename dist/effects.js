@@ -131,4 +131,113 @@
     });
     tracker.addEventListener('pointerleave', () => { lastX = 0; lastY = 0; if (!pending) { pending = true; requestAnimationFrame(updateHead); } });
   });
+  function motionBlocked(field) {
+    return paused || preference.matches || root.classList.contains('motion-paused') || field.closest('.frontier-panel')?.classList.contains('scene-paused');
+  }
+
+  function enablePngSatellite(field) {
+    const model = field.querySelector('.satellite-model');
+    let dragging = false;
+    let lastX = 0;
+    let yaw = 0;
+    let pitch = 0;
+    let idleId = 0;
+    let rafId = 0;
+    let autoActive = !preference.matches;
+
+    const applyTilt = () => {
+      field.style.setProperty('--sat-x', `${pitch}deg`);
+      field.style.setProperty('--sat-y', `${yaw}deg`);
+    };
+
+    const stopIdle = () => {
+      autoActive = false;
+      if (model) model.classList.remove('is-auto-orbit');
+      cancelAnimationFrame(rafId);
+      clearTimeout(idleId);
+    };
+
+    const spinFrame = () => {
+      if (!autoActive || motionBlocked(field) || dragging) return;
+      yaw = (yaw + .18) % 360;
+      applyTilt();
+      rafId = requestAnimationFrame(spinFrame);
+    };
+
+    const startIdle = (delay = 1200) => {
+      clearTimeout(idleId);
+      idleId = setTimeout(() => {
+        if (motionBlocked(field) || dragging) return;
+        autoActive = true;
+        if (model) model.classList.add('is-auto-orbit');
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(spinFrame);
+      }, delay);
+    };
+
+    field.addEventListener('pointerdown', event => {
+      if (event.button != null && event.button !== 0) return;
+      dragging = true;
+      stopIdle();
+      field.classList.add('is-dragging');
+      lastX = event.clientX;
+      field.setPointerCapture?.(event.pointerId);
+    });
+
+    field.addEventListener('pointermove', event => {
+      const rect = field.getBoundingClientRect();
+      if (dragging) {
+        const dx = event.clientX - lastX;
+        lastX = event.clientX;
+        yaw += dx * .35;
+        const y = (event.clientY - rect.top) / rect.height - .5;
+        pitch = Math.max(-18, Math.min(18, -y * 16));
+        applyTilt();
+        return;
+      }
+      if (motionBlocked(field)) return;
+      const x = (event.clientX - rect.left) / rect.width - .5;
+      const y = (event.clientY - rect.top) / rect.height - .5;
+      pitch = -y * 13;
+      yaw = x * 17;
+      applyTilt();
+    });
+
+    const endDrag = event => {
+      if (!dragging) return;
+      dragging = false;
+      field.classList.remove('is-dragging');
+      try { field.releasePointerCapture?.(event.pointerId); } catch (_) {}
+      startIdle();
+    };
+
+    field.addEventListener('pointerup', endDrag);
+    field.addEventListener('pointercancel', endDrag);
+    field.addEventListener('pointerleave', () => {
+      if (dragging) return;
+      pitch = 0;
+      if (!autoActive) { yaw = 0; applyTilt(); }
+      startIdle(400);
+    });
+
+    if (!preference.matches) startIdle(600);
+  }
+
+  document.querySelectorAll('[data-satellite-visual]').forEach(field => {
+    const boot = async () => {
+      try {
+        const mod = await import('./satellite-orbit.js');
+        const live = await mod.mountSatelliteVisual(field, {
+          pausedRef: () => paused,
+          preference,
+          root
+        });
+        if (!live) enablePngSatellite(field);
+      } catch (error) {
+        console.warn('Satellite 3D module failed, using PNG fallback.', error);
+        enablePngSatellite(field);
+      }
+    };
+    boot();
+  });
 })();
