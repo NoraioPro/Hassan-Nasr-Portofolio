@@ -264,14 +264,6 @@
     "fork": false
   },
   {
-    "repo": "NoraioPro/sandtrips",
-    "owner": "NoraioPro",
-    "name": "sandtrips",
-    "url": "https://github.com/NoraioPro/sandtrips",
-    "access": "unverified",
-    "fork": false
-  },
-  {
     "repo": "NoraioPro/Mori",
     "owner": "NoraioPro",
     "name": "Mori",
@@ -884,14 +876,6 @@
     "owner": "Gorgov11",
     "name": "L3Final2025",
     "url": "https://github.com/Gorgov11/L3Final2025",
-    "access": "unverified",
-    "fork": false
-  },
-  {
-    "repo": "Gorgov11/sandtrips",
-    "owner": "Gorgov11",
-    "name": "sandtrips",
-    "url": "https://github.com/Gorgov11/sandtrips",
     "access": "unverified",
     "fork": false
   },

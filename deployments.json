@@ -4,7 +4,24 @@
     "domain": "snora.cloud",
     "url": "https://snora.cloud",
     "repository": "NoraioPro/Snorawebsite",
-    "status": "live"
+    "status": "live",
+    "slug": "snora",
+    "shot": [
+      800,
+      600
+    ],
+    "logo": true,
+    "logoTone": "light",
+    "brand": {
+      "colors": [
+        "#06070c",
+        "#6d6d72"
+      ],
+      "fonts": [
+        "Inter",
+        "Playfair Display"
+      ]
+    }
   },
   {
     "name": "Site Builder Magic 65",
@@ -19,21 +36,73 @@
     "domain": "sobek-secure-wrap.vercel.app",
     "url": "https://sobek-secure-wrap.vercel.app",
     "repository": "NoraioPro/sobek-secure-wrap",
-    "status": "live"
+    "status": "live",
+    "slug": "sobek-secure-wrap",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#131210",
+        "#9c927e",
+        "#50473b",
+        "#282b2c",
+        "#7a6a56"
+      ],
+      "fonts": [
+        "Big Shoulders Display",
+        "Space Mono"
+      ]
+    }
   },
   {
     "name": "Pristine Silk",
     "domain": "pixel-perfect-match-neon.vercel.app",
     "url": "https://pixel-perfect-match-neon.vercel.app",
     "repository": "NoraioPro/Pristine-Silk",
-    "status": "live"
+    "status": "live",
+    "slug": "pristine-silk",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#2d2c2a",
+        "#0a0403",
+        "#cfc1aa",
+        "#5a534d"
+      ],
+      "fonts": [
+        "Cormorant Garamond",
+        "Montserrat"
+      ]
+    }
   },
   {
     "name": "SocialOrc",
     "domain": "socialorc.vercel.app",
     "url": "https://socialorc.vercel.app",
     "repository": "NoraioPro/socialorc",
-    "status": "live"
+    "status": "live",
+    "slug": "socialorc",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#050a0e",
+        "#224646",
+        "#14242b",
+        "#60a381"
+      ],
+      "fonts": [
+        "Geist Mono",
+        "Geist"
+      ]
+    }
   },
   {
     "name": "AI Automation Website",
@@ -47,7 +116,24 @@
     "domain": "primero-dental-clinics.vercel.app",
     "url": "https://primero-dental-clinics.vercel.app",
     "repository": "NoraioPro/Primero",
-    "status": "live"
+    "status": "live",
+    "slug": "primero",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#0d0e12",
+        "#658082",
+        "#3e3e33",
+        "#4b6867",
+        "#58a9ae"
+      ],
+      "fonts": [
+        "Outfit"
+      ]
+    }
   },
   {
     "name": "Menu Master",
@@ -61,14 +147,49 @@
     "domain": "luxury-beauty-ten.vercel.app",
     "url": "https://luxury-beauty-ten.vercel.app",
     "repository": "NoraioPro/luxury-beauty",
-    "status": "live"
+    "status": "live",
+    "slug": "luxury-beauty",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#3e2c2c",
+        "#e1d1cf",
+        "#674f4f",
+        "#a77875",
+        "#cb9e9b"
+      ],
+      "fonts": [
+        "Outfit",
+        "Cormorant Garamond"
+      ]
+    }
   },
   {
     "name": "GTW.no",
     "domain": "gtwno.vercel.app",
     "url": "https://gtwno.vercel.app",
     "repository": "NoraioPro/aqua-nova-solutions",
-    "status": "live"
+    "status": "live",
+    "slug": "gtw-no",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#050c17",
+        "#0c303a",
+        "#174354",
+        "#70afae"
+      ],
+      "fonts": [
+        "Manrope",
+        "JetBrains Mono"
+      ]
+    }
   },
   {
     "name": "Aqua Nova Next",
@@ -82,28 +203,90 @@
     "domain": "zerow11.vercel.app",
     "url": "https://zerow11.vercel.app",
     "repository": "NoraioPro/green-horizon-egypt",
-    "status": "live"
+    "status": "live",
+    "slug": "zerow11",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#3c585c",
+        "#33352c",
+        "#191b17",
+        "#8ea99e"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Montserrat"
+      ]
+    }
   },
   {
     "name": "Sharp Style Collective",
     "domain": "sharp-style-collective.vercel.app",
     "url": "https://sharp-style-collective.vercel.app",
     "repository": "NoraioPro/sharp-style-collective",
-    "status": "live"
+    "status": "live",
+    "slug": "sharp-style-collective",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#070707",
+        "#8d7a5f"
+      ],
+      "fonts": [
+        "Playfair Display",
+        "Inter"
+      ]
+    }
   },
   {
     "name": "Sharp Grooming Hub",
     "domain": "sharp-grooming-hub.vercel.app",
     "url": "https://sharp-grooming-hub.vercel.app",
     "repository": "NoraioPro/sharp-grooming-hub",
-    "status": "live"
+    "status": "live",
+    "slug": "sharp-grooming-hub",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#121212",
+        "#faf5ef",
+        "#958776",
+        "#463d36"
+      ],
+      "fonts": [
+        "Inter",
+        "JetBrains Mono"
+      ]
+    }
   },
   {
     "name": "Altno",
     "domain": "altno-six.vercel.app",
     "url": "https://altno-six.vercel.app",
     "repository": "NoraioPro/altno",
-    "status": "live"
+    "status": "live",
+    "slug": "altno",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#ffffff",
+        "#1d1d1d",
+        "#9ca1a3"
+      ],
+      "fonts": []
+    }
   },
   {
     "name": "Altno 39dw",
@@ -125,42 +308,142 @@
     "domain": "nestai-convert-07d75905.vercel.app",
     "url": "https://nestai-convert-07d75905.vercel.app",
     "repository": "NoraioPro/nestai-convert-07d75905",
-    "status": "live"
+    "status": "live",
+    "slug": "nestai-convert",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#fdfdfd",
+        "#4d4d53",
+        "#d7d8da",
+        "#171a28",
+        "#33323c"
+      ],
+      "fonts": [
+        "Plus Jakarta Sans"
+      ]
+    }
   },
   {
     "name": "Hair Restoration Hub",
     "domain": "hair-restoration-hub.vercel.app",
     "url": "https://hair-restoration-hub.vercel.app",
     "repository": "NoraioPro/hair-restoration-hub",
-    "status": "live"
+    "status": "live",
+    "slug": "hair-restoration-hub",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#1c5453",
+        "#5e7563",
+        "#2f4039",
+        "#415b4e",
+        "#959a82"
+      ],
+      "fonts": [
+        "Playfair Display"
+      ]
+    }
   },
   {
     "name": "ZeroWaste",
     "domain": "zerowaste-seven.vercel.app",
     "url": "https://zerowaste-seven.vercel.app",
     "repository": "NoraioPro/green-horizon-egypt",
-    "status": "live"
+    "status": "live",
+    "slug": "zerowaste",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#7b887b",
+        "#2f3c3f",
+        "#6f6048",
+        "#485e61",
+        "#5e7373"
+      ],
+      "fonts": [
+        "DM Sans",
+        "Playfair Display"
+      ]
+    }
   },
   {
     "name": "WOW Zone Launchpad",
     "domain": "wow-zone-launchpad.vercel.app",
     "url": "https://wow-zone-launchpad.vercel.app",
     "repository": "NoraioPro/wow-zone-launchpad",
-    "status": "live"
+    "status": "live",
+    "slug": "wow-zone-launchpad",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#0f0a1a",
+        "#481f50",
+        "#29173c",
+        "#775f98"
+      ],
+      "fonts": [
+        "Outfit"
+      ]
+    }
   },
   {
     "name": "Hydrogen Intelligence Hub",
     "domain": "www.h2greens.com",
     "url": "https://www.h2greens.com",
     "repository": "NoraioPro/hydrogen-intelligence-hub",
-    "status": "live"
+    "status": "live",
+    "slug": "hydrogen-intelligence-hub",
+    "shot": [
+      800,
+      600
+    ],
+    "logo": true,
+    "logoTone": "light",
+    "brand": {
+      "colors": [
+        "#08090d",
+        "#0f272a",
+        "#558c95"
+      ],
+      "fonts": [
+        "Inter",
+        "Space Grotesk"
+      ]
+    }
   },
   {
     "name": "Angles Global Fresh Hub",
     "domain": "angles-global-fresh-hub-three.vercel.app",
     "url": "https://angles-global-fresh-hub-three.vercel.app",
     "repository": "NoraioPro/angles-global-fresh-hub",
-    "status": "live"
+    "status": "live",
+    "slug": "angles-global-fresh-hub",
+    "shot": [
+      800,
+      600
+    ],
+    "brand": {
+      "colors": [
+        "#ffffff",
+        "#1a9040",
+        "#3d9c46",
+        "#96bf8f"
+      ],
+      "fonts": []
+    }
   },
   {
     "name": "Time2 Staff AI Enhancement",
@@ -171,9 +454,12 @@
   },
   {
     "name": "Galaxy Guide Buddy",
-    "domain": "galaxy-guide-buddy-rho.vercel.app",
-    "url": "https://galaxy-guide-buddy-rho.vercel.app",
+    "domain": "Deployment currently unavailable",
+    "url": null,
     "repository": "NoraioPro/galaxy-guide-buddy",
-    "status": "live"
+    "status": "unavailable",
+    "slug": "galaxy-guide-buddy",
+    "previousUrl": "https://galaxy-guide-buddy-rho.vercel.app",
+    "note": "Rendered a blank page on 2026-10-11 (empty app root)."
   }
 ]

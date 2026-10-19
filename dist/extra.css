@@ -1,0 +1,55 @@
+/* ===== Neural Portrait (digital twin) ===== */
+.twin{margin-top:clamp(48px,7vw,96px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(24px,4vw,56px);align-items:center}
+.twin-stage{--twin-rx:0deg;--twin-ry:0deg;--twin-gx:50%;--twin-gy:40%;position:relative;aspect-ratio:1/1;border:1px solid var(--line,rgba(255,255,255,.1));border-radius:var(--radius,16px);overflow:hidden;background:radial-gradient(circle at var(--twin-gx) var(--twin-gy),rgba(27,103,150,.55),transparent 38%),radial-gradient(circle at 50% 55%,#0d1f39,transparent 60%),#020711;perspective:1100px;outline:none}
+.twin-stage:focus-visible{box-shadow:0 0 0 2px #4f8cff}
+.twin-stage canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+.twin-photo{position:absolute;inset:6%;z-index:1;transform:rotateX(var(--twin-rx)) rotateY(var(--twin-ry));transform-style:preserve-3d;transition:opacity .5s,transform .2s ease-out;opacity:0}
+.twin-photo img{width:100%;height:100%;object-fit:contain;filter:saturate(.9) contrast(1.05) drop-shadow(0 30px 60px rgba(0,0,0,.6))}
+.twin[data-mode="photo"] .twin-photo{opacity:1}
+.twin[data-mode="photo"] canvas{opacity:0}
+.twin-grid{position:absolute;inset:0;z-index:0;background-image:linear-gradient(rgba(110,160,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(110,160,255,.07) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(circle at 50% 50%,#000 30%,transparent 75%)}
+.twin-hud{position:absolute;z-index:3;font:500 10px/1.5 "JetBrains Mono",monospace;letter-spacing:.08em;color:rgba(200,215,255,.75);text-transform:uppercase;pointer-events:none}
+.twin-hud b{color:#ff8a5c;font-weight:500}
+.twin-hud.tl{top:14px;left:16px}.twin-hud.br{bottom:14px;right:16px;text-align:right}.twin-hud.bl{bottom:14px;left:16px}
+.twin-copy h3{font-size:clamp(26px,3vw,38px);font-weight:500;letter-spacing:-.03em;line-height:1.05;margin:.6rem 0 1rem}
+.twin-copy h3 em{font-family:"Instrument Serif",serif;font-style:italic;font-weight:400;color:var(--accent,#ff5b26)}
+.twin-copy p{color:var(--muted,#9aa3b5);max-width:46ch}
+.twin-modes{display:flex;gap:.4rem;margin-top:1.4rem}
+.twin-modes button{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);color:inherit;padding:.4rem .8rem;border-radius:99px;font:500 11px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.twin-modes button[aria-pressed="true"]{border-color:#ff5b26;color:#ff9a70}
+.twin-modes button:focus-visible{outline:2px solid #4f8cff;outline-offset:2px}
+.twin-hint{margin-top:.8rem;font:11px "JetBrains Mono",monospace;opacity:.55}
+@media (max-width:820px){.twin{grid-template-columns:1fr}}
+/* ===== Thinking section ===== */
+.perspective[data-thinking]{position:relative;isolation:isolate;--ax:50%;--ay:30%}
+.perspective[data-thinking]::before{content:"";position:absolute;inset:40px -4vw -40px;z-index:-1;pointer-events:none;background:radial-gradient(520px circle at var(--ax) var(--ay),rgba(79,140,255,.12),transparent 65%),radial-gradient(380px circle at calc(var(--ax) + 160px) calc(var(--ay) + 80px),rgba(255,91,38,.08),transparent 60%);transition:background .2s}
+.perspective[data-thinking]::after{content:"";position:absolute;inset:40px -4vw -40px;z-index:-1;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(420px circle at var(--ax) var(--ay),#000,transparent 70%)}
+.tk-word{display:inline-block;opacity:.12;transform:translateY(.35em);filter:blur(6px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1),filter .7s ease;transition-delay:calc(var(--i) * 70ms)}
+.tk-in .tk-word{opacity:1;transform:none;filter:none}
+#perspective-title em .tk-word{background:linear-gradient(100deg,var(--accent,#ff5b26) 0%,#ffd2bd 45%,var(--accent,#ff5b26) 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:tkshine 5s linear infinite}
+@keyframes tkshine{0%{background-position:120% 0}100%{background-position:-130% 0}}
+.topics.tk-cards{align-items:start}
+.topics .tk-card{position:relative;padding:0;overflow:hidden;transform:var(--tilt,none);transition:transform .25s ease,border-color .3s,opacity .7s ease,translate .7s cubic-bezier(.2,.8,.2,1);min-height:0}
+.perspective[data-thinking]:not(.tk-in) .tk-card{opacity:0;translate:0 30px}
+.tk-in .tk-card{transition-delay:0s,0s,calc(var(--d) * 120ms + 300ms),calc(var(--d) * 120ms + 300ms)}
+.tk-card::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(300px circle at var(--sx,50%) var(--sy,0%),rgba(255,140,90,.10),transparent 65%);opacity:0;transition:opacity .3s}
+.tk-card:hover::after,.tk-card:focus-within::after,.tk-card.is-open::after{opacity:1}
+.tk-card:hover,.tk-card.is-open{border-color:rgba(255,91,38,.35)}
+.tk-card canvas{display:block;width:100%;height:150px;border-bottom:1px solid var(--line,rgba(255,255,255,.08));background:linear-gradient(180deg,rgba(2,7,17,.6),transparent)}
+.tk-toggle{all:unset;box-sizing:border-box;display:grid;gap:10px;width:100%;padding:22px 26px 24px;cursor:pointer}
+.tk-toggle:focus-visible{outline:2px solid #4f8cff;outline-offset:-4px;border-radius:inherit}
+.tk-toggle h3{margin:0!important;padding-top:6px!important}
+.tk-cta{font:500 11px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#ff9a70;display:inline-flex;gap:.4rem;align-items:center}
+.tk-cta::after{content:"+";transition:transform .3s}
+.is-open .tk-cta::after{transform:rotate(45deg)}
+.tk-more{padding:0 26px 24px;margin:0;list-style:none;display:grid;gap:.6rem;animation:tkopen .45s cubic-bezier(.2,.8,.2,1)}
+.tk-more li{position:relative;padding-left:18px;color:var(--muted,#9aa3b5);font-size:14.5px;line-height:1.5}
+.tk-more li::before{content:"";position:absolute;left:0;top:.6em;width:8px;height:1px;background:var(--accent,#ff5b26)}
+@keyframes tkopen{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.tk-word,.tk-card{transition:none!important;opacity:1!important;transform:none!important;filter:none!important;translate:none!important}#perspective-title em .tk-word{animation:none}.tk-more{animation:none}}
+.motion-paused #perspective-title em .tk-word{animation-play-state:paused}
+.motion-paused .tk-card{transform:none}
+
+/* test fix: section 05 aurora/tilt must not widen the page */
+.perspective{position:relative;overflow-x:clip}
+

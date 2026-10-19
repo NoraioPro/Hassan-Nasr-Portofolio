@@ -3,3 +3,6 @@ node_modules/
 *.tar.gz
 *.tar
 research/
+*.bak
+dist/.audit.js
+.claude/

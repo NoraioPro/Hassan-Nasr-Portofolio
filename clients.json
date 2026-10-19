@@ -1,0 +1,464 @@
+{
+  "verified": "October 2026",
+  "categories": [
+    {
+      "id": "ai",
+      "label": "AI & technology"
+    },
+    {
+      "id": "events",
+      "label": "Events & marketing"
+    },
+    {
+      "id": "industrial",
+      "label": "Industrial & B2B"
+    },
+    {
+      "id": "furniture",
+      "label": "Furniture & interiors"
+    },
+    {
+      "id": "travel",
+      "label": "Travel & tourism"
+    },
+    {
+      "id": "retail",
+      "label": "Retail & fashion"
+    },
+    {
+      "id": "food",
+      "label": "Food & FMCG"
+    },
+    {
+      "id": "health",
+      "label": "Healthcare"
+    },
+    {
+      "id": "education",
+      "label": "Education & NGO"
+    },
+    {
+      "id": "local",
+      "label": "Local services"
+    }
+  ],
+  "sites": [
+    {
+      "slug": "snora",
+      "name": "SNORA",
+      "url": "https://snora.cloud",
+      "category": "ai",
+      "featured": true,
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#06070c",
+          "#6d6d72"
+        ],
+        "fonts": [
+          "Inter",
+          "Playfair Display"
+        ]
+      }
+    },
+    {
+      "slug": "noraio",
+      "name": "NorAiO",
+      "url": "https://noraio.com",
+      "category": "ai",
+      "featured": true,
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#7f7f7f",
+          "#fefefe",
+          "#162f58",
+          "#6d6c68",
+          "#3c5e74"
+        ],
+        "fonts": []
+      }
+    },
+    {
+      "slug": "medioteq",
+      "name": "Medioteq",
+      "url": "https://medioteq.no",
+      "category": "ai",
+      "featured": true,
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#000000",
+          "#33292c",
+          "#8a9da2"
+        ],
+        "fonts": [
+          "Inter",
+          "Geist Mono"
+        ]
+      }
+    },
+    {
+      "slug": "dgc",
+      "name": "Digital Game Changers",
+      "url": "https://dgcc.ae",
+      "category": "ai",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#ea3432",
+          "#dd1d57",
+          "#5e2129",
+          "#dcd0d0",
+          "#8b5355"
+        ],
+        "fonts": [
+          "Archivo Black",
+          "Inter"
+        ]
+      }
+    },
+    {
+      "slug": "electra",
+      "name": "Electra Egypt",
+      "url": "https://electraeg.com",
+      "category": "ai",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#11534b",
+          "#153a34",
+          "#121918",
+          "#44a18c"
+        ],
+        "fonts": [
+          "Inter",
+          "Orbitron"
+        ]
+      }
+    },
+    {
+      "slug": "benchmark",
+      "name": "Benchmark",
+      "url": "https://benchmark-is.com",
+      "category": "events",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#c199a2",
+          "#1c2127",
+          "#9c868f",
+          "#63576b",
+          "#856979"
+        ],
+        "fonts": [
+          "Roboto Slab"
+        ]
+      }
+    },
+    {
+      "slug": "svat",
+      "name": "SVAT",
+      "url": "https://svat.no",
+      "category": "events",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#d12026",
+          "#151615",
+          "#4b504f",
+          "#8a8d8a"
+        ],
+        "fonts": [
+          "Roboto Slab",
+          "Open Sans"
+        ]
+      }
+    },
+    {
+      "slug": "tataspro",
+      "name": "TATAS Pro",
+      "url": "https://tataspro.com",
+      "category": "industrial",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#161616",
+          "#72624f",
+          "#634834",
+          "#283649",
+          "#020202"
+        ],
+        "fonts": [
+          "Assistant",
+          "Syne"
+        ]
+      }
+    },
+    {
+      "slug": "amgroup",
+      "name": "AM Group Egypt",
+      "url": "https://amgroup-egypt.com",
+      "category": "industrial",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#f7c725",
+          "#ffffff",
+          "#eb7e1e",
+          "#5f391e",
+          "#5e8282"
+        ],
+        "fonts": [
+          "Montserrat",
+          "Roboto Slab"
+        ]
+      }
+    },
+    {
+      "slug": "kabbani",
+      "name": "Kabbani Furniture",
+      "url": "https://kabbanifurniture.com",
+      "category": "furniture",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#014364",
+          "#002237",
+          "#837a71",
+          "#1b6b8a"
+        ],
+        "fonts": [
+          "Figtree",
+          "Cairo"
+        ]
+      }
+    },
+    {
+      "slug": "mk-kabbani",
+      "name": "MK Kabbani Furniture UAE",
+      "url": "https://mk-kabbanifurniture.com",
+      "category": "furniture",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#b6a898",
+          "#d0bba5",
+          "#978774",
+          "#d52929"
+        ],
+        "fonts": [
+          "Poppins",
+          "Noto Kufi Arabic"
+        ]
+      }
+    },
+    {
+      "slug": "mohm",
+      "name": "MOHM Furniture",
+      "url": "https://mohmfurniture.com",
+      "category": "furniture",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#7e7e7e",
+          "#413639",
+          "#545758",
+          "#e5e5e5"
+        ],
+        "fonts": [
+          "Tenor Sans",
+          "Poppins"
+        ]
+      }
+    },
+    {
+      "slug": "travamerica",
+      "name": "TravAmerica",
+      "url": "https://www.travamericaa.com",
+      "category": "travel",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "dark",
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#2b3b4b",
+          "#4c525d",
+          "#05172c",
+          "#777c82"
+        ],
+        "fonts": [
+          "Nunito Sans"
+        ]
+      }
+    },
+    {
+      "slug": "eltarzy",
+      "name": "El Tarzy",
+      "url": "https://eltarzy.com",
+      "category": "retail",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "dark",
+      "brand": {
+        "colors": [
+          "#755f4a",
+          "#a09386",
+          "#0c0d0f",
+          "#26211d",
+          "#504437"
+        ],
+        "fonts": [
+          "Instrument Sans"
+        ]
+      }
+    },
+    {
+      "slug": "obourland",
+      "name": "Obour Land",
+      "url": "https://obourland.com",
+      "category": "food",
+      "hidden": true,
+      "note": "Did not load from Norway on 2026-10-11 (connection error); re-enable once reachable."
+    },
+    {
+      "slug": "thefootscan",
+      "name": "The Foot Scan",
+      "url": "https://thefootscan.com",
+      "category": "health",
+      "shot": [
+        800,
+        600
+      ],
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#464d4a",
+          "#282118",
+          "#3c392e",
+          "#787c78"
+        ],
+        "fonts": [
+          "Josefin Sans"
+        ]
+      }
+    },
+    {
+      "slug": "alzahrawan",
+      "name": "Al Zahrawan",
+      "url": "https://alzahrawan.org",
+      "category": "education",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "dark",
+      "brand": {
+        "colors": [
+          "#ffffff",
+          "#dfe9e6",
+          "#3a979f",
+          "#d8d4c9",
+          "#8dd4d5"
+        ],
+        "fonts": []
+      }
+    },
+    {
+      "slug": "newlook",
+      "name": "New Look Barbershop",
+      "url": "https://newlookbarbershop.no",
+      "category": "local",
+      "shot": [
+        800,
+        600
+      ],
+      "logo": true,
+      "logoTone": "light",
+      "brand": {
+        "colors": [
+          "#000000",
+          "#ffffff",
+          "#1634b9",
+          "#bfbfc0",
+          "#e5e5e6"
+        ],
+        "fonts": [
+          "Teko",
+          "Heebo"
+        ]
+      }
+    }
+  ]
+}
