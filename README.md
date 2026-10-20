@@ -2,6 +2,8 @@
 
 Personal website of **Hassan Nasr**, CTO at Medioteq AS (Oslo): AI architecture, health technology, enterprise software and digital transformation.
 
+Live at **https://hnasr.com**.
+
 The site is static HTML, CSS and JavaScript in `dist/`. There is no framework and no `npm install`. Small Node scripts regenerate the data-driven sections, build the internal pages and minify the assets.
 
 ## What's on the site
@@ -18,7 +20,7 @@ The site is static HTML, CSS and JavaScript in `dist/`. There is no framework an
 | **Workshops** | AI workshops for leaders, readiness check and booking |
 | **Contact** | Contact form (FormSubmit) |
 
-Internal pages are generated from the same sections: `/space/`, `/medical/`, `/robotics/`, `/digital-twin/`, `/projects/`, `/credentials/`, `/workshops/`, `/about/`.
+Internal pages are generated from the same sections: `/space/`, `/medical/`, `/robotics/`, `/digital-twin/`, `/projects/`, `/credentials/`, `/workshops/`, `/about/`, plus a `404.html`.
 
 ## Project layout
 
@@ -30,12 +32,15 @@ dist/                     ← the website (deploy this folder)
   site.js, *.js           ← scripts (minified into dist/min/)
   space3d.js, robot3d.js  ← three.js scenes (loaded lazily from jsDelivr)
   assets/                 ← images: journey/, clients/, live/, avatar/, awards/ …
+  404.html, llms.txt      ← generated: not-found page, summary for AI assistants
+  sitemap.xml, robots.txt ← generated
+source-assets/            ← large originals not used by the site (kept out of dist/)
 portfolio.json            ← GitHub repositories
 deployments.json          ← own live deployments (status, URL, screenshot, brand kit)
 clients.json              ← client websites (category, screenshot, logo, brand kit)
-site.config.mjs           ← production URL (BASE_URL)
+site.config.mjs           ← production URL (BASE_URL = https://hnasr.com)
 update-portfolio.mjs      ← regenerates projects + live section, then runs the two build steps
-build-pages.mjs           ← internal pages, SEO tags, JSON-LD, sitemap.xml, robots.txt, manifest
+build-pages.mjs           ← internal pages, SEO tags, JSON-LD, sitemap.xml, robots.txt, manifest, 404.html, llms.txt
 build.mjs                 ← CSS bundle (app.min.css) + minified scripts (dist/min/) via esbuild
 site-cards.mjs            ← shared markup for the website cards and brand kits
 preview.mjs               ← tiny local web server
@@ -96,13 +101,17 @@ The site is fully static and `dist/` is committed already built.
 
 **Vercel:** import this repository and deploy. No settings are needed: `vercel.json` tells Vercel to skip install and build and to publish `dist/`. If the project was created earlier with other settings, open **Project → Settings → Build & Development** and make sure nothing overrides it (Framework *Other*, build and output overrides off), then redeploy.
 
-Any other static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder.
+`vercel.json` also sets security headers (HSTS, nosniff, frame and referrer policy, permissions policy), cache headers for `min/`, `assets/` and `app.min.css`, and a permanent redirect from `www.hnasr.com` to `hnasr.com`.
+
+**Domain:** in Vercel → Project → Settings → Domains add `hnasr.com` and `www.hnasr.com`, then create the DNS records Vercel shows at your registrar (usually an `A` record for the apex and a `CNAME` for `www`). HTTPS is issued automatically.
+
+Any other static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder. The headers and redirect in `vercel.json` are Vercel-only.
 
 ## Before going live
 
-- **Domain:** set the real domain in `site.config.mjs` (`BASE_URL` is still a placeholder), then run `node update-portfolio.mjs`. Canonical URLs, Open Graph tags, the sitemap and JSON-LD all use it.
+- **Domain:** `BASE_URL` in `site.config.mjs` is `https://hnasr.com`. Canonical URLs, Open Graph tags, the sitemap, JSON-LD and `llms.txt` all use it. If the domain ever changes, edit it there and run `node update-portfolio.mjs`.
 - **Contact form:** send one test message and click FormSubmit's activation email, otherwise messages won't be delivered.
-- **Search engines:** submit `sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+- **Search engines:** submit `https://hnasr.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
 
 See `ROADMAP.md` for the full list of next steps.
 

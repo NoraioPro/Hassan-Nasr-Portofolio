@@ -27,11 +27,11 @@ function extractByClass(html, cls) {
 
 const PAGES = [
   { slug: 'space', nav: 'Space', title: 'Space & satellites', h1: 'Space & <em>satellite exploration.</em>',
-    desc: 'Hassan Nasr on space and satellites: a live 3D orbit scene, Galaxy Guide Buddy, 2nd place at NASA Space Apps 2025 Oslo with Eduspaceno.com, and Andøya Space Hackathon 25.',
+    desc: 'Hassan Nasr on space and satellites: a live 3D orbit scene, 2nd place at NASA Space Apps 2025 Oslo with Eduspaceno.com, and Andøya Space Hackathon 25.',
     lead: 'Space, satellites, and the possibilities of connected intelligence. Our team took 2nd place at NASA Space Apps 2025 in Oslo with Eduspaceno.com, an AI-powered learning universe built on live NASA and ESA data.',
     sections: ['space'], frontier: true, extra: 'space' },
   { slug: 'medical', nav: 'Medical', title: 'Healthcare technology & MedTech', h1: 'Clinical AI, <em>engineered for trust.</em>',
-    desc: 'Hassan Nasr, CTO of Medioteq: secure, scalable digital health with cloud-native platforms, interoperability (HL7 FHIR), AI-powered clinical workflows and GDPR-compliant delivery.',
+    desc: 'Hassan Nasr, CTO of Medioteq: secure digital health with cloud platforms, HL7 FHIR interoperability, AI clinical workflows and GDPR-compliant delivery.',
     lead: 'As CTO of Medioteq, I lead the technology vision for secure, scalable digital health: cloud-native platforms, interoperability, AI-powered clinical workflows, and GDPR-compliant delivery that integrates with hospital systems and medical devices.',
     sections: ['medical'], frontier: true, extra: 'medical' },
   { slug: 'robotics', nav: 'Robotics', title: 'Robotics research track', h1: 'Intelligence <em>that moves.</em>',
@@ -39,7 +39,7 @@ const PAGES = [
     lead: 'A robotics cell running live in your browser. Overhead vision detects parts, a planner sequences the task, and inverse kinematics drives a five-axis arm to sort them. This is a concept system and a planned research track.',
     sections: ['robotics'], frontier: true, extra: 'robotics' },
   { slug: 'digital-twin', nav: 'Digital twin', title: 'Digital twins', h1: 'Mirror the real thing. <em>Then make it better.</em>',
-    desc: 'Hassan Nasr on digital twins: living models of patients, assets and operations that stay in sync with real data, so teams can monitor, simulate and decide. Includes his interactive, voiced neural portrait.',
+    desc: 'Hassan Nasr on digital twins: living models of patients, assets and operations that sync with real data. Includes his interactive, voiced neural portrait.',
     lead: 'I design digital twins: living models of patients, assets and operations that stay in sync with real data, so teams can monitor, simulate and decide before they act. Below is my own twin, a neural portrait that follows you and can introduce me.',
     sections: ['twin'], frontier: true },
   { slug: 'projects', nav: 'Projects', title: 'Projects & live websites', h1: 'Projects <em>you can open.</em>',
@@ -47,15 +47,15 @@ const PAGES = [
     lead: 'Live websites across industries, my own products, and the ideas I am building. Filter by status and industry, or switch to brand kits.',
     sections: ['live-projects', 'work'] },
   { slug: 'credentials', nav: 'Credentials', title: 'Awards & credentials', h1: 'Always learning. <em>Recognised along the way.</em>',
-    desc: 'Awards and certifications of Hassan Nasr: Beste AI-Jammer at AI JAM 2025, NASA Space Apps 2025, Andøya Space Hackathon 25, Claude Academy courses and more, with verify links.',
+    desc: 'Awards and certifications of Hassan Nasr: Beste AI-Jammer at AI JAM 2025, NASA Space Apps 2025, Andøya Space Hackathon 25, Claude Academy and more.',
     lead: 'From IT Essentials in 2008 to agentic AI in 2026, with an AI award and two space hackathons along the way. Open any credential for details and a verify link.',
     sections: ['credentials'] },
   { slug: 'workshops', nav: 'Workshops', title: 'AI workshops for leaders', h1: 'AI workshops <em>for leaders.</em>',
-    desc: 'Hands-on AI workshops for CEOs and leadership teams by Hassan Nasr, CTO at Medioteq AS: executive AGI briefing, strategy sprint, agentic AI, responsible AI and healthcare AI. Readiness check and booking.',
+    desc: 'Hands-on AI workshops for CEOs and leadership teams by Hassan Nasr, CTO at Medioteq: AGI briefing, strategy sprint, agentic and responsible AI.',
     lead: "I run hands-on workshops for CEOs and leadership teams who want to understand advanced AI and agentic systems, and turn them into decisions, roadmaps and working pilots. Take the readiness check, then request a date.",
     sections: ['workshops'], extra: 'workshops' },
   { slug: 'about', nav: 'About', title: 'About Hassan Nasr', h1: 'A builder’s curiosity. <em>A leader’s perspective.</em>',
-    desc: 'About Hassan Nasr, CTO at Medioteq AS in Oslo: AI architecture, business automation, ERP/CRM and Power Platform, product and technology leadership, and a career journey from 2005 to today.',
+    desc: 'About Hassan Nasr, CTO at Medioteq AS in Oslo: AI architecture, automation, ERP/CRM and Power Platform, and a career journey from 2005 to today.',
     lead: 'I’m Hassan, based in Oslo. My work brings together AI, software platforms, business automation, and technical leadership. Below is the journey that got me here.',
     sections: ['about', 'journey', '.perspective', 'contact'] },
 ];
@@ -183,8 +183,8 @@ for (const [id, [href, text]] of Object.entries(LEARN)) {
   home = home.replace(el, el.slice(0, close) + `<p class="learn-more"><a href="${href}">${text} <span aria-hidden="true">→</span></a></p>` + el.slice(close));
 }
 home = home.replace(/<nav class="footer-pages"[\s\S]*?<\/nav>/, '').replace(/(<footer class="footer wrap">[\s\S]*?)<\/footer>/, `$1<nav class="footer-pages" aria-label="Pages">${pageNav}</nav></footer>`);
-const homeTitle = 'Hassan Nasr · CTO, AI architecture, health & enterprise software · Oslo';
-const homeDesc = 'Hassan Nasr is CTO at Medioteq AS in Oslo: AI architecture for health, enterprise software and digital transformation across Norway, the Gulf and Egypt. Projects, awards and AI workshops for leaders.';
+const homeTitle = 'Hassan Nasr · CTO · AI architecture & health tech · Oslo';
+const homeDesc = 'Hassan Nasr, CTO at Medioteq AS in Oslo: AI architecture for health, enterprise software and digital transformation. Projects, awards and AI workshops.';
 home = home.replace(/\s*<title>[\s\S]*?<\/title>/, '').replace(/\s*<meta name="description"[^>]*>/, '').replace(/\s*<meta (property|name)="(og|twitter):[^>]*>/g, '')
   .replace(/\s*<link rel="canonical"[^>]*>/, '').replace(/\s*<link rel="(icon|apple-touch-icon|manifest)"[^>]*>/g, '')
   .replace(/\s*<script type="application\/ld\+json"[\s\S]*?<\/script>/g, '')
@@ -201,4 +201,52 @@ fs.writeFileSync(`${DIST}/robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${ab
 fs.writeFileSync(`${DIST}/manifest.webmanifest`, JSON.stringify({ name: 'Hassan Nasr', short_name: 'Hassan Nasr', start_url: '/', display: 'standalone', background_color: '#0b0c0e', theme_color: '#0b0c0e',
   icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }, { src: '/assets/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: '/assets/icon-512.png', sizes: '512x512', type: 'image/png' }] }, null, 2));
 if (!fs.existsSync(`${DIST}/favicon.svg`)) fs.writeFileSync(`${DIST}/favicon.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0b0c0e"/><path d="M18 16v32M46 16v32M18 32h28" stroke="#edeae3" stroke-width="7"/><circle cx="50" cy="14" r="6" fill="#ff5b26"/></svg>\n`);
+
+/* ---------- 404 page (Vercel serves dist/404.html for unknown paths) ---------- */
+fs.writeFileSync(`${DIST}/404.html`, `<!doctype html>
+<html lang="en">
+<head>
+  <base href="/">${baseHead.replace(/\s*<link rel="icon"[^>]*>/, '')}
+  <title>Page not found · Hassan Nasr</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="page page-404">
+  <a class="skip" href="/#main">Skip to content</a>
+  ${subHeader}
+  <main id="main">
+    <header class="page-hero wrap">
+      <p class="kicker mono"><i>404</i> Lost in orbit</p>
+      <h1>This page drifted <em>out of range.</em></h1>
+      <p class="lead">The link may be old or mistyped. Here are the places worth visiting:</p>
+      <ul class="page-list">${PAGES.map(p => `<li><a href="${p.slug}/">${p.nav}</a><small>${esc(p.title)}</small></li>`).join('')}</ul>
+      <div class="page-cta"><a class="button button-primary" href="./">Back to the home page</a></div>
+    </header>
+  </main>
+  ${footerFor()}${tail}</body>
+</html>
+`);
+
+/* ---------- llms.txt: a plain summary for AI search and assistants ---------- */
+fs.writeFileSync(`${DIST}/llms.txt`, `# Hassan Nasr
+
+> CTO at Medioteq AS in Oslo, Norway. Technology leader and founder building AI architecture for health, enterprise software and digital transformation across Norway, the Gulf and Egypt.
+
+## Pages
+
+- [Home](${abs('/')}): Overview, frontiers (space, healthcare, robotics, digital twins), journey, credentials, projects and workshops.
+${PAGES.map(p => `- [${p.title}](${abs(`/${p.slug}/`)}): ${p.desc}`).join('\n')}
+
+## Facts
+
+- Current role: Chief Technology Officer, Medioteq AS (2026 – present), Oslo.
+- Previous: CTO at DGC (Digital Game Changers), UAE, 2021 – 2025; Founder & Technical Director, Gorgov Digital, 2013 – 2025.
+- Recognition: 1st place and Best Vibecoder, AI Jam Norway 2025; 2nd place, NASA Space Apps 2025 Oslo.
+- Focus: AI and agentic systems, healthcare technology and interoperability (HL7 FHIR), digital twins, ERP/CRM and Power Platform automation.
+
+## Contact
+
+- LinkedIn: https://www.linkedin.com/in/h-nasr/
+- Website contact form: ${abs('/#contact')}
+`);
 console.log(`Pages: ${PAGES.map(p => '/' + p.slug + '/').join(' ')} · ${spaceRepos.length} space repos · ${creds.length} credentials · ${workshops.length} workshops in JSON-LD`);

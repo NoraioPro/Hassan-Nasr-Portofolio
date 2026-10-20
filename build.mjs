@@ -19,7 +19,7 @@ esbuild([...JS.map(f => `${DIST}/${f}`), '--minify', `--outdir=${DIST}/min`, '--
 
 // Small critical CSS so the first paint has the right colours before the bundle arrives.
 const CRITICAL = '<style id="critical">html{background:#0b0c0e;color:#edeae3;color-scheme:dark}body{margin:0;font-family:"Inter Tight",system-ui,sans-serif}</style>';
-const pages = [`${DIST}/index.html`, ...fs.readdirSync(DIST, { withFileTypes: true }).filter(d => d.isDirectory() && fs.existsSync(`${DIST}/${d.name}/index.html`)).map(d => `${DIST}/${d.name}/index.html`)];
+const pages = [`${DIST}/index.html`, ...(fs.existsSync(`${DIST}/404.html`) ? [`${DIST}/404.html`] : []), ...fs.readdirSync(DIST, { withFileTypes: true }).filter(d => d.isDirectory() && fs.existsSync(`${DIST}/${d.name}/index.html`)).map(d => `${DIST}/${d.name}/index.html`)];
 for (const file of pages) {
   let h = fs.readFileSync(file, 'utf8');
   // one bundle link instead of the individual stylesheets
@@ -32,7 +32,8 @@ for (const file of pages) {
   const seen = new Set();
   h = h.replace(/<script (?:type="module" )?src="min\/[^"]+"(?: defer)?><\/script>\n?/g, m => { const k = m.match(/min\/[^"]+/)[0]; if (seen.has(k)) return ''; seen.add(k); return m; });
   // below-the-fold images: lazy + async decode (the LCP hero image keeps fetchpriority=high)
-  h = h.replace(/<img(?![^>]*\bloading=)(?![^>]*fetchpriority)([^>]*)>/g, '<img loading="lazy" decoding="async"$1>');
+  h = h.replace(/<img(?![^>]*\bloading=)(?![^>]*fetchpriority)([^>]*)>/g, (m, rest) => `<img loading="lazy"${/\bdecoding=/.test(rest) ? '' : ' decoding="async"'}${rest}>`);
+  h = h.replace(/(<img\b[^>]*?\sdecoding="async")([^>]*?)\sdecoding="async"/g, '$1$2'); // clean up earlier duplicate attributes
   // preconnect to the CDN used by three.js / QR lib
   if (!h.includes('href="https://cdn.jsdelivr.net"')) h = h.replace('<link rel="preconnect" href="https://fonts.googleapis.com">', '<link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>');
   fs.writeFileSync(file, h);

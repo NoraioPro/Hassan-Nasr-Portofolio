@@ -7,13 +7,13 @@ Effort: S (< half a day) · M (1–3 days) · L (1–2 weeks). Impact: ★ low �
 
 | # | Item | Effort | Impact | Owner |
 |---|------|--------|--------|-------|
-| 1 | Pick the production domain and set `BASE_URL` in `site.config.mjs`, then rerun `node update-portfolio.mjs` (canonical, OG, sitemap, JSON-LD all use it) | S | ★★★ | Hassan → Dev |
+| 1 | Connect the domain: add `hnasr.com` and `www.hnasr.com` in Vercel → Project → Settings → Domains and set the DNS records Vercel shows (`www` redirects to the apex via `vercel.json`) | S | ★★★ | Hassan |
 | 2 | Activate FormSubmit: send one real message from the contact form, click the activation email | S | ★★★ | Hassan |
-| 3 | Deploy `dist/` to Vercel (output dir `dist`, no build command needed; or `node build.mjs`) | S | ★★★ | Dev |
-| 4 | Submit the sitemap in Google Search Console and Bing Webmaster Tools | S | ★★ | Hassan |
-| 5 | Fill the `TODO: Hassan to add` comments on the internal pages (Eduspaceno details, Medioteq material, robotics goals, workshop agendas) | M | ★★★ | Hassan |
-| 6 | Delete the unused 1.7–2.3 MB PNGs in `dist/assets/` (not referenced by any page) or move them out of `dist/` | S | ★ | Dev |
-| 7 | Add a real photo-based OG image if preferred over the generated one (`dist/assets/og-image.jpg`, 1200×630) | S | ★★ | Hassan |
+| 3 | Submit `https://hnasr.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools (verify the domain with a DNS TXT record) | S | ★★ | Hassan |
+| 4 | Fill the `TODO: Hassan to add` comments on the internal pages (Eduspaceno details, Medioteq material, robotics goals, workshop agendas) | M | ★★★ | Hassan |
+| 5 | Add a real photo-based OG image if preferred over the generated one (`dist/assets/og-image.jpg`, 1200×630) | S | ★★ | Hassan |
+
+**Done:** production domain `https://hnasr.com` set in `site.config.mjs`; Vercel config (`vercel.json`) with security headers, caching and www → apex redirect; `404.html`, `llms.txt`, sitemap, robots and JSON-LD generated on build; titles ≤ 60 and descriptions ≤ 155 characters; unused originals moved to `source-assets/` (dist 13.8 MB → 4.4 MB).
 
 ## 30 days
 
@@ -40,6 +40,6 @@ Effort: S (< half a day) · M (1–3 days) · L (1–2 weeks). Impact: ★ low �
 |------|--------|--------|-------|
 | **Voice-clone portrait option**: record ~2 min of consented audio, generate the intro with a voice-cloning TTS, ship a pre-rendered MP3 + viseme timeline (keeps the site static); keep Web Speech as fallback | M | ★★★ | Hassan (recording, consent) · Dev |
 | "Ask Hassan" assistant on the portrait: answers only from site content (RAG over the pages), with clear AI labelling | L | ★★ | Dev |
-| **AI search visibility**: `llms.txt`, concise FAQ blocks, consistent entity data (same name/title/links on LinkedIn, GitHub, Medioteq), cite-worthy insights posts | S–M | ★★★ | Dev · Hassan |
+| **AI search visibility**: `llms.txt` is live; add concise FAQ blocks, consistent entity data (same name/title/links on LinkedIn, GitHub, Medioteq), cite-worthy insights posts | S–M | ★★★ | Dev · Hassan |
 | Talks & media page (events, hackathons, workshops delivered) with photos Hassan supplies | M | ★★ | Hassan · Dev |
 | Quarterly review: analytics → which sections convert → prune or expand | S | ★★ | Hassan |

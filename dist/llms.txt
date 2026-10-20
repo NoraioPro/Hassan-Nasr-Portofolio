@@ -1,0 +1,27 @@
+# Hassan Nasr
+
+> CTO at Medioteq AS in Oslo, Norway. Technology leader and founder building AI architecture for health, enterprise software and digital transformation across Norway, the Gulf and Egypt.
+
+## Pages
+
+- [Home](https://hnasr.com/): Overview, frontiers (space, healthcare, robotics, digital twins), journey, credentials, projects and workshops.
+- [Space & satellites](https://hnasr.com/space/): Hassan Nasr on space and satellites: a live 3D orbit scene, 2nd place at NASA Space Apps 2025 Oslo with Eduspaceno.com, and Andøya Space Hackathon 25.
+- [Healthcare technology & MedTech](https://hnasr.com/medical/): Hassan Nasr, CTO of Medioteq: secure digital health with cloud platforms, HL7 FHIR interoperability, AI clinical workflows and GDPR-compliant delivery.
+- [Robotics research track](https://hnasr.com/robotics/): A robotics cell running live in the browser: overhead vision, task planning and five-axis inverse kinematics. A planned research track by Hassan Nasr.
+- [Digital twins](https://hnasr.com/digital-twin/): Hassan Nasr on digital twins: living models of patients, assets and operations that sync with real data. Includes his interactive, voiced neural portrait.
+- [Projects & live websites](https://hnasr.com/projects/): Live websites, products and selected work by Hassan Nasr, filterable by status and industry, with brand kits.
+- [Awards & credentials](https://hnasr.com/credentials/): Awards and certifications of Hassan Nasr: Beste AI-Jammer at AI JAM 2025, NASA Space Apps 2025, Andøya Space Hackathon 25, Claude Academy and more.
+- [AI workshops for leaders](https://hnasr.com/workshops/): Hands-on AI workshops for CEOs and leadership teams by Hassan Nasr, CTO at Medioteq: AGI briefing, strategy sprint, agentic and responsible AI.
+- [About Hassan Nasr](https://hnasr.com/about/): About Hassan Nasr, CTO at Medioteq AS in Oslo: AI architecture, automation, ERP/CRM and Power Platform, and a career journey from 2005 to today.
+
+## Facts
+
+- Current role: Chief Technology Officer, Medioteq AS (2026 – present), Oslo.
+- Previous: CTO at DGC (Digital Game Changers), UAE, 2021 – 2025; Founder & Technical Director, Gorgov Digital, 2013 – 2025.
+- Recognition: 1st place and Best Vibecoder, AI Jam Norway 2025; 2nd place, NASA Space Apps 2025 Oslo.
+- Focus: AI and agentic systems, healthcare technology and interoperability (HL7 FHIR), digital twins, ERP/CRM and Power Platform automation.
+
+## Contact
+
+- LinkedIn: https://www.linkedin.com/in/h-nasr/
+- Website contact form: https://hnasr.com/#contact
