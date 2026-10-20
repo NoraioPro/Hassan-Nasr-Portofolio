@@ -126,7 +126,8 @@ async function init() {
   try { THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'); } catch (e) { throw new Error('three.js failed to load'); }
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', alpha: false }); } catch (e) { throw new Error('WebGL unavailable'); }
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.debug.checkShaderErrors = false; // avoid synchronous shader-status stalls
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setClearColor(0x050912, 1);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x050912);

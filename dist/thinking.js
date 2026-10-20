@@ -23,7 +23,7 @@
     };
     wrap(h2);
   }
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('tk-in'); io.unobserve(e.target); } }), { threshold: .25 });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('tk-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -12% 0px' });
   io.observe(sec);
 
   /* Section aurora follows pointer */

@@ -10,7 +10,8 @@
   bar.className = 'fx-progress'; bar.setAttribute('aria-hidden', 'true');
   document.body.prepend(bar);
   let sq = false;
-  const updBar = () => { sq = false; const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`; };
+  let scrollMaxCache = -1; new ResizeObserver(() => { scrollMaxCache = -1; }).observe(document.body); addEventListener('resize', () => { scrollMaxCache = -1; }, { passive: true });
+  const updBar = () => { sq = false; if (scrollMaxCache < 0) scrollMaxCache = document.documentElement.scrollHeight - innerHeight; const h = scrollMaxCache; bar.style.transform = `scaleX(${h > 0 ? scrollY / h : 0})`; };
   addEventListener('scroll', () => { if (!sq) { sq = true; requestAnimationFrame(updBar); } }, { passive: true });
   updBar();
 
