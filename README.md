@@ -92,7 +92,11 @@ Screenshots and logos for website cards live in `dist/assets/clients/` and `dist
 
 ## Deploy
 
-The site is fully static. On **Vercel**: import this repository, set the **output directory** to `dist`, and leave the build command empty. The committed `dist/` is already built. Any static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder.
+The site is fully static and `dist/` is committed already built.
+
+**Vercel:** import this repository and deploy. No settings are needed: `vercel.json` tells Vercel to skip install and build and to publish `dist/`. If the project was created earlier with other settings, open **Project → Settings → Build & Development** and make sure nothing overrides it (Framework *Other*, build and output overrides off), then redeploy.
+
+Any other static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder.
 
 ## Before going live
 
