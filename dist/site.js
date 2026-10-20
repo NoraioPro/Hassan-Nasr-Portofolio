@@ -77,7 +77,7 @@
   const revealTargets = ['.section-head', '.frontier-copy', '.instrument', '.about-copy', '.focus-list li', '.project', '.deployments-heading', '.deployment-card', '.index-heading', '.repo-controls', '.topics li', '.contact h2', '.contact-bottom', '.stat', '.career-map', '.achievements li', '.clients-stats > div', '.client-filters', '.client-card'];
   const revealer = new IntersectionObserver(entries => entries.forEach(entry => {
     if (entry.isIntersecting) { entry.target.classList.add('is-visible'); revealer.unobserve(entry.target); }
-  }), { rootMargin: '0px 0px -8% 0px' });
+  }), { rootMargin: '0px 0px 25% 0px' });
   revealTargets.forEach(selector => $$(selector).forEach((el, i) => {
     el.dataset.reveal = '';
     const siblings = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
