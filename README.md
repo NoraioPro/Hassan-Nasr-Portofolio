@@ -33,6 +33,7 @@ dist/                     ← the website (deploy this folder)
   space3d.js, robot3d.js  ← three.js scenes (loaded lazily from jsDelivr)
   portrait.js             ← Neural Portrait (three.js + bloom, voice playback, lip-sync)
   focus.js, focus.css     ← living "Where I focus" icons
+  alive.js, alive.css     ← site-wide micro-interactions; on phones long lists become swipe rails (mark a list with data-rail)
   assets/                 ← images: journey/, clients/, live/, avatar/, awards/ …
   assets/avatar/voice.*   ← portrait voice (mp3) + word timings and mouth track (json)
   404.html, llms.txt      ← generated: not-found page, summary for AI assistants

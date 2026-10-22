@@ -5,8 +5,8 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
 const DIST = 'dist';
-const CSS = ['site.css', 'enhance.css', 'extra.css', 'contact.css', 'portrait.css', 'certs.css', 'workshops.css', 'pages.css', 'focus.css'];
-const JS = ['site.js', 'health.js', 'enhance.js', 'portrait.js', 'thinking.js', 'contact.js', 'certs.js', 'workshops.js', 'space3d.js', 'robot3d.js', 'focus.js'];
+const CSS = ['site.css', 'enhance.css', 'extra.css', 'contact.css', 'portrait.css', 'certs.css', 'workshops.css', 'pages.css', 'focus.css', 'alive.css'];
+const JS = ['site.js', 'health.js', 'enhance.js', 'portrait.js', 'thinking.js', 'contact.js', 'certs.js', 'workshops.js', 'space3d.js', 'robot3d.js', 'focus.js', 'alive.js'];
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const esbuild = args => execFileSync(npx, ['--yes', 'esbuild@0.24.0', ...args], { stdio: ['ignore', 'pipe', 'inherit'], shell: process.platform === 'win32' });
 

@@ -208,9 +208,19 @@
     // industry row: on phones it scrolls sideways; fade only the edges that hide more chips
     const fades = () => { if (!rail) return; const max = rail.scrollWidth - rail.clientWidth; rail.classList.toggle('fade-l', rail.scrollLeft > 4); rail.classList.toggle('fade-r', max > 4 && rail.scrollLeft < max - 4); };
     const reveal = ch => { if (!rail || rail.scrollWidth <= rail.clientWidth) return; const d = ch.getBoundingClientRect().left - rail.getBoundingClientRect().left - (rail.clientWidth - ch.offsetWidth) / 2; rail.scrollBy({ left: d, behavior: paused ? 'auto' : 'smooth' }); };
+    // desktop opens with a first page of sites; phones get the swipe rail instead (alive.css)
+    const CAP = 9, moreEl = $('#deployment-more'), moreBox = moreEl?.parentElement;
+    let expanded = false;
+    moreEl?.addEventListener('click', () => { expanded = true; apply(); cards.find(c => c.classList.contains('was-over'))?.querySelector('a, button')?.focus({ preventScroll: true }); });
     const apply = () => {
       let n = 0;
-      cards.forEach(card => { const ok = match(card, state.status, state.cat); card.hidden = !ok; if (ok) n++; });
+      cards.forEach(card => {
+        const ok = match(card, state.status, state.cat); card.hidden = !ok; if (ok) n++;
+        const over = ok && !expanded && n > CAP;
+        if (card.classList.contains('is-over') && !over && expanded) card.classList.add('was-over');
+        card.classList.toggle('is-over', over);
+      });
+      if (moreBox) { moreBox.hidden = expanded || n <= CAP; moreEl.textContent = `Show all ${n} sites`; }
       sChips.forEach(ch => { const k = ch.dataset.statusFilter; ch.setAttribute('aria-pressed', String(k === state.status)); const m = cards.filter(cd => match(cd, k, state.cat)).length; ch.lastElementChild.textContent = m; ch.classList.toggle('is-empty', !m); });
       // industries with nothing to show for this status are hidden (unless selected), so the row stays short
       cChips.forEach(ch => { const k = ch.dataset.catFilter; ch.setAttribute('aria-pressed', String(k === state.cat)); const m = cards.filter(cd => match(cd, state.status, k)).length; ch.lastElementChild.textContent = m; ch.classList.toggle('is-empty', !m); ch.hidden = !m && k !== 'all' && k !== state.cat; });
