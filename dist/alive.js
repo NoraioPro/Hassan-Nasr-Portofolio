@@ -130,6 +130,74 @@
     update();
   }
 
+  /* ---------- header: compact, steps aside while you read (phones), logo dot takes the colour of the world you are in ---------- */
+  const header = document.querySelector('.header'), mainNav = document.getElementById('main-nav'), palette = document.getElementById('palette');
+  const dock = document.querySelector('[data-dock]');
+  let lastY = scrollY, dirQ = false, idle = 0;
+  const onScrollDir = () => {
+    dirQ = false;
+    const y = scrollY, dy = y - lastY;
+    if (Math.abs(dy) < 8) return;
+    const down = dy > 0; lastY = y;
+    const busy = mainNav?.classList.contains('menu-open') || palette?.open || header?.contains(document.activeElement);
+    html.classList.toggle('hdr-hidden', phone.matches && down && y > 180 && !busy);
+    if (dock) {
+      dock.classList.toggle('is-mini', down && y > 180);
+      clearTimeout(idle); idle = setTimeout(() => dock.classList.remove('is-mini'), 1100);
+    }
+  };
+  addEventListener('scroll', () => { if (!dirQ) { dirQ = true; requestAnimationFrame(onScrollDir); } }, { passive: true });
+  header?.addEventListener('focusin', () => html.classList.remove('hdr-hidden'));
+  if (mainNav) new MutationObserver(() => { if (mainNav.classList.contains('menu-open')) html.classList.remove('hdr-hidden'); }).observe(mainNav, { attributes: true, attributeFilter: ['class'] });
+  const worldIO = new IntersectionObserver(es => {
+    for (const e of es) {
+      if (e.isIntersecting) html.style.setProperty('--brand-accent', getComputedStyle(e.target).getPropertyValue('--world-accent').trim() || '');
+      else if (getComputedStyle(e.target).getPropertyValue('--world-accent').trim() === html.style.getPropertyValue('--brand-accent')) html.style.removeProperty('--brand-accent');
+    }
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  document.querySelectorAll('.world').forEach(w => worldIO.observe(w));
+
+  /* ---------- dock: icons pop in, answer taps, know what time it is in Oslo and Cairo ---------- */
+  if (dock) {
+    const btns = [...dock.querySelectorAll(':scope > a, :scope > button')];
+    const hourIn = tz => +new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(new Date());
+    const timeIn = tz => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date());
+    const daytime = tz => { const h = hourIn(tz); return h >= 8 && h < 22; };
+    const wa = dock.querySelector('.m-dock-wa'), waLabel = wa?.getAttribute('aria-label') || '';
+    const clocks = () => {
+      if (wa) { const day = daytime('Europe/Oslo'); wa.classList.toggle('is-night', !day); wa.setAttribute('aria-label', `${waLabel}. It is ${timeIn('Europe/Oslo')} in Oslo${day ? '' : ', replies may come in the morning'}.`); }
+      dock.querySelectorAll('[data-tz]').forEach(el => {
+        const late = !daytime(el.dataset.tz);
+        el.classList.toggle('is-late', late);
+        el.textContent = `${timeIn(el.dataset.tz)}${late ? ' · late' : ''}`;
+        el.title = `${el.dataset.city} time${late ? ', late there' : ''}`;
+      });
+    };
+    clocks(); setInterval(clocks, 30000);
+    // icons pop in (staggered) each time the dock arrives; the phone rings once the first time
+    let rang = false, pings = 0;
+    new MutationObserver(() => {
+      if (!dock.classList.contains('is-on') || still()) return;
+      btns.forEach((b, i) => b.querySelector('svg')?.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1, offset: .7 }, { transform: 'none', opacity: 1 }],
+        { duration: 520, delay: 120 + i * 70, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'backwards' }));
+      if (!rang) { rang = true; setTimeout(() => play(dock.querySelector('.m-dock-call'), 'ring'), 900); }
+    }).observe(dock, { attributes: true, attributeFilter: ['class'] });
+    // a soft ring around WhatsApp now and then (three times at most), only while the dock is open and still
+    setInterval(() => {
+      if (pings >= 3 || still() || document.hidden || !dock.classList.contains('is-on') || dock.classList.contains('is-mini')) return;
+      pings++; play(wa, 'ping');
+    }, 11000);
+    const play = (el, cls) => { if (!el || still()) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), 900); };
+    const TAP = { 'm-dock-wa': 'wiggle', 'm-dock-call': 'ring', 'm-dock-li': 'hop', 'm-dock-ct': 'flap' };
+    btns.forEach(b => b.addEventListener('pointerdown', e => {
+      if (still()) return;
+      const r = b.getBoundingClientRect(), s = document.createElement('span');
+      s.className = 'm-ripple'; s.style.left = `${e.clientX - r.left}px`; s.style.top = `${e.clientY - r.top}px`;
+      b.append(s); s.animate([{ transform: 'translate(-50%,-50%) scale(0)', opacity: .5 }, { transform: 'translate(-50%,-50%) scale(1)', opacity: 0 }], { duration: 550, easing: 'ease-out' }).onfinish = () => s.remove();
+      play(b, TAP[[...b.classList].find(c => TAP[c])]);
+    }));
+  }
+
   /* ---------- journey: long bullet lists fold on phones ---------- */
   for (const ul of document.querySelectorAll('.tl-points')) {
     const extra = ul.children.length - 3;

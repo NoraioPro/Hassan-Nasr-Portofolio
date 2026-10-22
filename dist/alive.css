@@ -20,9 +20,62 @@
 @keyframes alive-bump { 35% { transform: scale(1.35); color: var(--accent); } }
 @keyframes alive-flash { 30% { color: var(--text); opacity: 1; } }
 
-/* the header dot breathes */
-.header .brand-dot { animation: alive-breathe 3.6s ease-in-out infinite; }
-@keyframes alive-breathe { 50% { box-shadow: 0 0 0 4px rgba(255, 91, 38, .18), 0 0 14px rgba(255, 91, 38, .5); } }
+/* header: the logo dot breathes in the colour of the world you are in; HN shimmers on hover */
+.header .brand-dot { background: var(--brand-accent, var(--accent)); transition: background-color .6s var(--ease); animation: alive-breathe 3.6s ease-in-out infinite; }
+@keyframes alive-breathe { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-accent, var(--accent)) 20%, transparent), 0 0 14px color-mix(in srgb, var(--brand-accent, var(--accent)) 55%, transparent); } }
+.brand:is(:hover, :focus-visible) .brand-mark { background: linear-gradient(100deg, var(--text) 30%, var(--brand-accent, var(--accent)) 50%, var(--text) 70%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: alive-shine 1.1s var(--ease) both; }
+@keyframes alive-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
+/* search: the lens leans in; menu: the lines slide apart and the links arrive one by one */
+.palette-trigger svg { transition: transform .35s var(--ease); }
+.palette-trigger:is(:hover, :focus-visible) svg { transform: rotate(-14deg) scale(1.12); }
+.palette-trigger:active svg { transform: rotate(-14deg) scale(.92); }
+.menu-toggle i { transition: transform .35s var(--ease), left .35s var(--ease), right .35s var(--ease); }
+.menu-toggle[aria-expanded="false"]:is(:hover, :focus-visible) i:first-of-type { left: 17px; }
+.menu-toggle[aria-expanded="false"]:is(:hover, :focus-visible) i:last-of-type { right: 17px; }
+@media (max-width: 760px) {
+  #main-nav.menu-open > a { animation: alive-nav-in .45s var(--ease) both; }
+  #main-nav.menu-open > a:nth-child(2) { animation-delay: .04s; } #main-nav.menu-open > a:nth-child(3) { animation-delay: .08s; }
+  #main-nav.menu-open > a:nth-child(4) { animation-delay: .12s; } #main-nav.menu-open > a:nth-child(5) { animation-delay: .16s; }
+  #main-nav.menu-open > a:nth-child(6) { animation-delay: .2s; } #main-nav.menu-open > a:nth-child(7) { animation-delay: .24s; }
+  #main-nav.menu-open > a:nth-child(8) { animation-delay: .28s; }
+  /* phones: the header compacts once you scroll and steps aside while you read down the page */
+  .header { transition: transform .4s var(--ease), background .4s, border-color .4s, backdrop-filter .4s; }
+  html.hdr-hidden .header { transform: translateY(-101%); }
+  .header-inner { transition: height .3s var(--ease); }
+  .header.is-scrolled .header-inner { height: 56px; }
+  .header.is-scrolled #main-nav { top: 56px; }
+  .header.is-scrolled :is(.palette-trigger, .menu-toggle) { width: 38px; height: 38px; }
+  .header.is-scrolled .menu-toggle i:first-of-type { top: 15px; } .header.is-scrolled .menu-toggle i:last-of-type { top: 21px; }
+  .header.is-scrolled .menu-toggle i { left: 12px; right: 12px; }
+  .frontier-tabs, .journey-aside { transition: top .4s var(--ease); }
+  html.hdr-hidden .frontier-tabs { top: 10px; }
+  html.hdr-hidden .journey-aside { top: 0; }
+}
+@keyframes alive-nav-in { from { opacity: 0; transform: translateY(-8px); } }
+
+/* dock: taps ripple, each icon has its own gesture, WhatsApp knows whether it is daytime in Oslo */
+.m-ripple { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: currentColor; pointer-events: none; transform: translate(-50%, -50%) scale(0); opacity: 0; }
+.m-dock-wa.wiggle svg { animation: m-wiggle .6s var(--ease); }
+.m-dock-call.ring svg { animation: m-ring .8s ease-in-out; }
+.m-dock-li.hop svg { animation: m-hop .55s var(--ease); }
+.m-dock-ct.flap svg { animation: m-flap .6s var(--ease); }
+.m-dock-ct.flap svg path { animation: m-flap-lid .6s var(--ease); transform-box: fill-box; transform-origin: 50% 0; }
+@keyframes m-wiggle { 25% { transform: rotate(-14deg) scale(1.1); } 55% { transform: rotate(10deg) scale(1.1); } 80% { transform: rotate(-4deg); } }
+@keyframes m-ring { 10%, 30%, 50%, 70% { transform: rotate(-16deg); } 20%, 40%, 60% { transform: rotate(16deg); } 85% { transform: none; } }
+@keyframes m-hop { 40% { transform: translateY(-5px) scale(1.08); } 70% { transform: translateY(1px) scale(.97); } }
+@keyframes m-flap { 45% { transform: translateY(-2px); } }
+@keyframes m-flap-lid { 45% { transform: scaleY(-.7) translateY(-1px); } }
+.m-dock-wa::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 0 rgba(37, 211, 102, .55); }
+.m-dock-wa.ping::after { animation: m-ping .9s ease-out; }
+@keyframes m-ping { to { box-shadow: 0 0 0 12px rgba(37, 211, 102, 0); } }
+.m-dot { position: absolute; top: 7px; left: calc(50% + 7px); width: 8px; height: 8px; border-radius: 50%; background: #e9fff1; box-shadow: 0 0 0 2px #25d366; }
+.m-dock-wa.is-night .m-dot { background: #ffb020; box-shadow: 0 0 0 2px #25d366; }
+.m-dock-wa:not(.is-night) .m-dot { animation: m-dot 2.4s ease-in-out infinite; }
+@keyframes m-dot { 50% { transform: scale(.75); } }
+.m-dock.is-mini .m-dot { top: 5px; }
+.m-call-when { justify-self: end; font-size: 11px; letter-spacing: .04em; color: #3ddc97; white-space: nowrap; }
+.m-call-when.is-late { color: #ffb020; }
+.m-call-when::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
 
 /* phones: swipe rails with a live counter */
 .rail-ui { display: none; }
@@ -63,6 +116,7 @@
 @media (max-width: 760px) { .grid-more { display: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .arw, .arw.is-bob, .chip b.is-bump, .is-bump, .header .brand-dot { animation: none; transition: none; }
+  .arw, .arw.is-bob, .chip b.is-bump, .is-bump, .header .brand-dot, .m-dot, .m-dock svg, .m-dock svg path, #main-nav.menu-open > a, .brand-mark { animation: none !important; transition: none; }
+  html.hdr-hidden .header { transform: none; }
 }
-html.motion-paused :is(.arw.is-bob, .header .brand-dot) { animation: none; }
+html.motion-paused :is(.arw.is-bob, .header .brand-dot, .m-dot) { animation: none; }
