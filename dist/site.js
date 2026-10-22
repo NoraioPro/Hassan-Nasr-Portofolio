@@ -82,10 +82,18 @@
   const dock = $('[data-dock]');
   if (dock) {
     let contactInView = false, dockQueued = false;
+    const callBtn = $('[data-call-toggle]', dock), callSheet = $('#m-call');
+    const setCall = open => { if (!callBtn || !callSheet) return; callSheet.hidden = !open; callBtn.setAttribute('aria-expanded', String(open)); if (open) $('a', callSheet)?.focus({ preventScroll: true }); };
+    callBtn?.addEventListener('click', () => setCall(callSheet.hidden));
+    callSheet?.addEventListener('click', e => { if (e.target.closest('a')) setTimeout(() => setCall(false), 150); });
+    document.addEventListener('pointerdown', e => { if (callSheet && !callSheet.hidden && !dock.contains(e.target)) setCall(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && callSheet && !callSheet.hidden) { setCall(false); callBtn.focus(); } });
     const updDock = () => {
       dockQueued = false;
       const after = Math.min(320, Math.max(0, (document.documentElement.scrollHeight - innerHeight) * .25));
-      dock.classList.toggle('is-on', scrollY >= after && !contactInView && !nav.classList.contains('menu-open'));
+      const on = scrollY >= after && !contactInView && !nav.classList.contains('menu-open');
+      dock.classList.toggle('is-on', on);
+      if (!on && callSheet && !callSheet.hidden) setCall(false);
     };
     const contactSec = $('#contact');
     if (contactSec) new IntersectionObserver(([e]) => { contactInView = e.isIntersecting; updDock(); }, { threshold: .12 }).observe(contactSec);
