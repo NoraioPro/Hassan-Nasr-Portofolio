@@ -1,0 +1,58 @@
+/* ===== "Where I focus": living icons (focus.js) ===== */
+.focus-list[data-fx] li { position: relative; isolation: isolate; overflow: hidden; cursor: default; }
+.focus-list[data-fx] li::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .35s;
+  background: radial-gradient(260px circle at var(--mx, 26px) var(--my, 50%), rgba(255, 91, 38, .11), transparent 65%); }
+.focus-list[data-fx] li.is-hot::before { opacity: 1; }
+.focus-list[data-fx] li.is-hot { border-color: rgba(255, 91, 38, .35); }
+
+.fx-tile { width: 52px; height: 52px; border-radius: 14px; background: var(--accent-soft); display: grid; place-items: center; position: relative;
+  perspective: 180px; transform: translate(calc(var(--sx, 0) * 2.5px), calc(var(--sy, 0) * 2.5px)); transition: box-shadow .35s, background .35s; }
+.is-hot .fx-tile { background: rgba(255, 91, 38, .2); box-shadow: 0 0 0 1px rgba(255, 91, 38, .3), 0 10px 26px -10px rgba(255, 91, 38, .55); }
+.fx-svg { width: 30px; height: 30px; overflow: visible; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* agents */
+.fx-hub { fill: rgba(255, 91, 38, .12); }
+.fx-nodes circle { fill: var(--accent); fill-opacity: 0; }
+.fx-ring { stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.focus-list.is-live .fx-ring { animation: fx-ping 2.6s ease-out infinite; }
+.fx-svg.is-burst .fx-ring { animation: fx-ping .75s ease-out 1; }
+@keyframes fx-ping { 0% { opacity: .75; transform: scale(1); } 100% { opacity: 0; transform: scale(2.7); } }
+.fx-pk circle { fill: var(--accent); stroke: none; opacity: 0; filter: drop-shadow(0 0 1.5px var(--accent)); }
+
+/* sync */
+.fx-box { fill: rgba(255, 91, 38, 0); }
+.fx-row { stroke-width: 1.2; opacity: .8; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.fx-wire { stroke-dasharray: 2.2 2.2; stroke-dashoffset: 0; }
+.focus-list.is-live .fx-wire { animation: fx-flow 1.2s linear infinite; }
+.focus-list.is-live .fx-wire + .fx-wire { animation-direction: reverse; }
+.is-hot .fx-wire { animation-duration: .6s !important; }
+@keyframes fx-flow { to { stroke-dashoffset: -4.4; } }
+
+/* product cube: a real 3D cube that turns through strategy, architecture and delivery */
+.fx-cube { --s: 19px; --h: calc(var(--s) / 2 + var(--ex, 0) * 5px); width: var(--s); height: var(--s); position: relative; transform-style: preserve-3d;
+  transform: rotateX(var(--rx, -30deg)) rotateY(var(--ry, 45deg)); }
+.fx-f { position: absolute; inset: 0; border: 1.6px solid var(--accent); border-radius: 2px; background: rgba(255, 91, 38, .07); backface-visibility: visible; }
+.fx-f.ff { transform: translateZ(var(--h)); }
+.fx-f.fk { transform: rotateY(180deg) translateZ(var(--h)); }
+.fx-f.fl { transform: rotateY(-90deg) translateZ(var(--h)); }
+.fx-f.fr { transform: rotateY(90deg) translateZ(var(--h)); }
+.fx-f.ft { transform: rotateX(90deg) translateZ(var(--h)); background: rgba(255, 91, 38, .2); }
+.fx-f.fb { transform: rotateX(-90deg) translateZ(var(--h)); }
+.fx-core { position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle, #ffd2bf, var(--accent) 60%);
+  box-shadow: 0 0 10px 2px rgba(255, 91, 38, .7); opacity: calc(var(--ex, 0) * 1.2);
+  transform: rotateY(calc(var(--ry, 45deg) * -1)) rotateX(calc(var(--rx, -30deg) * -1)) scale(calc(.35 + var(--ex, 0) * .65)); }
+
+/* live readout under each description */
+.fx-read { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.fx-read span, .fx-read b { font-weight: 400; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; transition: color .25s, border-color .25s, background .25s; }
+.fx-read .is-on { color: var(--accent); border-color: rgba(255, 91, 38, .45); background: var(--accent-soft); }
+.fx-read i { font-style: normal; min-width: 1.2em; text-align: center; color: var(--muted); }
+.fx-read b { margin-left: auto; color: var(--live); border-color: rgba(61, 220, 151, .3); }
+.fx-read b.is-busy { color: var(--muted); border-color: var(--line); }
+@media (max-width: 480px) { .fx-read b { margin-left: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-list.is-live .fx-ring, .focus-list.is-live .fx-wire, .fx-svg.is-burst .fx-ring { animation: none; }
+  .fx-tile { transform: none; }
+}
+html.motion-paused .focus-list .fx-ring, html.motion-paused .focus-list .fx-wire { animation: none; }

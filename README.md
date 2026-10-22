@@ -11,8 +11,8 @@ The site is static HTML, CSS and JavaScript in `dist/`. There is no framework an
 | Section | What it is |
 |---|---|
 | **Hero** | Name, portrait that follows the pointer, live Oslo clock, "Now" card |
-| **Frontiers** | Four full-bleed "worlds" with a portal entry on scroll: **Orbit** (three.js satellite over a lit Earth), **Clinic** (interactive clinical-platform architecture), **Lab** (5-axis robot cell with inverse kinematics, vision and pick-and-sort), **Twin** (digital twins + the voiced neural portrait) |
-| **About** | Background and focus areas |
+| **Frontiers** | Four full-bleed "worlds" with a portal entry on scroll: **Orbit** (three.js satellite over a lit Earth), **Clinic** (interactive clinical-platform architecture), **Lab** (5-axis robot cell with inverse kinematics, vision and pick-and-sort), **Twin** (digital twins + the Neural Portrait: a 3D head in its original gold and teal, with a natural recorded voice, phoneme lip-sync and captions) |
+| **About** | Background and three focus areas with living icons (an agent network, an ERP⇄CRM sync and a 3D product cube) |
 | **Journey** | Career timeline 2005 → today with a year odometer, career map and LinkedIn photo galleries |
 | **Credentials** | Awards and certifications with verify links |
 | **Selected work** | Featured projects and product families |
@@ -31,7 +31,10 @@ dist/                     ← the website (deploy this folder)
   site.css, *.css         ← stylesheets (bundled into app.min.css)
   site.js, *.js           ← scripts (minified into dist/min/)
   space3d.js, robot3d.js  ← three.js scenes (loaded lazily from jsDelivr)
+  portrait.js             ← Neural Portrait (three.js + bloom, voice playback, lip-sync)
+  focus.js, focus.css     ← living "Where I focus" icons
   assets/                 ← images: journey/, clients/, live/, avatar/, awards/ …
+  assets/avatar/voice.*   ← portrait voice (mp3) + word timings and mouth track (json)
   404.html, llms.txt      ← generated: not-found page, summary for AI assistants
   sitemap.xml, robots.txt ← generated
 source-assets/            ← large originals not used by the site (kept out of dist/)
@@ -45,6 +48,7 @@ build.mjs                 ← CSS bundle (app.min.css) + minified scripts (dist/
 site-cards.mjs            ← shared markup for the website cards and brand kits
 preview.mjs               ← tiny local web server
 audit-links.mjs           ← checks internal anchors/files and external links
+make-voice.py             ← re-records the portrait voice offline (Piper, from the local voice-agent install)
 ROADMAP.md                ← next steps
 ```
 
@@ -92,6 +96,7 @@ node audit-links.mjs
 | Client websites | `clients.json` (set `"hidden": true` to keep one but not show it) | `node update-portfolio.mjs` |
 | Any other section text | `dist/index.html` directly | `node update-portfolio.mjs` |
 | Styles / behaviour | `dist/*.css` / `dist/*.js` (not the files in `dist/min/`) | `node build.mjs` |
+| Neural Portrait words | `SCRIPT` in `dist/portrait.js` **and** in `make-voice.py` (keep them identical) | `make-voice.py dist/assets/avatar` with the voice-agent Python, then `node build.mjs` |
 
 Screenshots and logos for website cards live in `dist/assets/clients/` and `dist/assets/live/` as `<slug>.webp` and `<slug>-logo.webp`. Cards without a logo get a monogram in the site's brand colour.
 
@@ -118,7 +123,7 @@ See `ROADMAP.md` for the full list of next steps.
 ## Third-party services used at runtime
 
 - **Google Fonts:** Inter Tight, Instrument Serif and JetBrains Mono. Brand-kit fonts are loaded on demand.
-- **jsDelivr:** three.js and the Earth textures for the 3D scenes. If they can't load, the scenes fall back to lighter 2D versions.
+- **jsDelivr:** three.js (plus its bloom/output post-processing add-ons, resolved through an import map) and the Earth textures for the 3D scenes. If they can't load, the scenes fall back to lighter 2D versions.
 - **FormSubmit:** delivers contact form messages by email.
 
 ## License

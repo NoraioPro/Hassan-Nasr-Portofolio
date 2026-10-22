@@ -83,7 +83,7 @@ const workshops = [...home.matchAll(/<li class="ws-card[^"]*"[^>]*data-ws-id="([
 const person = { '@type': 'Person', '@id': abs('/#person'), name: 'Hassan Nasr', jobTitle: 'CTO', url: abs('/'),
   image: abs('/assets/og-image.jpg'), address: { '@type': 'PostalAddress', addressLocality: 'Oslo', addressCountry: 'NO' },
   worksFor: { '@type': 'Organization', '@id': abs('/#medioteq'), name: 'Medioteq AS', url: 'https://medioteq.no' },
-  sameAs: ['https://www.linkedin.com/in/h-nasr/', 'https://github.com/NoraioPro'],
+  sameAs: ['https://www.linkedin.com/in/h-nasr/'],
   knowsAbout: ['Artificial intelligence', 'Agentic AI', 'Healthcare technology', 'Enterprise software', 'Business automation', 'ERP and CRM integration', 'Microsoft Power Platform'] };
 const credLD = creds.map(c => ({ '@type': 'EducationalOccupationalCredential', name: c.title, credentialCategory: c.award ? 'award' : (c.kind || 'certificate'),
   recognizedBy: { '@type': 'Organization', name: c.issuer }, ...(c.verify ? { url: c.verify } : {}), ...(c.date ? { dateCreated: c.date } : {}) }));
@@ -114,7 +114,6 @@ const EXTRA = {
   <li><strong>Space Hackathon 25: Andøya Space</strong><span>14–16 October 2025. Certificate of Attendance (Norwegian Space Cluster / Andøya Space Education).</span></li>
   <li><strong>Galaxy Guide Buddy</strong><span>An exploration project linked from the orbit scene above. <a href="https://galaxy-guide-buddy-rho.vercel.app" rel="noopener" target="_blank">Explore Galaxy Guide Buddy ↗</a></span></li></ul>
   <!-- TODO: Hassan to add: what Eduspaceno.com does in more detail, team members, links to the Space Apps project page. --></section>
-  ${spaceRepos.length ? `<section class="page-block wrap" aria-labelledby="sp-repos"><h2 id="sp-repos">Space repositories</h2><ul class="page-list">${spaceRepos.map(r => `<li><a href="${esc(r.html_url || r.url || 'https://github.com/' + repoName(r))}" rel="noopener" target="_blank">${esc(repoName(r))} ↗</a>${r.description ? `<small>${esc(r.description)}</small>` : ''}</li>`).join('')}</ul></section>` : '<!-- TODO: Hassan to add: space repositories -->'}
   <section class="page-block wrap"><div class="page-cta"><a class="button button-primary" href="credentials/">See the space credentials</a><a class="button button-ghost" href="#contact">Start a conversation</a></div></section>`,
   medical: () => `<section class="page-block wrap" aria-labelledby="md-focus"><h2 id="md-focus">Focus areas</h2>
   <ul class="page-facts"><li><strong>Interoperability</strong><span>HL7 FHIR R4 and HL7 v2, connecting EHR/EPJ, medical devices (IoMT), lab and imaging systems.</span></li>

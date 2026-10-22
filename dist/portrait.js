@@ -1,5 +1,5 @@
 /* portrait.js: Hassan Nasr Neural Portrait. Restored from voice-agent/assets/avatar (three.js relief head),
-   embedded as a panel, re-tinted to the site palette, plus lip-sync (speechSynthesis) and captions. */
+   embedded as a panel in its original gold and teal, with a natural recorded voice, phoneme lip-sync and captions. */
 const root = document.querySelector('[data-np]');
 if (root) init().catch(err => { console.warn('Neural portrait fallback:', err?.message || err); root.classList.add('np-fallback'); });
 
@@ -12,7 +12,9 @@ async function init() {
   const canvas = $('.np-stage canvas');
   const BASE = root.dataset.base || 'assets/avatar/';
 
-  /* ---------- speech + captions (independent of WebGL so it works in fallback too) ---------- */
+  /* ---------- speech + captions (independent of WebGL so it works in fallback too) ----------
+     A pre-rendered natural voice plays when the panel has data-voice (voice.mp3 + voice.json with word starts and a
+     phoneme-accurate mouth track, rendered offline with Piper). Without it, the most natural male browser voice reads. */
   const SCRIPT = "Hi, I'm Hassan Nasr, CTO at Medioteq AS, based in Oslo. I'm a technology leader and founder. I build AI architecture for health, enterprise software and digital transformation, across Norway, the Gulf and Egypt. What I care about is intelligence that is actually useful: systems people can trust, built to fit real work. Move your cursor and I'll follow you. Click, and I'll wink.";
   const capEl = $('[data-np-captions]');
   const words = []; { const re = /\S+/g; let m; while ((m = re.exec(SCRIPT))) words.push({ w: m[0], i: m.index }); }
@@ -51,12 +53,37 @@ async function init() {
     return { starts, total: t };
   }
   let timed = null;
+
+  /* recorded voice: preloaded when the panel comes near the viewport, so Talk starts instantly */
+  const VOICE = root.dataset.voice ? BASE + root.dataset.voice : '';
+  let rec = null, recData = null, recReady = null, recMode = false, recFailed = false;
+  function loadRecording() {
+    if (!VOICE || recReady) return recReady;
+    rec = new Audio(); rec.preload = 'auto'; rec.src = VOICE + '.mp3';
+    rec.addEventListener('ended', () => { if (recMode) finish(); });
+    rec.addEventListener('error', () => { recFailed = true; if (recMode) { recMode = false; speakBrowser(); } });
+    recReady = fetch(VOICE + '.json').then(r => (r.ok ? r.json() : null)).then(j => (recData = j)).catch(() => null);
+    return recReady;
+  }
+  function sampleTrack(tr, t) { // [[t, jaw, wide, round], ...], smoothstep between keyframes
+    let lo = 0, hi = tr.length - 1;
+    if (t <= tr[0][0]) return tr[0];
+    if (t >= tr[hi][0]) return tr[hi];
+    while (lo < hi - 1) { const mid = (lo + hi) >> 1; if (tr[mid][0] <= t) lo = mid; else hi = mid; }
+    const a = tr[lo], b = tr[hi], k = Math.min(1, Math.max(0, (t - a[0]) / Math.max(1e-4, b[0] - a[0]))), e = k * k * (3 - 2 * k);
+    return [t, a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, a[3] + (b[3] - a[3]) * e];
+  }
+
+  /* browser voice fallback: prefer neural/natural male voices, never the old robotic ones */
   const synth = 'speechSynthesis' in window ? speechSynthesis : null;
+  const NATURAL = /natural|neural|online|enhanced|premium/i;
+  const MALE = /\b(andrew|brian|guy|christopher|eric|roger|steffan|davis|ryan|thomas|william|liam|connor|oliver|arthur|daniel|aaron|evan|nathan|tom|rishi|gordon|lee|alex|male)\b/i;
+  const ROBOTIC = /\b(david|mark|george|james|zira|hazel|fred|albert|bahh|bells|boing|bubbles|cellos|wobble|zarvox|trinoids|whisper|junior|ralph|kathy|princess|organ|superstar|jester|grandpa|grandma|rocko|eddy|reed|sandy|shelley|flo|espeak)\b/i;
   const pickVoice = () => {
-    const vs = synth?.getVoices() || []; const en = vs.filter(v => /^en(-|_|$)/i.test(v.lang));
-    const pref = [/Microsoft (Guy|Andrew|Brian|Christopher|Eric|Ryan|Davis|Roger|Steffan) Online/i, /Google UK English Male/i, /Daniel/i, /(Guy|Andrew|Brian|Ryan|Christopher|Davis|Eric|Thomas|Oliver|Alex|Fred|Arthur|Aaron|Rishi)/i, /male/i, /David|Mark|George|James/i];
-    for (const r of pref) { const v = en.find(v => r.test(v.name)); if (v) return v; }
-    return en[0] || vs[0] || null;
+    const all = synth?.getVoices() || [], en = all.filter(v => /^en(-|_|$)/i.test(v.lang));
+    const score = v => (NATURAL.test(v.name) ? 50 : 0) + (MALE.test(v.name) ? 60 : 0) + (/google/i.test(v.name) ? 15 : 0)
+      + (/^en[-_](us|gb)/i.test(v.lang) ? 10 : 0) - (ROBOTIC.test(v.name) && !NATURAL.test(v.name) ? 100 : 0);
+    return en.sort((a, b) => score(b) - score(a))[0] || all[0] || null;
   };
   synth?.addEventListener?.('voiceschanged', () => {});
   const talkBtn = $('[data-np-talk]'), stopBtn = $('[data-np-stop]'), voiceEl = $('[data-np-voice]');
@@ -69,43 +96,77 @@ async function init() {
   function capLoop() { if (!mouth.speaking || ready) return; driveMouth(performance.now() / 1000); requestAnimationFrame(capLoop); }
   function stop() {
     clearTimeout(timer); timed = null; visemes = []; mouth.target = 0; mouth.wTarget = 1;
+    recMode = false; if (rec && !rec.paused) rec.pause();
     if (synth) synth.cancel();
     setSpeaking(false);
   }
+  function finish() { recMode = false; highlight(words.length); setSpeaking(false); mouth.target = 0; mouth.wTarget = 1; }
   function speak() {
     stop(); curWord = -1; highlight(-1); capEl.hidden = false;
-    const now = performance.now() / 1000;
     boundarySeen = false;
+    if (VOICE && !recFailed) {
+      loadRecording();
+      try { rec.currentTime = 0; } catch {}
+      const played = rec.play(); // inside the click, so autoplay rules allow it
+      recMode = true; setSpeaking(true);
+      voiceEl.textContent = "Synthetic voice, not Hassan's own";
+      played?.catch?.(e => { if (!recMode || e?.name === 'AbortError') return; recMode = false; speakBrowser(); });
+      return;
+    }
+    speakBrowser();
+  }
+  function speakBrowser() {
+    const now = performance.now() / 1000;
     if (!synth) { voiceEl.textContent = 'Captions only (no speech in this browser)'; timed = timedRun(0, now); setSpeaking(true); return; }
-    const u = new SpeechSynthesisUtterance(SCRIPT);
-    const v = pickVoice(); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-GB';
-    u.rate = rate = 0.98; u.pitch = 0.92;
-    voiceEl.textContent = `Synthetic voice${v ? ` · ${v.name.replace(/Microsoft |Google | Online \(Natural\)|\(.*?\)/g, '').trim()}` : ''}`;
+    synth.cancel();
+    const v = pickVoice(); rate = 1.06;
+    voiceEl.textContent = `Synthetic voice${v ? ` · ${v.name.replace(/Microsoft |Google | Online \(Natural\)|\(.*?\)| - .*$/g, '').trim()}` : ''}`;
+    // one utterance per sentence: smoother in Chrome (no 15-second cut-off) and the queue plays back to back
+    const parts = [];
+    { const re = /[^.!?]+[.!?]+/g; let m; while ((m = re.exec(SCRIPT))) { const lead = m[0].length - m[0].trimStart().length; parts.push({ text: m[0].trim(), at: m.index + lead }); } }
     let started = false;
-    u.onstart = () => { started = true; setSpeaking(true); timer = setTimeout(() => { if (!boundarySeen && mouth.speaking) timed = timedRun(Math.max(0, curWord), performance.now() / 1000); }, 700); };
-    u.onboundary = e => {
-      if (e.name && e.name !== 'word') return;
-      boundarySeen = true; timed = null;
-      const k = words.findIndex((w, j) => w.i <= e.charIndex && (j === words.length - 1 || words[j + 1].i > e.charIndex));
-      if (k < 0) return;
-      highlight(k); visemes = []; vStart = performance.now() / 1000; scheduleWord(k, 0);
-    };
-    u.onend = () => { highlight(words.length); setSpeaking(false); mouth.target = 0; };
-    u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled') { voiceEl.textContent = 'Speech unavailable · captions only'; timed = timedRun(0, performance.now() / 1000); setSpeaking(true); } };
-    synth.speak(u);
+    parts.forEach((p, n) => {
+      const u = new SpeechSynthesisUtterance(p.text);
+      if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-GB';
+      u.rate = rate; u.pitch = 1;
+      if (n === 0) u.onstart = () => { started = true; setSpeaking(true); timer = setTimeout(() => { if (!boundarySeen && mouth.speaking) timed = timedRun(Math.max(0, curWord), performance.now() / 1000); }, 700); };
+      u.onboundary = e => {
+        if (e.name && e.name !== 'word') return;
+        boundarySeen = true; timed = null;
+        const ci = p.at + e.charIndex;
+        const k = words.findIndex((w, j) => w.i <= ci && (j === words.length - 1 || words[j + 1].i > ci));
+        if (k < 0) return;
+        highlight(k); visemes = []; vStart = performance.now() / 1000; scheduleWord(k, 0);
+      };
+      if (n === parts.length - 1) u.onend = () => finish();
+      u.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled') { voiceEl.textContent = 'Speech unavailable · captions only'; timed = timedRun(0, performance.now() / 1000); setSpeaking(true); } };
+      synth.speak(u);
+    });
     setSpeaking(true);
-    setTimeout(() => { if (!started && mouth.speaking && !timed && !boundarySeen) { voiceEl.textContent += ' · captions timed (no audio events)'; timed = timedRun(0, performance.now() / 1000); } }, 1500);
+    setTimeout(() => { if (!started && mouth.speaking && !timed && !boundarySeen && !recMode) { voiceEl.textContent += ' · captions timed (no audio events)'; timed = timedRun(0, performance.now() / 1000); } }, 1500);
   }
   talkBtn.addEventListener('click', () => mouth.speaking ? stop() : speak());
+  ['pointerenter', 'focus', 'touchstart'].forEach(ev => talkBtn.addEventListener(ev, loadRecording, { passive: true }));
   stopBtn.addEventListener('click', stop);
   addEventListener('pagehide', stop);
   function driveMouth(now) {
+    let k = 0.38, kw = 0.3;
     if (!mouth.speaking) { mouth.target = 0; mouth.wTarget = 1; }
+    else if (recMode) {
+      const t = rec.currentTime, d = recData;
+      if (d?.words?.length === words.length) { let w = -1; while (w + 1 < words.length && d.words[w + 1] <= t + 0.05) w++; highlight(w); }
+      else if (rec.duration) highlight(Math.min(words.length - 1, Math.floor(t / rec.duration * words.length)));
+      if (d?.track?.length) { // phoneme-accurate: jaw opens the mouth, rounding narrows it, spreading widens it
+        const [, jaw, wide, round] = sampleTrack(d.track, t + 0.035);
+        mouth.target = rec.paused ? 0 : Math.min(1, jaw); mouth.wTarget = Math.max(0.42, Math.min(1.1, 1 - round * 0.55 + (wide - 0.4) * 0.3));
+        k = 0.5; kw = 0.42;
+      } else if (!rec.paused) { mouth.target = 0.3 + 0.25 * Math.sin(now * 19) * Math.sin(now * 7.3); mouth.wTarget = 1; }
+    }
     else {
       if (timed) {
-        const t = now - vStart; let k = -1;
-        for (const [w, st] of timed.starts) if (st <= t) k = w; else break;
-        highlight(k);
+        const t = now - vStart; let w = -1;
+        for (const [j, st] of timed.starts) if (st <= t) w = j; else break;
+        highlight(w);
         if (t > timed.total + 0.2) { timed = null; highlight(words.length); setSpeaking(false); }
       }
       const t = now - vStart; let cur = null;
@@ -113,8 +174,8 @@ async function init() {
       if (cur) { const amp = 0.78 + 0.22 * Math.sin(now * 23) * Math.sin(now * 9.7); mouth.target = cur.v[0] * amp; mouth.wTarget = cur.v[1]; }
       if (visemes.length && t > visemes[visemes.length - 1].t + 0.25) mouth.target *= 0.9;
     }
-    mouth.open += (mouth.target - mouth.open) * 0.38;
-    mouth.width += (mouth.wTarget - mouth.width) * 0.3;
+    mouth.open += (mouth.target - mouth.open) * k;
+    mouth.width += (mouth.wTarget - mouth.width) * kw;
     const lips = $('.np-lips'); if (lips) lips.style.setProperty('--open', mouth.open.toFixed(3));
   }
 
@@ -122,15 +183,23 @@ async function init() {
   /* ---------- WebGL head ---------- */
   // Load three.js only when the portrait is near the viewport.
   await new Promise(res => { const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); res(); } }, { rootMargin: '600px 0px' }); io.observe(root); });
+  loadRecording();
   let THREE;
   try { THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'); } catch (e) { throw new Error('three.js failed to load'); }
+  // Same look as the original artifact: render -> soft bloom -> OutputPass (linear to sRGB). Without import maps, render directly.
+  let POST = null;
+  try {
+    const dir = 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/';
+    const [a, b, c, d] = await Promise.all(['EffectComposer', 'RenderPass', 'UnrealBloomPass', 'OutputPass'].map(n => import(dir + n + '.js')));
+    POST = { EffectComposer: a.EffectComposer, RenderPass: b.RenderPass, UnrealBloomPass: c.UnrealBloomPass, OutputPass: d.OutputPass };
+  } catch (e) { POST = null; }
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', alpha: false }); } catch (e) { throw new Error('WebGL unavailable'); }
+  try { renderer = new THREE.WebGLRenderer({ canvas, antialias: !POST, powerPreference: 'high-performance', alpha: false }); } catch (e) { throw new Error('WebGL unavailable'); }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.setClearColor(0x050912, 1);
+  renderer.setClearColor(0x07090b, 1);
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050912);
-  scene.fog = new THREE.FogExp2(0x050912, 0.09);
+  scene.background = new THREE.Color(0x07090b);
+  scene.fog = new THREE.FogExp2(0x07090b, 0.09);
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
   camera.position.set(0, 0.15, 6.2);
   const meshData = await (await fetch(BASE + 'mesh.json')).json();
@@ -160,7 +229,7 @@ const headUniforms = {
   uScan:{value:1}, uRes:{value:new THREE.Vector2(IW,IH)}, uPW:{value:PW}, uPH:{value:PH},
   uE0:{value:new THREE.Vector4(E[0].c[0],E[0].c[1],E[0].ang,E[0].hw)}, uE0b:{value:new THREE.Vector2(E[0].tu,E[0].tl)},
   uE1:{value:new THREE.Vector4(E[1].c[0],E[1].c[1],E[1].ang,E[1].hw)}, uE1b:{value:new THREE.Vector2(E[1].tu,E[1].tl)},
-  uGold:{value:new THREE.Color(0xff7a45)}, uSignal:{value:new THREE.Color(0x6ea0ff)},
+  uGold:{value:new THREE.Color(0xcaa65e)}, uSignal:{value:new THREE.Color(0x63d6d0)},
   uMouth:{value:new THREE.Vector3(0,1,0)}, uMC:{value:new THREE.Vector4(MC[0],MC[1],MHW,CHIN)}
 };
 const headMat = new THREE.ShaderMaterial({
@@ -290,7 +359,7 @@ const lmPos = P.map(p => uvToLocal(p[0], p[1], p[2], 0.03));
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
   g.setAttribute('aDist', new THREE.Float32BufferAttribute(dist,1));
   const m = new THREE.ShaderMaterial({
-    uniforms:{ uTime:headUniforms.uTime, uScan:headUniforms.uScan, uA:{value:new THREE.Color(0x6ea0ff)}, uB:{value:new THREE.Color(0xff7a45)} },
+    uniforms:{ uTime:headUniforms.uTime, uScan:headUniforms.uScan, uA:{value:new THREE.Color(0x63d6d0)}, uB:{value:new THREE.Color(0xcaa65e)} },
     transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
     vertexShader:`attribute float aDist; varying float vD; void main(){ vD=aDist; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
     fragmentShader:`uniform float uTime, uScan; uniform vec3 uA,uB; varying float vD;
@@ -309,7 +378,7 @@ const lmPos = P.map(p => uvToLocal(p[0], p[1], p[2], 0.03));
     transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
     vertexShader:`attribute float aSeed; uniform float uTime,uPR; varying float vA;
       void main(){ vA = pow(0.5+0.5*sin(uTime*2.2+aSeed*40.0), 6.0); gl_PointSize = (1.5+vA*3.5)*uPR; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-    fragmentShader:`uniform float uScan; varying float vA; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,0.,d)*(0.1+vA*0.35)*uScan; gl_FragColor=vec4(vec3(.6,.75,1.)*a,a); }`
+    fragmentShader:`uniform float uScan; varying float vA; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,0.,d)*(0.1+vA*0.35)*uScan; gl_FragColor=vec4(vec3(.55,.95,.92)*a,a); }`
   });
   headInner.add(new THREE.Points(pg, pm));
 }
@@ -341,7 +410,7 @@ let synapseCount = 0;
   g.setAttribute('aT', new THREE.Float32BufferAttribute(t,1));
   g.setAttribute('aPh', new THREE.Float32BufferAttribute(ph,1));
   const m = new THREE.ShaderMaterial({
-    uniforms:{ uTime:headUniforms.uTime, uA:{value:new THREE.Color(0x6ea0ff)}, uB:{value:new THREE.Color(0xff7a45)} },
+    uniforms:{ uTime:headUniforms.uTime, uA:{value:new THREE.Color(0x63d6d0)}, uB:{value:new THREE.Color(0xcaa65e)} },
     transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
     vertexShader:`attribute float aT, aPh; varying float vT, vPh; void main(){ vT=aT; vPh=aPh; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
     fragmentShader:`uniform float uTime; uniform vec3 uA,uB; varying float vT, vPh;
@@ -359,7 +428,7 @@ let synapseCount = 0;
       void main(){ vS=aSeed; vA = 0.35+0.65*pow(0.5+0.5*sin(uTime*1.3+aSeed*30.),4.); vec4 mv=modelViewMatrix*vec4(position,1.);
       gl_PointSize = min((3.0+vA*5.0)*uPR*(6.0/-mv.z), 10.0*uPR); gl_Position=projectionMatrix*mv; }`,
     fragmentShader:`varying float vA; varying float vS; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,.0,d)*vA;
-      vec3 c = vS>0.7 ? vec3(1.,.48,.27) : vec3(.43,.63,1.); gl_FragColor=vec4(c*a,a); }`
+      vec3 c = vS>0.7 ? vec3(.79,.65,.37) : vec3(.39,.84,.82); gl_FragColor=vec4(c*a,a); }`
   })));
 }
 
@@ -386,7 +455,7 @@ let synapseCount = 0;
         gl_PointSize = min((1.0+aSeed.x*2.2)*uPR*(6.0/-mv.z), 4.0*uPR);
         gl_Position = projectionMatrix*mv; }`,
     fragmentShader:`varying float vA; varying float vG; void main(){ float d=length(gl_PointCoord-.5); float a=smoothstep(.5,0.,d)*vA*0.8;
-      vec3 c = mix(vec3(.45,.65,1.), vec3(1.,.55,.3), vG); gl_FragColor=vec4(c*a,a); }`
+      vec3 c = mix(vec3(.45,.9,.88), vec3(.86,.7,.4), vG); gl_FragColor=vec4(c*a,a); }`
   });
   const pts = new THREE.Points(g, m); pts.frustumCulled = false; stageGroup.add(pts);
 }
@@ -409,7 +478,7 @@ const orbit = new THREE.Group(); headGroup.add(orbit);
   await document.fonts.load('500 44px "JetBrains Mono"').catch(()=>{});
   cx.font = '500 44px "JetBrains Mono", monospace'; cx.textBaseline='middle';
   let x = 0; const w = cx.measureText(words).width;
-  cx.fillStyle = '#ff7a45';
+  cx.fillStyle = '#caa65e';
   while (x < cv.width){ cx.fillText(words, x, 50); x += w; }
   const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   const ring = new THREE.Mesh(new THREE.CylinderGeometry(1.62,1.62,0.085,160,1,true),
@@ -417,19 +486,32 @@ const orbit = new THREE.Group(); headGroup.add(orbit);
   ring.position.y = -0.62; ring.rotation.x = 0.16; ring.name='textRing';
   orbit.add(ring);
   const halo = new THREE.Mesh(new THREE.RingGeometry(1.34,1.345,256),
-    new THREE.MeshBasicMaterial({ color:0xff7a45, transparent:true, opacity:0.45, side:THREE.DoubleSide, depthWrite:false }));
+    new THREE.MeshBasicMaterial({ color:0xcaa65e, transparent:true, opacity:0.45, side:THREE.DoubleSide, depthWrite:false }));
   halo.position.set(0, 0.05, -0.55); orbit.add(halo);
   const halo2 = new THREE.Mesh(new THREE.RingGeometry(1.52,1.524,256, 1, 0, Math.PI*1.35),
-    new THREE.MeshBasicMaterial({ color:0x6ea0ff, transparent:true, opacity:0.5, side:THREE.DoubleSide, depthWrite:false }));
+    new THREE.MeshBasicMaterial({ color:0x63d6d0, transparent:true, opacity:0.5, side:THREE.DoubleSide, depthWrite:false }));
   halo2.position.set(0, 0.05, -0.6); halo2.name='halo2'; orbit.add(halo2);
 }
 
+
+  /* ---------- post: bloom + output colour space, as in the original artifact ---------- */
+  let composer = null, bloom = null;
+  if (POST) {
+    try {
+      composer = new POST.EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { samples: 4, type: THREE.HalfFloatType }));
+      composer.addPass(new POST.RenderPass(scene, camera));
+      bloom = new POST.UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.5, 0.82);
+      composer.addPass(bloom);
+      composer.addPass(new POST.OutputPass());
+    } catch (e) { composer = null; }
+  }
+  root.classList.toggle('np-post', !!composer);
 
   /* ---------- layout ---------- */
   const stageEl = $('.np-stage');
   function resize() {
     const w = stageEl.clientWidth, h = stageEl.clientHeight; if (!(w > 0 && h > 0)) return;
-    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false); if (composer) { composer.setSize(w, h); bloom.setSize(w, h); } camera.aspect = w / h; camera.updateProjectionMatrix();
     const s = Math.min(1, camera.aspect * 1.05); stageGroup.position.set(0, -0.22, 0); stageGroup.scale.setScalar(s * 0.92);
     kick();
   }
@@ -499,7 +581,7 @@ const orbit = new THREE.Group(); headGroup.add(orbit);
     orbit.rotation.y = -look.x * 0.2;
     const dust = scene.getObjectByName('dust'); dust.rotation.y = headUniforms.uTime.value * 0.01; dust.position.x = -look.x * 0.15;
     camera.position.x = look.x * 0.12; camera.position.y = 0.15 + look.y * 0.08; camera.lookAt(0, 0.1 + stageGroup.position.y * 0.3, 0);
-    renderer.render(scene, camera);
+    if (composer) composer.render(); else renderer.render(scene, camera);
     if (t - hudT > 0.1) {
       hudT = t;
       hud.yaw.textContent = fmt(THREE.MathUtils.radToDeg(headGroup.rotation.y));

@@ -172,21 +172,31 @@
   if (comboGrid) {
     const cards = $$(':scope > li', comboGrid);
     const sChips = $$('[data-status-filter]'), cChips = $$('[data-cat-filter]');
-    const countEl = $('#deployment-count'), emptyEl = $('#deployment-empty');
-    const state = { status: (sChips.find(c => c.getAttribute('aria-pressed') === 'true') || {}).dataset?.statusFilter || 'all', cat: 'all' };
+    const countEl = $('#deployment-count'), emptyEl = $('#deployment-empty'), clearEl = $('.combo-clear'), rail = $('[data-combo="cat-filter"]');
+    const DEFAULT = { status: (sChips.find(c => c.getAttribute('aria-pressed') === 'true') || {}).dataset?.statusFilter || 'all', cat: 'all' };
+    const state = { ...DEFAULT };
     const match = (card, s, c) => (s === 'all' || card.dataset.status === s) && (c === 'all' || card.dataset.cat === c);
+    // industry row: on phones it scrolls sideways; fade only the edges that hide more chips
+    const fades = () => { if (!rail) return; const max = rail.scrollWidth - rail.clientWidth; rail.classList.toggle('fade-l', rail.scrollLeft > 4); rail.classList.toggle('fade-r', max > 4 && rail.scrollLeft < max - 4); };
+    const reveal = ch => { if (!rail || rail.scrollWidth <= rail.clientWidth) return; const d = ch.getBoundingClientRect().left - rail.getBoundingClientRect().left - (rail.clientWidth - ch.offsetWidth) / 2; rail.scrollBy({ left: d, behavior: paused ? 'auto' : 'smooth' }); };
     const apply = () => {
       let n = 0;
       cards.forEach(card => { const ok = match(card, state.status, state.cat); card.hidden = !ok; if (ok) n++; });
       sChips.forEach(ch => { const k = ch.dataset.statusFilter; ch.setAttribute('aria-pressed', String(k === state.status)); const m = cards.filter(cd => match(cd, k, state.cat)).length; ch.lastElementChild.textContent = m; ch.classList.toggle('is-empty', !m); });
-      cChips.forEach(ch => { const k = ch.dataset.catFilter; ch.setAttribute('aria-pressed', String(k === state.cat)); const m = cards.filter(cd => match(cd, state.status, k)).length; ch.lastElementChild.textContent = m; ch.classList.toggle('is-empty', !m); });
-      if (countEl) countEl.textContent = `Showing ${n} of ${cards.length} sites`;
+      // industries with nothing to show for this status are hidden (unless selected), so the row stays short
+      cChips.forEach(ch => { const k = ch.dataset.catFilter; ch.setAttribute('aria-pressed', String(k === state.cat)); const m = cards.filter(cd => match(cd, state.status, k)).length; ch.lastElementChild.textContent = m; ch.classList.toggle('is-empty', !m); ch.hidden = !m && k !== 'all' && k !== state.cat; });
+      if (countEl) countEl.textContent = `${n} of ${cards.length} sites`;
       if (emptyEl) emptyEl.hidden = n !== 0;
+      if (clearEl) clearEl.hidden = state.status === DEFAULT.status && state.cat === DEFAULT.cat;
+      fades();
     };
     const run = () => { if (document.startViewTransition && !paused) { const t = document.startViewTransition(apply); t.ready.catch(() => {}); t.finished.catch(() => {}); } else apply(); };
     sChips.forEach(ch => ch.addEventListener('click', () => { state.status = ch.dataset.statusFilter; run(); }));
-    cChips.forEach(ch => ch.addEventListener('click', () => { state.cat = ch.dataset.catFilter; run(); }));
+    cChips.forEach(ch => ch.addEventListener('click', () => { state.cat = ch.dataset.catFilter; run(); reveal(ch); }));
     $('.combo-reset')?.addEventListener('click', () => { state.status = 'all'; state.cat = 'all'; run(); });
+    clearEl?.addEventListener('click', () => { Object.assign(state, DEFAULT); run(); rail?.scrollTo({ left: 0, behavior: paused ? 'auto' : 'smooth' }); });
+    rail?.addEventListener('scroll', fades, { passive: true });
+    addEventListener('resize', fades);
     apply();
   }
 
