@@ -106,11 +106,11 @@ The site is fully static and `dist/` is committed already built.
 
 **Vercel:** import this repository and deploy. No settings are needed: `vercel.json` tells Vercel to skip install and build and to publish `dist/`. If the project was created earlier with other settings, open **Project → Settings → Build & Development** and make sure nothing overrides it (Framework *Other*, build and output overrides off), then redeploy.
 
-`vercel.json` also sets security headers (HSTS, nosniff, frame and referrer policy, permissions policy), cache headers for `min/`, `assets/` and `app.min.css`, and a permanent redirect from `www.hnasr.com` to `hnasr.com`.
+`vercel.json` also sets security headers (HSTS, nosniff, frame and referrer policy, permissions policy) and cache headers for `min/`, `assets/` and `app.min.css`. Choose which of `hnasr.com` / `www.hnasr.com` is primary in Vercel's Domains settings (a redirect in `vercel.json` as well would loop).
 
 **Domain:** in Vercel → Project → Settings → Domains add `hnasr.com` and `www.hnasr.com`, then create the DNS records Vercel shows at your registrar (usually an `A` record for the apex and a `CNAME` for `www`). HTTPS is issued automatically.
 
-Any other static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder. The headers and redirect in `vercel.json` are Vercel-only.
+Any other static host (Netlify, GitHub Pages, Cloudflare Pages, nginx) works the same way: serve the `dist/` folder. The headers in `vercel.json` are Vercel-only.
 
 ## Before going live
 

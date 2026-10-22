@@ -7,13 +7,13 @@ Effort: S (< half a day) · M (1–3 days) · L (1–2 weeks). Impact: ★ low �
 
 | # | Item | Effort | Impact | Owner |
 |---|------|--------|--------|-------|
-| 1 | Connect the domain: add `hnasr.com` and `www.hnasr.com` in Vercel → Project → Settings → Domains and set the DNS records Vercel shows (`www` redirects to the apex via `vercel.json`) | S | ★★★ | Hassan |
+| 1 | Connect the domain: add `hnasr.com` and `www.hnasr.com` in Vercel → Project → Settings → Domains and set the DNS records Vercel shows (pick the primary domain there; Vercel redirects the other) | S | ★★★ | Hassan |
 | 2 | Activate FormSubmit: send one real message from the contact form, click the activation email | S | ★★★ | Hassan |
 | 3 | Submit `https://hnasr.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools (verify the domain with a DNS TXT record) | S | ★★ | Hassan |
 | 4 | Fill the `TODO: Hassan to add` comments on the internal pages (Eduspaceno details, Medioteq material, robotics goals, workshop agendas) | M | ★★★ | Hassan |
 | 5 | Add a real photo-based OG image if preferred over the generated one (`dist/assets/og-image.jpg`, 1200×630) | S | ★★ | Hassan |
 
-**Done:** production domain `https://hnasr.com` set in `site.config.mjs`; Vercel config (`vercel.json`) with security headers, caching and www → apex redirect; `404.html`, `llms.txt`, sitemap, robots and JSON-LD generated on build; titles ≤ 60 and descriptions ≤ 155 characters; unused originals moved to `source-assets/` (dist 13.8 MB → 4.4 MB).
+**Done:** production domain `https://hnasr.com` set in `site.config.mjs`; Vercel config (`vercel.json`) with security headers and caching; `404.html`, `llms.txt`, sitemap, robots and JSON-LD generated on build; titles ≤ 60 and descriptions ≤ 155 characters; unused originals moved to `source-assets/` (dist 13.8 MB → 4.4 MB).
 
 ## 30 days
 

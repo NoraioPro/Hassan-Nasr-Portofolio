@@ -43,11 +43,16 @@
 
   /* ---------- Header, progress, active section ---------- */
   const header = $('.header');
+  const progressBar = $('.progress-bar span');
   let scrollQueued = false;
+  let maxCache = -1;
+  const scrollMax = () => maxCache < 0 ? (maxCache = document.documentElement.scrollHeight - innerHeight) : maxCache;
+  new ResizeObserver(() => { maxCache = -1; }).observe(document.body);
+  addEventListener('resize', () => { maxCache = -1; }, { passive: true });
   function onScroll() {
     scrollQueued = false;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    root.style.setProperty('--progress', max > 0 ? (scrollY / max).toFixed(4) : 0);
+    const max = scrollMax();
+    progressBar.style.transform = `scaleX(${max > 0 ? (scrollY / max).toFixed(4) : 0})`;
     header.classList.toggle('is-scrolled', scrollY > 24);
   }
   addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(onScroll); } }, { passive: true });
@@ -73,11 +78,27 @@
   nav.addEventListener('click', e => { if (e.target.closest('a')) closeMenu(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('menu-open')) { closeMenu(); menu.focus(); } });
 
+  /* ---------- Mobile quick-contact dock: appears after the hero, steps aside for the menu and the contact section ---------- */
+  const dock = $('[data-dock]');
+  if (dock) {
+    let contactInView = false, dockQueued = false;
+    const updDock = () => {
+      dockQueued = false;
+      const after = Math.min(320, Math.max(0, (document.documentElement.scrollHeight - innerHeight) * .25));
+      dock.classList.toggle('is-on', scrollY >= after && !contactInView && !nav.classList.contains('menu-open'));
+    };
+    const contactSec = $('#contact');
+    if (contactSec) new IntersectionObserver(([e]) => { contactInView = e.isIntersecting; updDock(); }, { threshold: .12 }).observe(contactSec);
+    addEventListener('scroll', () => { if (!dockQueued) { dockQueued = true; requestAnimationFrame(updDock); } }, { passive: true });
+    new MutationObserver(updDock).observe(nav, { attributes: true, attributeFilter: ['class'] });
+    updDock();
+  }
+
   /* ---------- Reveal on scroll ---------- */
   const revealTargets = ['.section-head', '.frontier-copy', '.instrument', '.about-copy', '.focus-list li', '.project', '.deployments-heading', '.deployment-card', '.index-heading', '.repo-controls', '.topics li', '.contact h2', '.contact-bottom', '.stat', '.career-map', '.achievements li', '.clients-stats > div', '.client-filters', '.client-card'];
   const revealer = new IntersectionObserver(entries => entries.forEach(entry => {
     if (entry.isIntersecting) { entry.target.classList.add('is-visible'); revealer.unobserve(entry.target); }
-  }), { rootMargin: '0px 0px -8% 0px' });
+  }), { rootMargin: '0px 0px 25% 0px' });
   revealTargets.forEach(selector => $$(selector).forEach((el, i) => {
     el.dataset.reveal = '';
     const siblings = el.parentElement ? [...el.parentElement.children].indexOf(el) : 0;
@@ -464,6 +485,7 @@
 
   /* ---------- Scroll-linked scenes: frontier tabs + journey ---------- */
   const scrollScenes = [];
+  const setVar = (el, name, value) => { const key = `_${name}`; if (el[key] === value) return; el[key] = value; el.style.setProperty(name, value); };
   const progressOf = (el, startAt = .7, endAt = .3) => { // 0 when el top hits startAt·vh, 1 when its bottom hits endAt·vh
     const r = el.getBoundingClientRect();
     return clamp((innerHeight * startAt - r.top) / (r.height + innerHeight * (startAt - endAt)), 0, 1);
@@ -480,17 +502,21 @@
     const indicator = $('.tab-indicator', tabBar);
     const tabs = $$('.frontier-tab', tabBar);
     const panels = tabs.map(tab => $(tab.hash));
+    let placed = null;
     const placeIndicator = () => {
       const current = tabs.find(tab => tab.getAttribute('aria-current') === 'true');
       tabBar.classList.toggle('has-active', !!current);
-      if (!current) return;
+      if (!current || current === placed) return;
+      placed = current;
       tabBar.style.setProperty('--ix', `${current.offsetLeft}px`);
       tabBar.style.setProperty('--iw', `${current.offsetWidth}px`);
       tabBar.style.setProperty('--active-glow', `color-mix(in srgb, ${getComputedStyle(current).getPropertyValue('--tab-accent').trim() || '#ff5b26'} 35%, transparent)`);
     };
+    addEventListener('resize', () => { placed = null; placeIndicator(); }, { passive: true });
     new MutationObserver(placeIndicator).observe(tabBar, { subtree: true, attributes: true, attributeFilter: ['aria-current'] });
     scrollScenes.push(() => {
-      panels.forEach((panel, i) => tabs[i].style.setProperty('--p', progressOf(panel, .6, .4).toFixed(3)));
+      const ps = panels.map(panel => progressOf(panel, .6, .4).toFixed(3));
+      ps.forEach((v, i) => setVar(tabs[i], '--p', v));
       placeIndicator();
     });
   }
@@ -509,12 +535,13 @@
     setYear(milestones[0].dataset.year);
     scrollScenes.push(() => {
       const p = progressOf(timeline, .55, .55);
-      timeline.style.setProperty('--tp', p.toFixed(4));
-      meter.style.setProperty('--jp', p.toFixed(4));
       const line = innerHeight * .55;
+      const tops = milestones.map(m => m.getBoundingClientRect().top);
       let active = milestones[0];
-      milestones.forEach(m => {
-        const lit = m.getBoundingClientRect().top + 40 < line;
+      setVar(timeline, '--tp', p.toFixed(3));
+      setVar(meter, '--jp', p.toFixed(3));
+      milestones.forEach((m, i) => {
+        const lit = tops[i] + 40 < line;
         m.classList.toggle('is-lit', lit);
         if (lit) active = m;
       });
@@ -530,17 +557,19 @@
   }
   // Worlds: portal entry progress, and the page colour follows the world you are in
   const worlds = $$('.world');
+  let pageBg = '';
   const WORLD_BG = { orbit: '#03050b', clinic: '#06100e', lab: '#0b0a08', twin: '#07051a' };
   scrollScenes.push(() => {
     let current = null;
-    worlds.forEach(w => {
-      const r = w.getBoundingClientRect();
+    const rects = worlds.map(w => w.getBoundingClientRect());
+    worlds.forEach((w, i) => {
+      const r = rects[i];
       const enter = paused ? 1 : clamp((innerHeight - r.top) / (innerHeight * .85), 0, 1);
-      w.style.setProperty('--enter', enter.toFixed(3));
+      setVar(w, '--enter', enter.toFixed(2));
       if (r.top < innerHeight * .5 && r.bottom > innerHeight * .5) current = w;
     });
-    if (current) root.style.setProperty('--page-bg', WORLD_BG[current.dataset.world]);
-    else root.style.removeProperty('--page-bg');
+    const bg = current ? WORLD_BG[current.dataset.world] : '';
+    if (bg !== pageBg) { pageBg = bg; if (bg) root.style.setProperty('--page-bg', bg); else root.style.removeProperty('--page-bg'); }
   });
   runScenes();
 

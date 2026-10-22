@@ -5,9 +5,6 @@
   "buildCommand": null,
   "outputDirectory": "dist",
   "trailingSlash": true,
-  "redirects": [
-    { "source": "/:path*", "has": [{ "type": "host", "value": "www.hnasr.com" }], "destination": "https://hnasr.com/:path*", "permanent": true }
-  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -195,7 +195,8 @@ async function init() {
   } catch (e) { POST = null; }
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: !POST, powerPreference: 'high-performance', alpha: false }); } catch (e) { throw new Error('WebGL unavailable'); }
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.debug.checkShaderErrors = false; // avoid synchronous shader-status stalls
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.setClearColor(0x07090b, 1);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x07090b);
