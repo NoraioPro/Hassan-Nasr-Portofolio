@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const DIST = 'dist';
-const BASE = 'https://hnasr.com';
+const BASE = 'https://www.hnasr.com';
 const labs = JSON.parse(fs.readFileSync('labs/labs.json', 'utf8'));
 const esc = s => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
