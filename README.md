@@ -16,6 +16,7 @@ The site is static HTML, CSS and JavaScript in `dist/`. There is no framework an
 | **Journey** | Career timeline 2005 → today with a year odometer, career map and LinkedIn photo galleries |
 | **Credentials** | Awards and certifications with verify links |
 | **Selected work** | Featured projects and product families |
+| **Labs & games** | Interactive pages, each with its own URL under `/labs/`, grouped on the `/labs/` gallery into five sections: science and the body (Corpus, Heart & Brain, Inner Voyage, LIFE, CareOS Twin replay); faith, history and economy (Humanity, Miracles in the Quran, Norway Economy Simulator); space and 3D architecture (NORGE EVA Build Lab, ASTRA TWIN, Lunar Site Navigator, two DWG-based commercial buildings); games and worlds (Night Circuit Arcade, Norsk Quest, Robot Workshop, Crucible Frontiers, Gorgov Valley of Creation); tools and dashboards (Harness Builder, Heimdall Network Watch). Source pages live in `labs/src/`, with the manifest in `labs/labs.json` |
 | **Live on the web** | Live client websites and own deployments with screenshots, logos and extracted **brand kits** (colour palette + typography) on flip cards |
 | **Workshops** | AI workshops for leaders, readiness check and booking |
 | **Contact** | Contact form (FormSubmit) |
@@ -45,6 +46,7 @@ clients.json              ← client websites (category, screenshot, logo, brand
 site.config.mjs           ← production URL (BASE_URL = https://hnasr.com)
 update-portfolio.mjs      ← regenerates projects + live section, then runs the two build steps
 build-pages.mjs           ← internal pages, SEO tags, JSON-LD, sitemap.xml, robots.txt, manifest, 404.html, llms.txt
+build-labs.mjs            ← interactive labs: dist/labs/<slug>/ pages, /labs/ gallery, sitemap and llms.txt entries
 build.mjs                 ← CSS bundle (app.min.css) + minified scripts (dist/min/) via esbuild
 site-cards.mjs            ← shared markup for the website cards and brand kits
 preview.mjs               ← tiny local web server
@@ -97,6 +99,7 @@ node audit-links.mjs
 | Client websites | `clients.json` (set `"hidden": true` to keep one but not show it) | `node update-portfolio.mjs` |
 | Any other section text | `dist/index.html` directly | `node update-portfolio.mjs` |
 | Styles / behaviour | `dist/*.css` / `dist/*.js` (not the files in `dist/min/`) | `node build.mjs` |
+| An interactive lab | `labs/src/<slug>.html` (the page as exported) and its entry in `labs/labs.json` (title, description, order) | `node update-portfolio.mjs` |
 | Neural Portrait words | `SCRIPT` in `dist/portrait.js` **and** in `make-voice.py` (keep them identical) | `make-voice.py dist/assets/avatar` with the voice-agent Python, then `node build.mjs` |
 
 Screenshots and logos for website cards live in `dist/assets/clients/` and `dist/assets/live/` as `<slug>.webp` and `<slug>-logo.webp`. Cards without a logo get a monogram in the site's brand colour.

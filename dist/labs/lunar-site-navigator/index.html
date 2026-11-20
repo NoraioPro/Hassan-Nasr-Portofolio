@@ -1,0 +1,492 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="description" content="Pick dates and candidate sites near the lunar south pole, then compare sunlight and Earth-in-view windows. Synthetic data."><link rel="canonical" href="https://hnasr.com/labs/lunar-site-navigator/"><meta property="og:title" content="Lunar Site Navigator · Hassan Nasr"><meta property="og:description" content="Pick dates and candidate sites near the lunar south pole, then compare sunlight and Earth-in-view windows. Synthetic data."><meta property="og:url" content="https://hnasr.com/labs/lunar-site-navigator/"><meta property="og:image" content="https://hnasr.com/assets/labs/lunar-site-navigator.webp"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="robots" content="index,follow"><style id="hn-back">.hn-back{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:inline-flex;align-items:center;gap:0;height:40px;min-width:40px;padding:0 12px;box-sizing:border-box;border-radius:999px;background:rgba(9,11,14,.78);color:#ece6d8;border:1px solid rgba(255,255,255,.18);font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s}.hn-back:hover{border-color:rgba(255,255,255,.45)}.hn-back:focus-visible{outline:2px solid #ff5b26;outline-offset:2px}.hn-back-t{display:inline-block;max-width:0;overflow:hidden;opacity:0;margin-left:0;transition:max-width .35s,opacity .25s,margin-left .35s}.hn-back:hover .hn-back-t,.hn-back:focus-visible .hn-back-t{max-width:90px;opacity:1;margin-left:8px}@media (max-width:760px){.hn-back-t{max-width:90px;opacity:1;margin-left:8px}}@media (prefers-reduced-motion:reduce){.hn-back,.hn-back-t{transition:none}}.hn-back[data-corner="bl"]{right:auto;left:calc(12px + env(safe-area-inset-left,0px))}.hn-back[data-corner="tr"]{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="tl"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="mr"]{bottom:auto;top:50%;transform:translateY(-50%)}.hn-back[data-corner="ml"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%)}.hn-back.is-compact{width:40px;padding:0;justify-content:center}.hn-back.is-compact .hn-back-t{max-width:0!important;opacity:0!important;margin-left:0!important}</style></head><body><a class="hn-back" href="/labs/" aria-label="All labs"><span aria-hidden="true">←</span><span class="hn-back-t">All labs</span></a><script id="hn-back-js">(()=>{const b=document.querySelector('.hn-back');if(!b||!document.elementsFromPoint||!window.MutationObserver)return;
+const CTRL='button,a[href],input,select,textarea,[role="button"],[role="tab"],[role="slider"],[role="link"]';
+const hits=()=>{const r=b.getBoundingClientRect();let n=0;for(const[x,y]of[[r.left+r.width/2,r.top+r.height/2],[r.left+3,r.top+3],[r.right-3,r.top+3],[r.left+3,r.bottom-3],[r.right-3,r.bottom-3]]){if(document.elementsFromPoint(x,y).some(e=>e!==b&&!b.contains(e)&&e.matches(CTRL)))n++}return n};
+const P=['br','bl','tr','tl','mr','ml'];
+const place=()=>{b.dataset.corner=b.dataset.corner||'br';if(!hits())return;
+for(const compact of[b.classList.contains('is-compact'),true]){b.classList.toggle('is-compact',compact);for(const c of P){b.dataset.corner=c;if(!hits())return}}
+let best=['br',1e9];for(const c of P){b.dataset.corner=c;const n=hits();if(n<best[1])best=[c,n]}b.dataset.corner=best[0]};
+let last=0,q=0;const soon=()=>{if(q)return;q=setTimeout(()=>{q=0;last=Date.now();place()},Math.max(150,1000-(Date.now()-last)))};
+addEventListener('load',()=>{setTimeout(place,1200);new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-expanded']})});
+addEventListener('resize',soon);addEventListener('orientationchange',soon);})();</script>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Lunar Site Navigator</title>
+<style>
+:root {
+  --bg: #f4f4f1; --fg: #161a1f; --muted: #5a616b; --panel: #ffffff; --line: #d7dade;
+  --accent: #1f5f8b; --accent-fg: #ffffff; --note-bg: #fdf1d8; --note-fg: #6a4700;
+  --sun: #d98c00; --earth: #1f6fb0; --both: #2e8a52; --none: #c9ccd2; --mask: #d9dce1;
+  --s1: #d9581f; --s2: #1f6fb0; --s3: #2e8a52; --s4: #7a4fd1;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1216; --fg: #e5e8ec; --muted: #9ba4ae; --panel: #161b21; --line: #2a323b;
+    --accent: #8cc0ef; --accent-fg: #0e1216; --note-bg: #2b2410; --note-fg: #f0d48c;
+    --sun: #f2b033; --earth: #6fb4f0; --both: #6fd79a; --none: #39424c; --mask: #2a3138;
+    --s1: #ff9a66; --s2: #6fb4f0; --s3: #6fd79a; --s4: #bfa3ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1216; --fg: #e5e8ec; --muted: #9ba4ae; --panel: #161b21; --line: #2a323b;
+  --accent: #8cc0ef; --accent-fg: #0e1216; --note-bg: #2b2410; --note-fg: #f0d48c;
+  --sun: #f2b033; --earth: #6fb4f0; --both: #6fd79a; --none: #39424c; --mask: #2a3138;
+  --s1: #ff9a66; --s2: #6fb4f0; --s3: #6fd79a; --s4: #bfa3ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 20px; padding-bottom: 32px; overflow-x: hidden;
+}
+h1 { font-size: 22px; margin: 0 0 4px; text-wrap: balance; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+p { margin: 0 0 8px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.banner { background: var(--note-bg); color: var(--note-fg); border-radius: 8px; padding: 10px 12px; margin: 12px 0 16px; font-size: 13px; }
+.grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+.field { margin-bottom: 12px; min-width: 0; }
+.field > label, .field > .lbl { display: block; font-size: 13px; margin-bottom: 4px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.row input[type="range"] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+.val { font-variant-numeric: tabular-nums; min-width: 3.5em; text-align: right; color: var(--muted); }
+select, input[type="date"], button {
+  font: inherit; color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; max-width: 100%;
+}
+select, input[type="date"] { width: 100%; }
+button { cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 12px; }
+.checks label { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; min-width: 0; }
+.checks input { accent-color: var(--accent); }
+.table-wrap { overflow-x: auto; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+td.num { text-align: right; }
+tr.best td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+canvas { width: 100%; height: auto; display: block; max-width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; background: var(--c, var(--accent)); }
+.estimate { font-size: 12px; color: var(--note-fg); background: var(--note-bg); border-radius: 6px; padding: 6px 8px; margin-top: 8px; }
+.windows { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
+.windows li { margin-bottom: 3px; }
+.next ul { margin: 6px 0 0; padding-left: 18px; }
+.next li { margin-bottom: 6px; }
+@media (min-width: 900px) {
+  .grid.two { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: start; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Lunar Site Navigator</h1>
+  <p class="muted">Compare south-pole candidate sites over a date range: Sun above the horizon, Earth in view, and the windows where both hold.</p>
+</header>
+
+<div class="banner" role="note">
+  <strong>Illustrative model, not ephemeris data.</strong> Site coordinates, horizon masks and the Sun and Earth curves are synthetic and simplified. They are good for comparing layouts and workflows, not for mission timing. See the next steps panel.
+</div>
+
+<div class="grid two">
+  <section class="panel" aria-labelledby="ctl-h">
+    <h2 id="ctl-h">Dates and sites</h2>
+    <div class="field">
+      <label for="start">Start date (UTC)</label>
+      <input type="date" id="start" value="2026-12-01">
+    </div>
+    <div class="field">
+      <label for="days">Range length</label>
+      <select id="days">
+        <option value="30">30 days</option>
+        <option value="60" selected>60 days</option>
+        <option value="90">90 days</option>
+      </select>
+    </div>
+    <div class="field">
+      <span class="lbl" id="day-lbl">Chosen day</span>
+      <input type="range" id="day" min="0" max="59" value="0" aria-labelledby="day-lbl" style="width:100%;accent-color:var(--accent)">
+      <div class="small muted" id="day-read"></div>
+    </div>
+    <div class="field">
+      <span class="lbl">Candidate sites</span>
+      <div class="checks" id="site-checks"></div>
+    </div>
+    <div class="field">
+      <label for="mask">Extra horizon obstruction: <span id="mask-val">0</span> deg</label>
+      <input type="range" id="mask" min="0" max="6" step="0.5" value="0" style="width:100%;accent-color:var(--accent)">
+      <div class="small muted">Raises the terrain mask at every site. Higher values shorten sunlit and Earth windows.</div>
+    </div>
+    <div class="field">
+      <label for="rank">Rank sites by</label>
+      <select id="rank">
+        <option value="both">Power and communication share</option>
+        <option value="sun">Sunlit share</option>
+        <option value="earth">Earth-in-view share</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="hsite">Horizon chart site</label>
+      <select id="hsite"></select>
+    </div>
+  </section>
+
+  <div style="display:grid; gap:16px; min-width:0">
+    <section class="panel" aria-labelledby="sum-h">
+      <h2 id="sum-h">Site comparison over the range</h2>
+      <p class="small muted" id="summary"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th class="num">Sunlit</th>
+              <th class="num">Earth in view</th>
+              <th class="num">Both</th>
+              <th class="num">Windows</th>
+              <th class="num">Longest window</th>
+              <th class="num">Longest dark</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:8px">Sunlit = Sun above the site mask. Earth in view = Earth above the same mask. Both = the power and communication window. Times in hours.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="sun-h">
+      <h2 id="sun-h">Sun elevation over time (approximate)</h2>
+      <canvas id="sunc" height="220" aria-label="Approximate Sun elevation curves for the selected sites"></canvas>
+      <div class="legend" id="sun-legend"></div>
+      <div class="estimate">Approximation: elevation = mean + amplitude x sin(2 pi t / 29.53 d + phase). This simple sinusoid stands in for the synodic cycle. Replace it with JPL Horizons output.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="strip-h">
+      <h2 id="strip-h">Horizon timeline: when power and Earth line up</h2>
+      <canvas id="stripc" height="200" aria-label="Timeline strip showing sunlit and Earth-in-view hours for each selected site"></canvas>
+      <div class="legend">
+        <span style="--c:var(--both)">Both</span>
+        <span style="--c:var(--sun)">Sun only</span>
+        <span style="--c:var(--earth)">Earth only</span>
+        <span style="--c:var(--none)">Neither</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="hor-h">
+      <h2 id="hor-h">Horizon view for the chosen day</h2>
+      <canvas id="horc" height="240" aria-label="Horizon chart with Sun and Earth positions for the chosen day"></canvas>
+      <div class="legend">
+        <span style="--c:var(--sun)">Sun, above horizon</span>
+        <span style="--c:var(--earth)">Earth, above horizon</span>
+        <span style="--c:var(--none)">Below the mask</span>
+      </div>
+      <div class="estimate">Azimuth model: the Sun sweeps one full turn per 29.53 days. Earth stays near a fixed bearing with a small 27.32-day wobble. Both are approximate.</div>
+      <h2 style="margin-top:12px">Combined windows for this site</h2>
+      <ol class="windows" id="wins"></ol>
+    </section>
+  </div>
+</div>
+
+<section class="panel next" style="margin-top:16px" aria-labelledby="next-h">
+  <h2 id="next-h">Next steps to use real data</h2>
+  <p>This prototype computes everything in the browser from a simple model. A real navigator would replace the model with computed positions and real terrain, then keep the same comparison views.</p>
+  <ul>
+    <li><strong>Sun and Earth positions:</strong> JPL Horizons ephemerides for each site's coordinates, sampled hourly over the chosen dates, with the observer set to the surface site.</li>
+    <li><strong>Local horizon:</strong> a terrain mask per site from LRO LOLA topography (or a higher-resolution LRO product for the candidate rim or massif), instead of the synthetic mask here.</li>
+    <li><strong>Site list:</strong> the candidate coordinates and names from the mission team's current south-pole landing-site study.</li>
+    <li><strong>Communication:</strong> the actual relay or direct-to-Earth coverage schedule from the mission communications plan, in place of the Earth-in-view proxy.</li>
+    <li><strong>Power:</strong> a sunlit fraction from the ephemeris and mask, then a lander power model for the chosen hardware.</li>
+  </ul>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  // Simplified south-pole candidate sites. ALL PARAMETERS ARE SYNTHETIC.
+  // Sun: h0 + A sin(2 pi t / 29.53 + ph). Earth: e0 + B cos(2 pi t / 27.32 + ph2). Angles in degrees.
+  var SITES = [
+    { id: "shk", name: "Shackleton-type rim", h0: 1.2, A: 1.8, ph: 0.4, mask: 2.0, e0: 1.5, B: 2.0, ph2: 0.9, azOff: 30, earthAz: 10, col: "--s1" },
+    { id: "gdg", name: "de Gerlache-type rim", h0: 0.8, A: 2.6, ph: 1.1, mask: 1.0, e0: 0.6, B: 2.4, ph2: 2.1, azOff: 150, earthAz: 200, col: "--s2" },
+    { id: "mal", name: "Malapert-type massif", h0: 3.5, A: 2.5, ph: 2.0, mask: 2.5, e0: 1.0, B: 1.2, ph2: 3.5, azOff: 260, earthAz: 80, col: "--s3" },
+    { id: "hwt", name: "Haworth-type plateau", h0: 0.5, A: 1.2, ph: 2.8, mask: 0.8, e0: -0.5, B: 2.8, ph2: 0.2, azOff: 330, earthAz: 320, col: "--s4" }
+  ];
+  var EPOCH = Date.UTC(2000, 0, 1); // arbitrary phase reference; synthetic
+  var SYN = 29.53, SID = 27.32, TAU = Math.PI * 2, D2R = Math.PI / 180;
+
+  var $ = function (id) { return document.getElementById(id); };
+  function tok(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  function sunEl(s, t) { return s.h0 + s.A * Math.sin(TAU * t / SYN + s.ph); }
+  function earthEl(s, t) { return s.e0 + s.B * Math.cos(TAU * t / SID + s.ph2); }
+  function sunAz(s, t) { return ((s.azOff + 360 * t / SYN) % 360 + 360) % 360; }
+  function earthAz(s, t) { return s.earthAz + 6 * Math.sin(TAU * t / SID); }
+  function termMask(s, az, obs) { return s.mask + obs + 1.2 * Math.sin(3 * az * D2R + s.ph); }
+
+  function startMs() {
+    var v = $("start").value;
+    var ms = v ? Date.parse(v + "T00:00:00Z") : NaN;
+    return isNaN(ms) ? Date.UTC(2026, 11, 1) : ms;
+  }
+  function fmtDay(ms) { return new Date(ms).toISOString().slice(0, 10); }
+  function fmtHour(ms) { return new Date(ms).toISOString().slice(0, 16).replace("T", " ") + " UTC"; }
+
+  function selectedSites() {
+    return SITES.filter(function (s) { var c = document.querySelector('input[data-site="' + s.id + '"]'); return c && c.checked; });
+  }
+
+  // Build hourly series for one site over the range.
+  function series(s, days, obs) {
+    var n = days * 24, t0 = startMs();
+    var sun = new Float32Array(n), ear = new Float32Array(n);
+    var vs = new Uint8Array(n), ve = new Uint8Array(n), vb = new Uint8Array(n);
+    var m = s.mask + obs;
+    for (var h = 0; h < n; h++) {
+      var t = (t0 - EPOCH + h * 3600000) / 864e5;
+      sun[h] = sunEl(s, t); ear[h] = earthEl(s, t);
+      vs[h] = sun[h] > m ? 1 : 0;
+      ve[h] = ear[h] > m ? 1 : 0;
+      vb[h] = vs[h] & ve[h];
+    }
+    return { sun: sun, ear: ear, vs: vs, ve: ve, vb: vb, n: n };
+  }
+
+  // Length of longest run of 1s, and the number of runs.
+  function runs(arr) {
+    var longest = 0, cur = 0, count = 0, starts = [];
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i]) { if (cur === 0) { count++; starts.push(i - 0); } cur++; if (cur > longest) longest = cur; }
+      else cur = 0;
+    }
+    return { longest: longest, count: count };
+  }
+  function windowList(arr) {
+    var out = [], i = 0;
+    while (i < arr.length) {
+      if (arr[i]) { var j = i; while (j < arr.length && arr[j]) j++; out.push([i, j]); i = j; }
+      else i++;
+    }
+    return out;
+  }
+  function share(arr) { var c = 0; for (var i = 0; i < arr.length; i++) c += arr[i]; return c / arr.length; }
+
+  function dayCount() { return +$("days").value; }
+
+  function render() {
+    var days = dayCount();
+    var dayInput = $("day");
+    dayInput.max = String(days - 1);
+    if (+dayInput.value > days - 1) dayInput.value = String(days - 1);
+    var di = +dayInput.value;
+    var t0 = startMs();
+    $("day-read").textContent = "Chosen day: " + fmtDay(t0 + di * 864e5) + " (day " + (di + 1) + " of " + days + ")";
+
+    var obs = +$("mask").value;
+    $("mask-val").textContent = obs.toFixed(1);
+
+    var sel = selectedSites();
+    var rows = sel.map(function (s) {
+      var ser = series(s, days, obs);
+      var sunS = share(ser.vs), earS = share(ser.ve), bothS = share(ser.vb);
+      var wins = runs(ser.vb), dark = runs(ser.vs.map(function (v) { return v ? 0 : 1; }));
+      return { s: s, ser: ser, sun: sunS, ear: earS, both: bothS, wins: wins.count, longest: wins.longest, dark: dark.longest };
+    });
+
+    var rankKey = $("rank").value;
+    var keyOf = { both: "both", sun: "sun", earth: "ear" };
+    rows.sort(function (a, b) { return b[keyOf[rankKey]] - a[keyOf[rankKey]]; });
+
+    var hs = $("hsite"), prev = hs.value;
+    var hOpts = SITES.map(function (s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join("");
+    if (hs.innerHTML !== hOpts) hs.innerHTML = hOpts;
+    if (prev) hs.value = prev;
+
+    var tb = $("rows");
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="7" class="muted">Select at least one site.</td></tr>';
+      $("summary").textContent = "No sites selected.";
+    } else {
+      tb.innerHTML = rows.map(function (r, i) {
+        return '<tr' + (i === 0 ? ' class="best"' : '') + '><td>' + r.s.name + '</td>' +
+          '<td class="num">' + (r.sun * 100).toFixed(0) + '%</td>' +
+          '<td class="num">' + (r.ear * 100).toFixed(0) + '%</td>' +
+          '<td class="num">' + (r.both * 100).toFixed(0) + '%</td>' +
+          '<td class="num">' + r.wins + '</td>' +
+          '<td class="num">' + r.longest + ' h</td>' +
+          '<td class="num">' + r.dark + ' h</td></tr>';
+      }).join("");
+      $("summary").textContent = "Ranked by " + $("rank").options[$("rank").selectedIndex].text.toLowerCase() + ": " + rows[0].s.name + " leads over " + days + " days.";
+    }
+
+    drawSun(rows, days, obs);
+    drawStrip(rows, days, di);
+    drawHorizon(obs, days, di);
+  }
+
+  function drawSun(rows, days, obs) {
+    var cv = $("sunc"), dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth || 600, h = 220;
+    cv.width = w * dpr; cv.height = h * dpr;
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var L = 40, R = w - 10, T = 10, B = h - 24;
+    var ymin = -4, ymax = 8;
+    var fg = tok("--fg"), muted = tok("--muted"), line = tok("--line");
+    function X(i, n) { return L + (R - L) * i / (n - 1); }
+    function Y(v) { return B - (B - T) * (v - ymin) / (ymax - ymin); }
+    ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = muted; ctx.strokeStyle = line; ctx.lineWidth = 1;
+    for (var v = ymin; v <= ymax; v += 4) {
+      ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke();
+      ctx.textAlign = "right"; ctx.fillText(v + "°", L - 5, Y(v) + 4);
+    }
+    ctx.strokeStyle = fg; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(L, Y(0)); ctx.lineTo(R, Y(0)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = muted; ctx.textAlign = "left";
+    ctx.fillText("day 1", L, h - 6); ctx.textAlign = "right"; ctx.fillText("day " + days, R, h - 6);
+    var legend = "";
+    rows.forEach(function (r) {
+      var col = tok(r.s.col), n = r.ser.n;
+      ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath();
+      for (var i = 0; i < n; i += 2) {
+        var px = X(i, n), py = Y(Math.max(ymin, Math.min(ymax, r.ser.sun[i])));
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      legend += '<span style="--c:' + col + '">' + r.s.name + '</span>';
+    });
+    $("sun-legend").innerHTML = legend || '<span class="muted">No sites selected</span>';
+    if (!rows.length) return;
+    var di = +$("day").value, n0 = rows[0].ser.n;
+    var mx = X(di * 24, n0);
+    ctx.strokeStyle = fg; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx, T); ctx.lineTo(mx, B); ctx.stroke();
+  }
+
+  function drawStrip(rows, days, di) {
+    var cv = $("stripc"), dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth || 600, h = 200;
+    cv.width = w * dpr; cv.height = h * dpr;
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var fg = tok("--fg"), muted = tok("--muted");
+    if (!rows.length) { ctx.fillStyle = muted; ctx.fillText("No sites selected", 10, 20); return; }
+    var L = 96, R = w - 6, top = 22, rowH = Math.min(34, (h - top - 16) / rows.length), n = days * 24;
+    var cols = { both: tok("--both"), sun: tok("--sun"), earth: tok("--earth"), none: tok("--none") };
+    ctx.font = "11px system-ui, sans-serif";
+    rows.forEach(function (r, ri) {
+      var y0 = top + ri * rowH;
+      ctx.fillStyle = fg; ctx.textAlign = "left";
+      ctx.fillText(r.s.name.replace(" rim", "").replace(" massif", "").replace(" plateau", ""), 4, y0 + rowH * 0.6);
+      for (var px = 0; px < R - L; px++) {
+        var hIdx = Math.min(n - 1, Math.floor(px * n / (R - L)));
+        var c = r.ser.vb[hIdx] ? cols.both : r.ser.vs[hIdx] ? cols.sun : r.ser.ve[hIdx] ? cols.earth : cols.none;
+        ctx.fillStyle = c; ctx.fillRect(L + px, y0 + 2, 1, rowH - 6);
+      }
+    });
+    var mx = L + (R - L) * (di * 24 + 12) / n;
+    ctx.strokeStyle = fg; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(mx, top - 4); ctx.lineTo(mx, top + rows.length * rowH); ctx.stroke();
+    ctx.fillStyle = muted; ctx.textAlign = "left"; ctx.fillText("day 1", L, 12);
+    ctx.textAlign = "right"; ctx.fillText("day " + days, R, 12);
+  }
+
+  function drawHorizon(obs, days, di) {
+    var cv = $("horc"), dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth || 600, h = 240;
+    cv.width = w * dpr; cv.height = h * dpr;
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var s = SITES.filter(function (x) { return x.id === $("hsite").value; })[0] || SITES[0];
+    var L = 40, R = w - 10, T = 10, B = h - 26, ymin = -4, ymax = 12;
+    var fg = tok("--fg"), muted = tok("--muted"), line = tok("--line");
+    function X(az) { return L + (R - L) * az / 360; }
+    function Y(v) { return B - (B - T) * (v - ymin) / (ymax - ymin); }
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.strokeStyle = line; ctx.fillStyle = muted; ctx.lineWidth = 1;
+    for (var e = -4; e <= 12; e += 4) {
+      ctx.beginPath(); ctx.moveTo(L, Y(e)); ctx.lineTo(R, Y(e)); ctx.stroke();
+      ctx.textAlign = "right"; ctx.fillText(e + "°", L - 5, Y(e) + 4);
+    }
+    for (var az = 0; az <= 360; az += 90) {
+      ctx.textAlign = az === 0 ? "left" : az === 360 ? "right" : "center";
+      ctx.fillText(az + "°", X(az), h - 8);
+    }
+    // Terrain mask as a filled silhouette.
+    ctx.beginPath(); ctx.moveTo(X(0), Y(ymin));
+    for (var a = 0; a <= 360; a += 2) ctx.lineTo(X(a), Y(termMask(s, a, obs)));
+    ctx.lineTo(X(360), Y(ymin)); ctx.closePath();
+    ctx.fillStyle = tok("--mask"); ctx.fill();
+    ctx.strokeStyle = fg; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (var a2 = 0; a2 <= 360; a2 += 2) { if (a2 === 0) ctx.moveTo(X(a2), Y(termMask(s, a2, obs))); else ctx.lineTo(X(a2), Y(termMask(s, a2, obs))); }
+    ctx.stroke();
+
+    var t0 = startMs(), dayStart = t0 + di * 864e5;
+    var sunC = tok("--sun"), earC = tok("--earth"), noneC = tok("--none");
+    var sunVis = 0, earVis = 0;
+    for (var hr = 0; hr < 24; hr++) {
+      var tt = ((dayStart + hr * 3600000) - EPOCH) / 864e5;
+      var seS = sunEl(s, tt), saz = sunAz(s, tt);
+      var seE = earthEl(s, tt), eaz = earthAz(s, tt);
+      var sAbove = seS > termMask(s, saz, obs), eAbove = seE > termMask(s, ((eaz % 360) + 360) % 360, obs);
+      if (sAbove) sunVis++; if (eAbove) earVis++;
+      ctx.beginPath(); ctx.arc(X(((saz % 360) + 360) % 360), Y(seS), 4, 0, TAU);
+      ctx.fillStyle = sAbove ? sunC : noneC; ctx.fill();
+      ctx.beginPath(); ctx.arc(X(((eaz % 360) + 360) % 360), Y(seE), 3, 0, TAU);
+      ctx.fillStyle = eAbove ? earC : noneC; ctx.fill();
+    }
+    ctx.fillStyle = fg; ctx.textAlign = "left";
+    ctx.fillText("Hours: Sun " + sunVis + ", Earth " + earVis, L + 6, T + 14);
+
+    // Windows for the chosen site over the whole range, listed below the chart.
+    var ser = series(s, days, obs);
+    var wl = windowList(ser.vb).slice(0, 8);
+    $("wins").innerHTML = wl.length ? wl.map(function (p) {
+      var st = t0 + p[0] * 3600000, en = t0 + (p[1] - 1) * 3600000;
+      return "<li>" + fmtHour(st) + " to " + fmtHour(en) + " (" + (p[1] - p[0]) + " h)</li>";
+    }).join("") : '<li class="muted">No combined windows in this range for this site.</li>';
+  }
+
+  function init() {
+    var sc = $("site-checks");
+    sc.innerHTML = SITES.map(function (s) {
+      return '<label><input type="checkbox" data-site="' + s.id + '" checked> ' + s.name + '</label>';
+    }).join("");
+    sc.addEventListener("change", render);
+    ["start", "days", "day", "mask", "rank", "hsite"].forEach(function (id) {
+      $(id).addEventListener("input", render);
+      $(id).addEventListener("change", render);
+    });
+    window.addEventListener("resize", render);
+    if (window.matchMedia) {
+      var mq = window.matchMedia("(prefers-color-scheme: dark)");
+      if (mq.addEventListener) mq.addEventListener("change", render);
+    }
+    render();
+  }
+
+  init();
+})();
+</script>
+<nav aria-label="Connected challenges" style="max-width:880px;margin:24px auto 0;padding:16px;border:1px solid #8884;border-radius:12px;font:14px system-ui,sans-serif;line-height:1.5">
+<strong style="display:block;margin-bottom:8px">Connected challenges</strong>
+Open the live disaster globe hub
+<ul style="margin:8px 0 0;padding-left:18px">
+<li>Earth analog ranker</li>
+<li>Mission design game</li>
+</ul>
+</nav>
+</body>
+</html>
+
+</body></html>

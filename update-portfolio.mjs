@@ -61,4 +61,5 @@ fs.writeFileSync('dist/index.html',html);
 console.log(`Added ${projects.length} featured projects and ${repos.length} repository entries.`);
 // Internal pages, SEO files, then minified bundles (build step is skipped if esbuild can't run).
 await import('./build-pages.mjs');
+await import('./build-labs.mjs');
 try { await import('./build.mjs'); } catch (e) { console.warn('build.mjs skipped:', e.message); }

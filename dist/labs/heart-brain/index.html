@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Heart & Brain 3D Clinical Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#e9eeec; --bg2:#d9e2df; --surface:#fbfcfc; --surface2:#eef3f1; --text:#13262b; --muted:#5a6c70;
+  --line:#cfdad7; --accent:#12746f; --accent-ink:#ffffff; --chip:#e6eeeb; --chip-on:#12746f; --shadow:0 10px 30px rgba(19,38,43,.14);
+  --lbl-bg:rgba(251,252,252,.92); --lbl-text:#13262b; --ecg:#0f8a57; --ecg-grid:rgba(15,138,87,.14);
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1a21; --bg2:#122630; --surface:#13232b; --surface2:#1a2f39; --text:#e3eeee; --muted:#93a8ad;
+    --line:#24404b; --accent:#3fc2b6; --accent-ink:#06201d; --chip:#1b313b; --chip-on:#3fc2b6; --shadow:0 10px 30px rgba(0,0,0,.45);
+    --lbl-bg:rgba(19,35,43,.9); --lbl-text:#e3eeee; --ecg:#4be39a; --ecg-grid:rgba(75,227,154,.12);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1a21; --bg2:#122630; --surface:#13232b; --surface2:#1a2f39; --text:#e3eeee; --muted:#93a8ad;
+  --line:#24404b; --accent:#3fc2b6; --accent-ink:#06201d; --chip:#1b313b; --chip-on:#3fc2b6; --shadow:0 10px 30px rgba(0,0,0,.45);
+  --lbl-bg:rgba(19,35,43,.9); --lbl-text:#e3eeee; --ecg:#4be39a; --ecg-grid:rgba(75,227,154,.12);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{height:100%; scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; height:100%; overflow:hidden; background:radial-gradient(ellipse at 50% 35%, var(--bg2), var(--bg) 70%); background-color:var(--bg);
+  color:var(--text); font-family:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif; font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased}
+#app{position:relative; height:100%; overflow:hidden}
+#stage{position:absolute; inset:0; touch-action:none}
+#c{display:block; width:100%; height:100%; cursor:grab}
+#c:active{cursor:grabbing}
+#labels{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+.lbl{position:absolute; left:0; top:0; transform:translate(-50%,-100%); white-space:nowrap; font-size:11.5px; font-weight:700; color:var(--lbl-text);
+  background:var(--lbl-bg); padding:2px 7px; border-radius:6px; border:1px solid var(--line); pointer-events:auto; cursor:pointer; display:none}
+.lbl::after{content:""; position:absolute; left:50%; bottom:-7px; width:1px; height:6px; background:var(--muted)}
+.lbl.sel{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.lbl.sel::after{background:var(--accent)}
+
+.top{position:absolute; left:0; right:0; top:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; pointer-events:none; z-index:5}
+.brand{pointer-events:auto; line-height:1.15}
+.brand b{display:block; font-size:18px; letter-spacing:-.01em}
+.brand small{color:var(--muted); font-size:12.5px}
+.seg{pointer-events:auto; display:flex; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px; box-shadow:var(--shadow)}
+.seg button{font:inherit; font-weight:700; font-size:14px; border:0; background:transparent; color:var(--muted); padding:7px 16px; border-radius:999px; cursor:pointer}
+.seg button.on{background:var(--accent); color:var(--accent-ink)}
+button:focus-visible, input:focus-visible, .lbl:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.tools{position:absolute; right:12px; top:70px; display:flex; flex-direction:column; gap:8px; z-index:5}
+.tool{font:inherit; font-size:12px; font-weight:700; width:58px; padding:8px 4px 6px; border-radius:12px; border:1px solid var(--line); background:var(--surface); color:var(--text);
+  box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px}
+.tool svg{width:20px; height:20px}
+.tool[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+
+#ecgBox{position:absolute; left:12px; top:72px; z-index:4; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:6px 8px 4px; box-shadow:var(--shadow)}
+#ecgBox canvas{display:block; width:210px; height:64px}
+#ecgBox .row{display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted)}
+#ecgBox .row b{color:var(--ecg); font-size:13px}
+#phase{font-weight:700; color:var(--text)}
+
+#sheet{position:absolute; left:0; right:0; bottom:0; z-index:6; background:var(--surface); border-top:1px solid var(--line); border-radius:18px 18px 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.18); display:flex; flex-direction:column; max-height:74%; transition:height .28s ease; height:212px}
+#sheet.open{height:74%}
+.grab{border:0; background:transparent; width:100%; padding:8px 0 4px; cursor:pointer; display:flex; justify-content:center}
+.grab span{width:42px; height:5px; border-radius:3px; background:var(--line)}
+.scroll{overflow-y:auto; padding:0 16px 18px; -webkit-overflow-scrolling:touch}
+.sel-head{display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+#selName{font-size:19px; margin:0; letter-spacing:-.01em}
+#selCat{font-size:12.5px; color:var(--muted); white-space:nowrap}
+#selDesc{margin:4px 0 0; color:var(--text)}
+#sheet:not(.open) #selDesc{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+#sheet:not(.open) .more{display:none}
+.clin{margin:12px 0 0; padding:10px 12px; background:var(--surface2); border-left:3px solid var(--accent); border-radius:6px}
+.clin h3{margin:0 0 2px; font-size:13px; color:var(--accent)}
+.clin p{margin:0}
+h4{margin:18px 0 8px; font-size:13.5px; color:var(--muted); font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{font:inherit; font-size:13px; border:1px solid var(--line); background:var(--chip); color:var(--text); padding:5px 11px; border-radius:999px; cursor:pointer}
+.chip.on{background:var(--chip-on); color:var(--accent-ink); border-color:var(--chip-on)}
+.chip.off{opacity:.5; text-decoration:line-through}
+.ctrl{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px}
+.ctrl label{font-size:13px; color:var(--muted)}
+input[type=range]{flex:1; min-width:120px; accent-color:var(--accent)}
+.quick{display:flex; gap:6px; margin-top:10px; flex-wrap:wrap}
+.hint{font-size:12.5px; color:var(--muted); margin-top:14px}
+.legend{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; margin-top:8px}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+#loading{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; z-index:20; background:var(--bg); color:var(--muted); font-weight:700; transition:opacity .4s}
+
+@media (min-width:900px){
+  #stage{right:400px}
+  #sheet{left:auto; top:0; width:400px; height:100% !important; max-height:none; border-radius:0; border-top:0; border-left:1px solid var(--line); box-shadow:none}
+  .grab{display:none}
+  .scroll{padding-top:18px}
+  #sheet:not(.open) #selDesc{display:block}
+  #sheet:not(.open) .more{display:block}
+  .tools{right:412px}
+}
+@media (prefers-reduced-motion: reduce){ #sheet{transition:none} }
+</style>
+<meta name="description" content="Tap any chamber, vessel or brain region to see its anatomy and clinical relevance. Watch a beating heart, follow the blood flow, switch lobes and functional areas, and slice through with a section plane."><link rel="canonical" href="https://hnasr.com/labs/heart-brain/"><meta property="og:title" content="Heart &amp; Brain · Hassan Nasr"><meta property="og:description" content="Tap any chamber, vessel or brain region to see its anatomy and clinical relevance. Watch a beating heart, follow the blood flow, switch lobes and functional areas, and slice through with a section plane."><meta property="og:url" content="https://hnasr.com/labs/heart-brain/"><meta property="og:image" content="https://hnasr.com/assets/labs/heart-brain.webp"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="robots" content="index,follow"><style id="hn-back">.hn-back{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:inline-flex;align-items:center;gap:0;height:40px;min-width:40px;padding:0 12px;box-sizing:border-box;border-radius:999px;background:rgba(9,11,14,.78);color:#ece6d8;border:1px solid rgba(255,255,255,.18);font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s}.hn-back:hover{border-color:rgba(255,255,255,.45)}.hn-back:focus-visible{outline:2px solid #ff5b26;outline-offset:2px}.hn-back-t{display:inline-block;max-width:0;overflow:hidden;opacity:0;margin-left:0;transition:max-width .35s,opacity .25s,margin-left .35s}.hn-back:hover .hn-back-t,.hn-back:focus-visible .hn-back-t{max-width:90px;opacity:1;margin-left:8px}@media (max-width:760px){.hn-back-t{max-width:90px;opacity:1;margin-left:8px}}@media (prefers-reduced-motion:reduce){.hn-back,.hn-back-t{transition:none}}.hn-back[data-corner="bl"]{right:auto;left:calc(12px + env(safe-area-inset-left,0px))}.hn-back[data-corner="tr"]{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="tl"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="mr"]{bottom:auto;top:50%;transform:translateY(-50%)}.hn-back[data-corner="ml"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%)}.hn-back.is-compact{width:40px;padding:0;justify-content:center}.hn-back.is-compact .hn-back-t{max-width:0!important;opacity:0!important;margin-left:0!important}</style></head>
+<body><a class="hn-back" href="/labs/" aria-label="All labs"><span aria-hidden="true">←</span><span class="hn-back-t">All labs</span></a><script id="hn-back-js">(()=>{const b=document.querySelector('.hn-back');if(!b||!document.elementsFromPoint||!window.MutationObserver)return;
+const CTRL='button,a[href],input,select,textarea,[role="button"],[role="tab"],[role="slider"],[role="link"]';
+const hits=()=>{const r=b.getBoundingClientRect();let n=0;for(const[x,y]of[[r.left+r.width/2,r.top+r.height/2],[r.left+3,r.top+3],[r.right-3,r.top+3],[r.left+3,r.bottom-3],[r.right-3,r.bottom-3]]){if(document.elementsFromPoint(x,y).some(e=>e!==b&&!b.contains(e)&&e.matches(CTRL)))n++}return n};
+const P=['br','bl','tr','tl','mr','ml'];
+const place=()=>{b.dataset.corner=b.dataset.corner||'br';if(!hits())return;
+for(const compact of[b.classList.contains('is-compact'),true]){b.classList.toggle('is-compact',compact);for(const c of P){b.dataset.corner=c;if(!hits())return}}
+let best=['br',1e9];for(const c of P){b.dataset.corner=c;const n=hits();if(n<best[1])best=[c,n]}b.dataset.corner=best[0]};
+let last=0,q=0;const soon=()=>{if(q)return;q=setTimeout(()=>{q=0;last=Date.now();place()},Math.max(150,1000-(Date.now()-last)))};
+addEventListener('load',()=>{setTimeout(place,1200);new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-expanded']})});
+addEventListener('resize',soon);addEventListener('orientationchange',soon);})();</script>
+<div id="app">
+  <div id="stage"><canvas id="c" aria-label="3D anatomical model. Drag to rotate, pinch or scroll to zoom, tap a structure to identify it."></canvas><div id="labels"></div></div>
+
+  <header class="top">
+    <div class="brand"><b>Anatomy 3D</b><small>Clinical heart & brain atlas</small></div>
+    <div class="seg" role="tablist" aria-label="Organ">
+      <button data-o="heart" class="on" role="tab">Heart</button>
+      <button data-o="brain" role="tab">Brain</button>
+    </div>
+  </header>
+
+  <div class="tools">
+    <button class="tool" id="tLabels" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h10l5 5-5 5H4z"/></svg>Labels</button>
+    <button class="tool" id="tXray" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>X‑ray</button>
+    <button class="tool" id="tCut" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 4v4M12 16v4"/></svg>Section</button>
+    <button class="tool" id="tReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v4h4"/></svg>Reset</button>
+  </div>
+
+  <div id="ecgBox">
+    <div class="row"><span id="phase">Diastole</span><span><b id="bpmVal">72</b> bpm</span></div>
+    <canvas id="ecg" width="420" height="128" aria-label="Simulated ECG lead II synchronized with the beating heart"></canvas>
+  </div>
+
+  <section id="sheet" aria-label="Structure details and controls">
+    <button class="grab" id="grab" aria-label="Expand or collapse panel"><span></span></button>
+    <div class="scroll">
+      <div class="sel-head"><h2 id="selName">Tap any structure</h2><span id="selCat"></span></div>
+      <p id="selDesc">Drag to rotate, pinch to zoom. Tap a chamber, vessel or region to see its anatomy and clinical relevance.</p>
+      <div class="more">
+        <div class="clin" id="clinBox" hidden><h3>Clinical relevance</h3><p id="selClin"></p></div>
+        <div class="clin" id="supBox" hidden><h3 id="supTitle">Blood supply</h3><p id="selSup"></p></div>
+      </div>
+
+      <div id="heartCtrls">
+        <div class="ctrl">
+          <button class="chip on" id="beatBtn">Beating</button>
+          <button class="chip" id="flowBtn">Blood flow</button>
+          <label for="bpm">Rate</label><input id="bpm" type="range" min="35" max="180" value="72">
+        </div>
+      </div>
+      <div id="brainCtrls" hidden>
+        <div class="ctrl"><label>Colour</label>
+          <div class="chips" id="colorMode">
+            <button class="chip on" data-m="natural">Natural</button>
+            <button class="chip" data-m="lobes">Lobes</button>
+            <button class="chip" data-m="functional">Functional areas</button>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+
+      <div class="more">
+        <h4>Section plane</h4>
+        <div class="chips" id="cutMode">
+          <button class="chip on" data-c="off">Off</button>
+          <button class="chip" data-c="coronal">Coronal</button>
+          <button class="chip" data-c="sagittal">Sagittal</button>
+          <button class="chip" data-c="axial">Axial</button>
+        </div>
+        <div class="ctrl"><label for="cutPos">Depth</label><input id="cutPos" type="range" min="-100" max="100" value="5"></div>
+
+        <h4>Layers</h4>
+        <div class="chips" id="layers"></div>
+
+        <h4>Structures</h4>
+        <div id="structList"></div>
+        <p class="hint">Educational model built procedurally for teaching; proportions are approximate and it is not a substitute for patient imaging or clinical judgement.</p>
+      </div>
+    </div>
+  </section>
+  <div id="loading">Building anatomy…</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const V3 = THREE.Vector3;
+
+/* ---------------- noise ---------------- */
+const P = new Uint8Array(512);
+(function(){ const p=[]; for(let i=0;i<256;i++)p[i]=i; let s=1337; const r=()=>{s=(s*16807)%2147483647; return s/2147483647;};
+  for(let i=255;i>0;i--){const j=Math.floor(r()*(i+1)); const t=p[i]; p[i]=p[j]; p[j]=t;} for(let i=0;i<512;i++)P[i]=p[i&255]; })();
+const fade=t=>t*t*t*(t*(t*6-15)+10), lerp=(a,b,t)=>a+(b-a)*t;
+function grad(h,x,y,z){const u=h<8?x:y, v=h<4?y:(h===12||h===14?x:z); return ((h&1)?-u:u)+((h&2)?-v:v);}
+function noise(x,y,z){
+  let X=Math.floor(x)&255, Y=Math.floor(y)&255, Z=Math.floor(z)&255;
+  x-=Math.floor(x); y-=Math.floor(y); z-=Math.floor(z);
+  const u=fade(x), v=fade(y), w=fade(z);
+  const A=P[X]+Y, AA=P[A]+Z, AB=P[A+1]+Z, B=P[X+1]+Y, BA=P[B]+Z, BB=P[B+1]+Z;
+  return lerp(lerp(lerp(grad(P[AA]&15,x,y,z),grad(P[BA]&15,x-1,y,z),u),lerp(grad(P[AB]&15,x,y-1,z),grad(P[BB]&15,x-1,y-1,z),u),v),
+              lerp(lerp(grad(P[AA+1]&15,x,y,z-1),grad(P[BA+1]&15,x-1,y,z-1),u),lerp(grad(P[AB+1]&15,x,y-1,z-1),grad(P[BB+1]&15,x-1,y-1,z-1),u),v),w);
+}
+const sm=(e0,e1,x)=>{const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0))); return t*t*(3-2*t);};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+/* ---------------- renderer ---------------- */
+const canvas=document.getElementById('c'), stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+renderer.setClearColor(0x000000,0);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(34,1,0.05,60);
+scene.add(camera);
+scene.add(new THREE.HemisphereLight(0xfff4ee, 0x2a3440, 0.55));
+const key=new THREE.DirectionalLight(0xffffff,1.15); key.position.set(2.5,3,4); camera.add(key);
+const fill=new THREE.DirectionalLight(0xbfd8ff,0.35); fill.position.set(-4,-1,1); camera.add(fill);
+const rim=new THREE.DirectionalLight(0xffe2d0,0.55); rim.position.set(0,2,-5); scene.add(rim);
+
+const heart=new THREE.Group(), brain=new THREE.Group();
+scene.add(heart); scene.add(brain);
+
+/* ---------------- registry ---------------- */
+const S={}; // structures
+const pickables={heart:[], brain:[]};
+const layers={heart:[], brain:[]};
+function reg(o){ S[o.id]=Object.assign({meshes:[], primary:false, deep:false}, o); return S[o.id]; }
+function physMat(color, o){ return new THREE.MeshPhysicalMaterial(Object.assign({color, roughness:.48, metalness:0, clearcoat:.55, clearcoatRoughness:.32}, o||{})); }
+function addMesh(parent, geo, material, sid, organ){
+  const m=new THREE.Mesh(geo, material); m.userData.sid=sid; parent.add(m);
+  if(sid){ S[sid].meshes.push(m); pickables[organ].push(m); }
+  m.userData.baseEmissive = material.emissive ? material.emissive.clone() : null;
+  return m;
+}
+function tube(points, r, segs, radial){ const c=new THREE.CatmullRomCurve3(points.map(p=>Array.isArray(p)?new V3(p[0],p[1],p[2]):p)); return {curve:c, geo:new THREE.TubeGeometry(c, segs||64, r, radial||14, false)}; }
+function capTube(parent, points, r, mat, sid, organ){
+  const t=tube(points,r); const m=addMesh(parent,t.geo,mat,sid,organ);
+  const capG=new THREE.SphereGeometry(r,14,10);
+  const a=new THREE.Mesh(capG,mat), b=new THREE.Mesh(capG,mat); a.position.copy(t.curve.getPoint(0)); b.position.copy(t.curve.getPoint(1));
+  a.userData.sid=b.userData.sid=sid; parent.add(a); parent.add(b);
+  if(sid){S[sid].meshes.push(a,b); pickables[organ].push(a,b);}
+  m.userData.curve=t.curve; return m;
+}
+function roughen(geo, amp, freq, seed){
+  const p=geo.attributes.position; const n=geo.attributes.normal; const v=new V3();
+  for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i); const d=noise(v.x*freq+seed,v.y*freq,v.z*freq)*amp + noise(v.x*freq*3.1,v.y*freq*3.1+seed,v.z*freq*3.1)*amp*.35;
+    p.setXYZ(i, v.x+n.getX(i)*d, v.y+n.getY(i)*d, v.z+n.getZ(i)*d); }
+  geo.computeVertexNormals(); return geo;
+}
+function ellip(sx,sy,sz,ws,hs){ const g=new THREE.SphereGeometry(1,ws||64,hs||44); g.scale(sx,sy,sz); return g; }
+
+/* ======================================================================
+   HEART  (+x patient left, +y superior, +z anterior; 1 unit ≈ 9 cm)
+   ====================================================================== */
+const H={};
+(function buildHeart(){
+  const muscle=0xa8323a, atrium=0x96343f;
+  const cavity=0x7e2a33;
+  // --- structures
+  reg({id:'lv', organ:'heart', cat:'Chambers', name:'Left ventricle', primary:true, anchor:[.05,-.55,.0], anchorObj:'vent',
+    desc:'The thick-walled (8–12 mm) systemic pump. It receives oxygenated blood through the mitral valve and ejects it through the aortic valve at roughly 120 mmHg, forming the cardiac apex.',
+    clin:'Hypertension and aortic stenosis cause concentric hypertrophy; ischaemia or cardiomyopathy reduces ejection fraction (normal ≥ 55%). Apical thrombus may follow anterior MI.',
+    sup:'Left anterior descending (anterior wall, apex, anterior two-thirds of septum), circumflex (lateral), posterior descending (inferior wall).'});
+  reg({id:'rv', organ:'heart', cat:'Chambers', name:'Right ventricle', primary:true, anchor:[-.42,-.35,.22], anchorObj:'vent',
+    desc:'Crescent-shaped chamber wrapped around the septum with a thin (3–5 mm) wall. It forms most of the anterior (sternocostal) surface and pumps deoxygenated blood into the low-pressure pulmonary circuit.',
+    clin:'Acute pulmonary embolism causes RV dilatation and strain (S1Q3T3, RV/LV ratio > 1 on CT). RV infarction complicates proximal RCA occlusion: hypotension with clear lungs, avoid nitrates.',
+    sup:'Right coronary artery and its acute marginal branch; anterior septal branches from the LAD.'});
+  reg({id:'ra', organ:'heart', cat:'Chambers', name:'Right atrium', primary:true, anchor:[-.12,.05,.05], anchorObj:'ra',
+    desc:'Receives systemic venous return from the superior and inferior venae cavae and the coronary sinus. Its wall holds the sinoatrial node, and the right auricle overlaps the aortic root.',
+    clin:'Typical atrial flutter circulates around the tricuspid annulus through the cavotricuspid isthmus (ablation target). Secundum ASD is the commonest adult congenital shunt.',
+    sup:'Sinoatrial nodal artery (RCA in about 60%).'});
+  reg({id:'la', organ:'heart', cat:'Chambers', name:'Left atrium', primary:true, anchor:[0.05,.08,-.08], anchorObj:'la',
+    desc:'The most posterior chamber, lying against the oesophagus. It receives four pulmonary veins and fills the left ventricle through the mitral valve; its appendage peeks out beside the pulmonary trunk.',
+    clin:'Atrial fibrillation is usually triggered around the pulmonary vein ostia (pulmonary vein isolation). About 90% of non-valvular AF thrombi form in the left atrial appendage. Enlargement may compress the oesophagus (dysphagia) or recurrent laryngeal nerve.',
+    sup:'Circumflex artery and atrial branches.'});
+  reg({id:'aorta', organ:'heart', cat:'Great vessels', name:'Aorta', primary:true,
+    desc:'Ascending aorta, arch and descending thoracic aorta. The arch gives the brachiocephalic trunk, left common carotid and left subclavian arteries.',
+    clin:'Stanford type A dissection (ascending) is a surgical emergency; type B is usually managed medically or endovascularly. Coarctation causes radio‑femoral delay and rib notching.'});
+  reg({id:'pt', organ:'heart', cat:'Great vessels', name:'Pulmonary trunk', primary:true,
+    desc:'Carries deoxygenated blood from the right ventricle and divides beneath the aortic arch into the left and right pulmonary arteries. Shown in blue by convention.',
+    clin:'Saddle pulmonary embolism lodges at the bifurcation. A trunk diameter > 29 mm on CT suggests pulmonary hypertension.'});
+  reg({id:'svc', organ:'heart', cat:'Great vessels', name:'Superior vena cava', desc:'Drains the head, neck and upper limbs into the right atrium.',
+    clin:'SVC obstruction (often lung cancer or lymphoma) causes facial swelling and distended chest-wall veins. Central lines terminate at the cavo-atrial junction.'});
+  reg({id:'ivc', organ:'heart', cat:'Great vessels', name:'Inferior vena cava', desc:'Returns blood from the abdomen and lower limbs, entering the floor of the right atrium.',
+    clin:'IVC diameter and collapsibility on bedside ultrasound estimate right atrial pressure and fluid responsiveness.'});
+  reg({id:'pv', organ:'heart', cat:'Great vessels', name:'Pulmonary veins', desc:'Four veins (two from each lung) carrying oxygenated blood into the left atrium. Shown in red because they carry oxygenated blood.',
+    clin:'Muscle sleeves extending into the veins generate the ectopic beats that trigger atrial fibrillation; anomalous pulmonary venous return drains into the right side.'});
+  reg({id:'lad', organ:'heart', cat:'Coronary circulation', name:'Left main & LAD', primary:true,
+    desc:'The left main stem divides into the left anterior descending artery, which runs in the anterior interventricular groove to the apex, giving diagonal and septal branches.',
+    clin:'Proximal LAD occlusion ("widow-maker") causes anterior STEMI: ST elevation in V1–V4. Left main disease often warrants surgical revascularisation (CABG).'});
+  reg({id:'lcx', organ:'heart', cat:'Coronary circulation', name:'Circumflex artery', desc:'Runs in the left atrioventricular groove around to the back, giving obtuse marginal branches to the lateral left ventricle.',
+    clin:'Occlusion causes lateral MI (I, aVL, V5–V6) and is the classic electrically "silent" infarct; posterior involvement shows ST depression in V1–V3.'});
+  reg({id:'rca', organ:'heart', cat:'Coronary circulation', name:'Right coronary artery', primary:true,
+    desc:'Runs in the right atrioventricular groove, gives the acute marginal branch and, in right-dominant hearts (≈ 85%), the posterior descending artery.',
+    clin:'Inferior MI (II, III, aVF). Because the RCA usually supplies the SA (≈ 60%) and AV (≈ 85%) nodes, occlusion often causes bradycardia and heart block.'});
+  reg({id:'cvein', organ:'heart', cat:'Coronary circulation', name:'Cardiac veins & coronary sinus',
+    desc:'The great, middle and small cardiac veins drain the myocardium into the coronary sinus in the posterior AV groove, which empties into the right atrium.',
+    clin:'The coronary sinus is cannulated to place the left ventricular lead in cardiac resynchronisation therapy (CRT); a dilated sinus suggests a persistent left SVC.'});
+  reg({id:'mitral', organ:'heart', cat:'Valves', name:'Mitral valve', deep:true, primary:true,
+    desc:'Bicuspid atrioventricular valve with a large anterior and a crescentic posterior leaflet, tethered by chordae tendineae to two papillary muscles.',
+    clin:'Mitral stenosis is usually rheumatic (opening snap, mid-diastolic rumble). Regurgitation follows prolapse, papillary muscle rupture after inferior MI, or ventricular dilatation; treated by repair or transcatheter edge-to-edge clip.'});
+  reg({id:'tricuspid', organ:'heart', cat:'Valves', name:'Tricuspid valve', deep:true,
+    desc:'Three-leaflet right atrioventricular valve (anterior, posterior, septal) with the largest orifice of the four valves.',
+    clin:'Endocarditis in people who inject drugs; functional regurgitation with RV dilatation or pacing leads; Ebstein anomaly displaces the septal leaflet apically.'});
+  reg({id:'aorticv', organ:'heart', cat:'Valves', name:'Aortic valve', deep:true, primary:true,
+    desc:'Three semilunar cusps (left, right and non-coronary). The coronary arteries arise from the sinuses of Valsalva behind the left and right cusps.',
+    clin:'Calcific aortic stenosis: angina, syncope and dyspnoea; ejection systolic murmur radiating to the carotids. Bicuspid valve (1–2% of people) presents earlier. Treated by surgical replacement or TAVI.'});
+  reg({id:'pulmv', organ:'heart', cat:'Valves', name:'Pulmonary valve', deep:true,
+    desc:'Three semilunar cusps guarding the right ventricular outflow tract.',
+    clin:'Congenital pulmonary stenosis; part of tetralogy of Fallot; regurgitation after Fallot repair often needs later valve replacement.'});
+  reg({id:'sa', organ:'heart', cat:'Conduction system', name:'Sinoatrial node', deep:true,
+    desc:'The natural pacemaker at the junction of the SVC and right atrium, firing at 60–100 per minute and generating the P wave.',
+    clin:'Sick sinus syndrome causes bradycardia, pauses and tachy-brady episodes; a common indication for pacemaker implantation.'});
+  reg({id:'av', organ:'heart', cat:'Conduction system', name:'AV node & His bundle', deep:true,
+    desc:'Lies in the triangle of Koch. It delays conduction (~0.1 s) so the atria finish emptying, creating most of the PR interval, then passes the impulse into the His bundle.',
+    clin:'First-, second- (Wenckebach / Mobitz II) and third-degree AV block; AV nodal re-entrant tachycardia. Slowed by adenosine, beta-blockers and calcium-channel blockers.'});
+  reg({id:'bb', organ:'heart', cat:'Conduction system', name:'Bundle branches & Purkinje', deep:true,
+    desc:'Left and right bundle branches descend either side of the septum into the Purkinje network, activating the ventricles from apex to base within ~0.1 s (QRS).',
+    clin:'Left bundle branch block widens QRS and causes dyssynchrony; new LBBB with chest pain is assessed for MI (Sgarbossa criteria). Right bundle branch block can be normal or indicate RV strain.'});
+
+  // --- ventricles
+  const vent=new THREE.Group(); vent.position.set(.05,.12,.02); vent.rotation.set(-.35,0,.55); heart.add(vent); H.vent=vent;
+  const prof=new THREE.SplineCurve([[.001,-1.0],[.1,-.975],[.23,-.86],[.35,-.66],[.44,-.4],[.485,-.15],[.47,.05],[.4,.19],[.24,.27],[.001,.29]].map(a=>new THREE.Vector2(a[0],a[1]))).getPoints(48);
+  const lvG=new THREE.LatheGeometry(prof, 96); lvG.scale(1,1,.88); roughen(lvG,.012,4,1.3);
+  const lvMat=physMat(muscle,{side:THREE.FrontSide, vertexColors:false});
+  const lv=addMesh(vent,lvG,lvMat,'lv','heart');
+  const lvIn=new THREE.Mesh(lvG, new THREE.MeshStandardMaterial({color:cavity, side:THREE.BackSide, roughness:.7})); vent.add(lvIn); lvIn.userData.sid='lv'; S.lv.meshes.push(lvIn);
+  const rvG=ellip(.36,.6,.3,96,64); rvG.rotateZ(-.18); roughen(rvG,.012,4,2.1);
+  const rv=addMesh(vent,rvG,physMat(0xb03a40),'rv','heart'); rv.position.set(-.3,-.28,.22);
+  const rvIn=new THREE.Mesh(rvG,new THREE.MeshStandardMaterial({color:cavity, side:THREE.BackSide, roughness:.7})); rv.add(rvIn); rvIn.userData.sid='rv'; S.rv.meshes.push(rvIn);
+  // papillary muscles
+  const papMat=physMat(0x8d2a31);
+  [[.14,-.5,.12],[-.1,-.52,-.13]].forEach(p=>{const g=new THREE.ConeGeometry(.07,.32,18); const m=addMesh(vent,g,papMat,'mitral','heart'); m.position.set(p[0],p[1],p[2]); m.userData.inner=true;});
+  // RV outflow (infundibulum) in world
+  scene.updateMatrixWorld(true);
+  const infG=new THREE.CylinderGeometry(.11,.19,.42,40,1,true); const inf=addMesh(heart,infG,physMat(0xb03a40,{side:THREE.DoubleSide}),'rv','heart');
+  inf.position.set(.0,.12,.32); inf.rotation.set(.05,0,-.2);
+
+  // --- atria
+  function atriumGroup(pos,sid){ const g=new THREE.Group(); g.position.set(pos[0],pos[1],pos[2]); heart.add(g); return g; }
+  const raG=atriumGroup([-.48,.3,.03],'ra'); H.ra=raG;
+  const raGeo=roughen(ellip(.36,.34,.32,80,56),.014,5,3.3);
+  addMesh(raG,raGeo,physMat(atrium),'ra','heart');
+  const raIn=new THREE.Mesh(raGeo,new THREE.MeshStandardMaterial({color:cavity,side:THREE.BackSide})); raG.add(raIn); raIn.userData.sid='ra'; S.ra.meshes.push(raIn);
+  const raApp=addMesh(raG,roughen(ellip(.2,.11,.15,48,32),.02,7,4),physMat(0x9e3a45),'ra','heart'); raApp.position.set(.2,.18,.27); raApp.rotation.set(.3,.2,-.5);
+  const laG=atriumGroup([.12,.33,-.33],'la'); H.la=laG;
+  const laGeo=roughen(ellip(.4,.27,.29,80,56),.014,5,5.2);
+  addMesh(laG,laGeo,physMat(atrium),'la','heart');
+  const laIn=new THREE.Mesh(laGeo,new THREE.MeshStandardMaterial({color:cavity,side:THREE.BackSide})); laG.add(laIn); laIn.userData.sid='la'; S.la.meshes.push(laIn);
+  const laApp=addMesh(laG,roughen(ellip(.17,.08,.13,48,32),.02,8,6),physMat(0x9e3a45),'la','heart'); laApp.position.set(.36,.03,.42); laApp.rotation.set(-.2,.6,.4);
+
+  // --- great vessels
+  const DS={side:THREE.DoubleSide}; const art=physMat(0xcc4a42,{roughness:.4,...DS}), ptMat=physMat(0x4a6fc4,{roughness:.42,...DS}), vMat=physMat(0x3a5cae,{roughness:.45,...DS}), pvMat=physMat(0xb93e3c,{roughness:.45,...DS});
+  const ao=capTube(heart,[[-.02,.22,.05],[-.12,.62,.12],[-.08,1.0,.04],[.15,1.16,-.18],[.36,1.0,-.42],[.4,.55,-.55],[.38,-.2,-.56],[.35,-1.15,-.5]],.155,art,'aorta','heart'); H.aoCurve=ao.userData.curve;
+  const bct=capTube(heart,[[-.04,1.04,.02],[-.18,1.35,.04],[-.28,1.72,.02]],.075,art,'aorta','heart');
+  capTube(heart,[[.1,1.12,-.1],[.12,1.42,-.1],[.13,1.78,-.08]],.056,art,'aorta','heart');
+  capTube(heart,[[.25,1.1,-.27],[.38,1.38,-.3],[.55,1.68,-.32]],.062,art,'aorta','heart');
+  const ptm=capTube(heart,[[.05,.24,.33],[.12,.6,.3],[.16,.82,.1]],.13,ptMat,'pt','heart'); H.ptCurve=ptm.userData.curve;
+  const lpa=capTube(heart,[[.16,.82,.1],[.48,.88,-.12],[.86,.84,-.24]],.09,ptMat,'pt','heart'); H.lpa=lpa.userData.curve;
+  const rpa=capTube(heart,[[.16,.82,.1],[-.15,.82,-.22],[-.82,.78,-.3]],.09,ptMat,'pt','heart'); H.rpa=rpa.userData.curve;
+  const svc=capTube(heart,[[-.48,.45,.0],[-.48,1.0,-.02],[-.46,1.55,0]],.105,vMat,'svc','heart'); H.svc=svc.userData.curve;
+  const ivc=capTube(heart,[[-.46,.08,-.04],[-.43,-.55,-.15],[-.4,-1.2,-.2]],.12,vMat,'ivc','heart'); H.ivc=ivc.userData.curve;
+  H.pvs=[];
+  [[[.3,.33,-.45],[.55,.48,-.5],[.82,.56,-.5]],[[.3,.22,-.48],[.55,.16,-.55],[.82,.12,-.55]],
+   [[-.08,.36,-.48],[-.35,.48,-.52],[-.62,.52,-.5]],[[-.08,.24,-.5],[-.35,.15,-.56],[-.62,.12,-.55]]].forEach(p=>{H.pvs.push(capTube(heart,p,.065,pvMat,'pv','heart').userData.curve);});
+  S.aorta.anchor=[.15,1.16,-.18]; S.pt.anchor=[.12,.6,.32]; S.svc.anchor=[-.48,1.25,0]; S.ivc.anchor=[-.42,-.8,-.17]; S.pv.anchor=[.82,.56,-.5];
+
+  // --- coronary arteries & veins, projected onto the surface
+  scene.updateMatrixWorld(true);
+  const surf=[lv,rv,raG.children[0],laG.children[0],raApp];
+  const ray=new THREE.Raycaster(); const cen=new V3(.12,-.2,.02);
+  function project(pts, lift){
+    const curve=new THREE.CatmullRomCurve3(pts.map(p=>new V3(p[0],p[1],p[2])));
+    const out=[]; const N=Math.max(24, pts.length*10);
+    for(let i=0;i<=N;i++){ const p=curve.getPoint(i/N); const dir=p.clone().sub(cen).normalize();
+      ray.set(cen.clone().add(dir.clone().multiplyScalar(4)), dir.clone().negate());
+      const h=ray.intersectObjects(surf,false)[0];
+      if(h){ const n=h.face.normal.clone().transformDirection(h.object.matrixWorld); out.push(h.point.clone().add(n.multiplyScalar(lift))); } else out.push(p); }
+    return out.map(p=>vent.worldToLocal(p.clone()));
+  }
+  const corMat=physMat(0xe0302c,{roughness:.32,clearcoat:.8}), cvMat=physMat(0x3d63c9,{roughness:.38});
+  function vessel(pts, r, mat, sid){ const t=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(project(pts,r*.7)), 120, r, 10, false); return addMesh(vent,t,mat,sid,'heart'); }
+  vessel([[-.02,.28,.14],[.08,.24,.24],[.14,.12,.42],[.22,-.15,.5],[.33,-.45,.45],[.45,-.74,.35],[.56,-.9,.24]],.024,corMat,'lad');
+  vessel([[.2,-.08,.48],[.42,-.24,.38],[.6,-.42,.2]],.016,corMat,'lad');
+  vessel([[.3,-.36,.47],[.5,-.52,.32],[.62,-.64,.16]],.015,corMat,'lad');
+  vessel([[.08,.24,.24],[.32,.18,.16],[.52,.08,-.04],[.55,-.02,-.3],[.35,-.08,-.45]],.021,corMat,'lcx');
+  vessel([[.52,.04,-.12],[.64,-.28,-.1],[.6,-.56,-.04]],.016,corMat,'lcx');
+  vessel([[-.06,.26,.12],[-.2,.2,.32],[-.4,.04,.36],[-.52,-.25,.25],[-.5,-.45,-.05],[-.25,-.5,-.35],[0,-.62,-.32],[.3,-.84,-.12]],.024,corMat,'rca');
+  vessel([[-.5,-.18,.28],[-.32,-.42,.36],[-.1,-.56,.38]],.015,corMat,'rca');
+  vessel([[.5,-.85,.3],[.4,-.52,.47],[.28,-.18,.52],[.22,.06,.4],[.42,.1,.16],[.57,.0,-.1],[.45,-.04,-.36],[.1,-.06,-.46],[-.25,-.03,-.36],[-.4,.04,-.2]],.02,cvMat,'cvein');
+  vessel([[.3,-.84,-.06],[.06,-.6,-.32],[-.08,-.18,-.4]],.017,cvMat,'cvein');
+  S.lad.anchor=[.35,-.25,.4]; S.lad.anchorObj='vent'; // set below via world points
+  S.lad.anchorW=new V3(.26,-.25,.5); S.lcx.anchorW=new V3(.58,-.05,-.2); S.rca.anchorW=new V3(-.52,-.2,.27); S.cvein.anchorW=new V3(.1,-.06,-.48);
+
+  // --- valves
+  const leafMat=new THREE.MeshPhysicalMaterial({color:0xeee2c8, roughness:.6, side:THREE.DoubleSide, clearcoat:.3});
+  const ringMat=physMat(0xf2d9a6,{roughness:.55});
+  H.valves=[];
+  function makeValve(sid,pos,axis,r,leaves,kind){
+    const g=new THREE.Group(); g.position.set(pos[0],pos[1],pos[2]); heart.add(g); g.lookAt(new V3(pos[0]+axis[0],pos[1]+axis[1],pos[2]+axis[2]));
+    addMesh(g,new THREE.TorusGeometry(r,r*.11,10,48),ringMat,sid,'heart');
+    const lf=[]; let a0=0;
+    leaves.forEach(len=>{ const L=len*Math.PI/180; const geo=new THREE.SphereGeometry(r*.98,24,10,a0+.04,L-.08,0,Math.PI/2); geo.rotateX(-Math.PI/2); geo.scale(1,1,.6);
+      const m=addMesh(g,geo,leafMat.clone(),sid,'heart'); const mid=a0+L/2; m.userData.dir=new V3(-Math.cos(mid),Math.sin(mid),0); lf.push(m); a0+=L; });
+    const v={g,lf,r,kind,open:0}; H.valves.push(v); S[sid].anchorW=new V3(pos[0],pos[1],pos[2]); return v;
+  }
+  const mv=makeValve('mitral',[.13,.13,-.16],[.45,-.85,.25],.13,[200,160],'av');
+  makeValve('tricuspid',[-.3,.08,.1],[.3,-.8,.3],.14,[130,110,120],'av');
+  makeValve('aorticv',[-.02,.3,.07],[-.15,1,.1],.1,[120,120,120],'sl');
+  makeValve('pulmv',[.06,.33,.33],[.1,1,-.05],.1,[120,120,120],'sl');
+  // chordae tendineae
+  scene.updateMatrixWorld(true);
+  const chordPts=[]; const tips=[new V3(.14,-.34,.12),new V3(-.1,-.36,-.13)].map(p=>vent.localToWorld(p));
+  for(let i=0;i<14;i++){ const a=i/14*Math.PI*2; const p=new V3(Math.cos(a)*.12,Math.sin(a)*.12,-.05); mv.g.localToWorld(p); const tip=tips[i%2===0&&i<7?0:(i<7?0:1)];
+    chordPts.push(p.x,p.y,p.z, tip.x,tip.y,tip.z); }
+  const cg=new THREE.BufferGeometry(); cg.setAttribute('position',new THREE.Float32BufferAttribute(chordPts,3));
+  const chords=new THREE.LineSegments(cg,new THREE.LineBasicMaterial({color:0xf3ead6})); heart.add(chords); H.chords=chords;
+
+  // --- conduction system
+  const condMat=new THREE.MeshStandardMaterial({color:0xf5c542, emissive:0xb07d00, emissiveIntensity:.5, roughness:.4});
+  H.condMat=condMat;
+  const nodeG=new THREE.SphereGeometry(.045,20,14);
+  const saN=addMesh(heart,nodeG,condMat,'sa','heart'); saN.position.set(-.42,.5,.14);
+  const avN=addMesh(heart,nodeG,condMat,'av','heart'); avN.position.set(-.12,.06,.02);
+  const intern=tube([[-.42,.5,.14],[-.32,.28,.14],[-.12,.06,.02]],.012).curve;
+  addMesh(heart,new THREE.TubeGeometry(intern,40,.012,8,false),condMat.clone(),'sa','heart');
+  const his=[[-.12,.06,.02],[-.02,-.02,.06],[.05,-.1,.08]];
+  capTube(heart,his,.02,condMat,'av','heart');
+  const lbb=tube([[.05,-.1,.08],[.18,-.35,.05],[.34,-.6,.14],[.48,-.72,.24]],.016); addMesh(heart,lbb.geo,condMat,'bb','heart');
+  const rbb=tube([[.05,-.1,.08],[.02,-.36,.22],[.16,-.62,.32],[.36,-.72,.32]],.014); addMesh(heart,rbb.geo,condMat,'bb','heart');
+  [[.48,-.72,.24],[.36,-.72,.32],[.34,-.6,.14],[.16,-.62,.32]].forEach((s,i)=>{ for(let k=0;k<3;k++){ const a=i*1.7+k*2.1;
+    const e=[s[0]+Math.cos(a)*.12, s[1]+.05+Math.sin(a)*.06, s[2]+Math.sin(a*1.3)*.12]; addMesh(heart,tube([s,[(s[0]+e[0])/2,(s[1]+e[1])/2-.03,(s[2]+e[2])/2],e],.006).geo,condMat,'bb','heart'); }});
+  H.intern=intern; H.his=new THREE.CatmullRomCurve3(his.map(p=>new V3(...p))); H.lbb=lbb.curve; H.rbb=rbb.curve; H.saN=saN; H.avN=avN;
+  const pulseMat=new THREE.MeshBasicMaterial({color:0xfff2a8, transparent:true, opacity:.95, depthTest:false});
+  H.pulses=[0,1,2].map(()=>{const m=new THREE.Mesh(new THREE.SphereGeometry(.035,14,10),pulseMat); m.renderOrder=10; heart.add(m); return m;});
+  S.sa.anchorW=new V3(-.42,.5,.14); S.av.anchorW=new V3(-.12,.06,.02); S.bb.anchorW=new V3(.3,-.55,.12);
+
+  // --- layers
+  const L=(name,ids,interior)=>layers.heart.push({name,ids,on:true,interior});
+  L('Chambers',['lv','rv','ra','la']); L('Great vessels',['aorta','pt','svc','ivc','pv']); L('Coronary circulation',['lad','lcx','rca','cvein']);
+  L('Valves',['mitral','tricuspid','aorticv','pulmv'],true); L('Conduction system',['sa','av','bb'],true);
+
+  // --- blood flow particles
+  const wv=(o,p)=>o.localToWorld(new V3(p[0],p[1],p[2]));
+  scene.updateMatrixWorld(true);
+  const rvC=wv(vent,[-.3,-.35,.22]), rvA=wv(vent,[-.25,-.62,.2]), lvC=wv(vent,[0,-.35,0]), lvA=wv(vent,[0,-.75,0]);
+  const seg=(c,a,b)=>{const o=[]; for(let i=0;i<=8;i++)o.push(c.getPoint(a+(b-a)*i/8)); return o;};
+  const deoxy1=[...seg(H.ivc,1,0), new V3(-.48,.3,.03), new V3(-.3,.08,.1), rvC, rvA, new V3(-.05,-.1,.28), new V3(.0,.15,.32), ...seg(H.ptCurve,0,1), ...seg(H.lpa,0,1)];
+  const deoxy2=[...seg(H.svc,1,0), new V3(-.5,.25,.05), new V3(-.3,.08,.1), rvC, rvA, new V3(-.05,-.1,.28), new V3(.0,.15,.32), ...seg(H.ptCurve,0,1), ...seg(H.rpa,0,1)];
+  const oxy1=[...seg(H.pvs[0],1,0), new V3(.12,.33,-.33), new V3(.13,.13,-.16), lvC, lvA, new V3(-.08,-.3,.08), new V3(-.02,.15,.06), ...seg(H.aoCurve,0,1)];
+  const oxy2=[...seg(H.pvs[2],1,0), new V3(.12,.3,-.3), new V3(.13,.13,-.16), lvC, lvA, new V3(-.08,-.3,.08), new V3(-.02,.15,.06), ...seg(H.aoCurve,0,.25), ...[[-.04,1.04,.02],[-.18,1.35,.04],[-.28,1.72,.02]].map(p=>new V3(...p))];
+  const paths=[deoxy1,deoxy2,oxy1,oxy2].map(a=>new THREE.CatmullRomCurve3(a));
+  const cvs=document.createElement('canvas'); cvs.width=cvs.height=64; const cx=cvs.getContext('2d'); const gr=cx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.45,'rgba(255,255,255,.75)'); gr.addColorStop(1,'rgba(255,255,255,0)'); cx.fillStyle=gr; cx.fillRect(0,0,64,64);
+  const spr=new THREE.CanvasTexture(cvs);
+  const NP=110; const tot=NP*4; const pos=new Float32Array(tot*3), col=new Float32Array(tot*3); const meta=[];
+  for(let i=0;i<tot;i++){ const pi=Math.floor(i/NP); meta.push({p:pi,u:Math.random(), j:new V3((Math.random()-.5)*.06,(Math.random()-.5)*.06,(Math.random()-.5)*.06)});
+    const c=new THREE.Color(pi<2?0x5a8cff:0xff4b4b).convertSRGBToLinear(); col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b; }
+  const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.BufferAttribute(pos,3)); pg.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const flow=new THREE.Points(pg,new THREE.PointsMaterial({size:.085, map:spr, vertexColors:true, transparent:true, depthTest:false, depthWrite:false}));
+  flow.renderOrder=9; flow.visible=false; heart.add(flow); H.flow={obj:flow, paths, meta, pos};
+
+  S.lv.anchorW=new V3(.62,-.38,.12); S.rv.anchorW=new V3(-.32,-.55,.36); S.ra.anchorW=new V3(-.78,.3,.08); S.la.anchorW=new V3(.5,.42,.22); S.lad.anchorW=new V3(.16,.02,.5);
+})();
+
+/* ======================================================================
+   BRAIN  (+x patient left, +y superior, +z anterior)
+   ====================================================================== */
+const B={};
+const LOBES=[null,'frontal','parietal','temporal','occipital'];
+const FUNCS=[null,'motor','sensory','broca','wernicke','auditory','visual','prefrontal'];
+const LOBE_COL={frontal:0x4f86e8, parietal:0xf0bb3c, temporal:0x3fae7f, occipital:0xe0577a};
+const FUNC_COL={motor:0xe4572e, sensory:0x1ea6a6, broca:0x8f5bd6, wernicke:0xd64fa0, auditory:0xf0a030, visual:0x3c8de0, prefrontal:0x86b04a};
+(function buildBrain(){
+  reg({id:'frontal',organ:'brain',cat:'Cerebral lobes',name:'Frontal lobe',primary:true,anchorW:new V3(.62,.38,.62),
+    desc:'Largest lobe, in front of the central sulcus. Contains the primary motor cortex, premotor and supplementary motor areas, frontal eye fields, Broca\'s area (dominant side) and the prefrontal cortex governing executive function, judgement and personality.',
+    clin:'Lesions cause contralateral weakness, expressive (Broca) aphasia, disinhibition or apathy, and primitive reflexes. Frontotemporal dementia presents with behavioural change.',
+    sup:'Anterior cerebral artery (medial surface, leg area) and middle cerebral artery (lateral surface, face and arm).'});
+  reg({id:'parietal',organ:'brain',cat:'Cerebral lobes',name:'Parietal lobe',primary:true,anchorW:new V3(.58,.52,-.42),
+    desc:'Behind the central sulcus. Holds the primary somatosensory cortex and association areas integrating touch, proprioception, spatial attention, calculation and praxis.',
+    clin:'Contralateral sensory loss, astereognosis; hemineglect with non-dominant lesions; Gerstmann syndrome (acalculia, agraphia, finger agnosia, left–right confusion) with dominant angular gyrus lesions; inferior quadrantanopia.',
+    sup:'Middle cerebral artery laterally, anterior cerebral artery medially.'});
+  reg({id:'temporal',organ:'brain',cat:'Cerebral lobes',name:'Temporal lobe',primary:true,anchorW:new V3(.8,-.36,.05),
+    desc:'Below the lateral (Sylvian) fissure. Primary auditory cortex, Wernicke\'s area for language comprehension (dominant side), and the medial temporal memory system (hippocampus, amygdala).',
+    clin:'Temporal lobe epilepsy (déjà vu, epigastric aura, automatisms); receptive aphasia; contralateral superior quadrantanopia from Meyer\'s loop; early atrophy in Alzheimer disease; HSV encephalitis targets it.',
+    sup:'Middle cerebral artery laterally; posterior cerebral artery inferomedially.'});
+  reg({id:'occipital',organ:'brain',cat:'Cerebral lobes',name:'Occipital lobe',primary:true,anchorW:new V3(.42,.18,-1.0),
+    desc:'The visual lobe. Primary visual cortex lines the calcarine sulcus on the medial surface; association areas process colour, motion and object recognition.',
+    clin:'Posterior cerebral artery stroke gives contralateral homonymous hemianopia with macular sparing. Bilateral lesions cause cortical blindness, sometimes with denial (Anton syndrome).',
+    sup:'Posterior cerebral artery (calcarine branch); MCA supplies the occipital pole and macular cortex in part.'});
+  reg({id:'motor',organ:'brain',cat:'Functional areas',name:'Primary motor cortex',anchorW:new V3(.55,.55,.02),
+    desc:'Precentral gyrus (Brodmann 4) arranged as the motor homunculus: leg medially, then trunk, arm, hand and face laterally. Origin of the corticospinal tract.',
+    clin:'Lesions give contralateral upper motor neurone weakness: face and arm with MCA strokes, leg with ACA strokes. Focal seizures may march along the homunculus (Jacksonian march).'});
+  reg({id:'sensory',organ:'brain',cat:'Functional areas',name:'Primary somatosensory cortex',anchorW:new V3(.55,.55,-.14),
+    desc:'Postcentral gyrus (Brodmann 3, 1, 2) receiving touch, pain, temperature and proprioception from the thalamus in a sensory homunculus.',
+    clin:'Contralateral loss of fine touch, two-point discrimination and graphaesthesia with cortical lesions.'});
+  reg({id:'broca',organ:'brain',cat:'Functional areas',name:'Broca\'s area',anchorW:new V3(.66,-.03,.42),
+    desc:'Inferior frontal gyrus (Brodmann 44, 45) of the dominant, usually left, hemisphere; plans speech production and grammar.',
+    clin:'Expressive (non-fluent) aphasia: effortful telegraphic speech with relatively preserved comprehension; patients are aware and frustrated. Superior MCA division territory.'});
+  reg({id:'wernicke',organ:'brain',cat:'Functional areas',name:'Wernicke\'s area',anchorW:new V3(.72,-.08,-.32),
+    desc:'Posterior superior temporal gyrus (Brodmann 22) of the dominant hemisphere; maps sound to meaning.',
+    clin:'Receptive (fluent) aphasia: fluent but meaningless speech, neologisms, poor comprehension, often unaware. Inferior MCA division territory. Arcuate fasciculus lesions cause conduction aphasia.'});
+  reg({id:'auditory',organ:'brain',cat:'Functional areas',name:'Primary auditory cortex',anchorW:new V3(.75,-.15,.1),
+    desc:'Heschl\'s transverse gyri (Brodmann 41, 42) on the superior temporal surface; tonotopically organised and receives input from both ears.',
+    clin:'Unilateral lesions rarely cause deafness because of bilateral input; bilateral lesions cause cortical deafness or auditory agnosia.'});
+  reg({id:'visual',organ:'brain',cat:'Functional areas',name:'Primary visual cortex',anchorW:new V3(.25,.0,-1.06),
+    desc:'Striate cortex (V1, Brodmann 17) along the calcarine sulcus; upper bank receives the inferior visual field, lower bank the superior field.',
+    clin:'Contralateral homonymous hemianopia; macular sparing reflects dual PCA/MCA supply to the occipital pole.'});
+  reg({id:'prefrontal',organ:'brain',cat:'Functional areas',name:'Prefrontal cortex',anchorW:new V3(.42,.25,.95),
+    desc:'Dorsolateral, orbitofrontal and medial prefrontal regions: working memory, planning, inhibition, social behaviour and decision-making.',
+    clin:'Dysexecutive syndrome after trauma (coup injuries to the orbitofrontal surface), tumours or frontotemporal dementia; classic case Phineas Gage.'});
+  reg({id:'cerebellum',organ:'brain',cat:'Hindbrain',name:'Cerebellum',primary:true,anchorW:new V3(.42,-.66,-.78),
+    desc:'Two hemispheres joined by the midline vermis, folded into thin folia. Coordinates posture, gait, limb timing and motor learning; projects through the thalamus to the motor cortex.',
+    clin:'Lesions are ipsilateral: dysmetria, intention tremor, dysdiadochokinesia, nystagmus, scanning speech. Vermis lesions cause truncal and gait ataxia (alcohol). Tonsillar herniation through the foramen magnum is fatal.',
+    sup:'Superior cerebellar, anterior inferior (AICA) and posterior inferior (PICA) cerebellar arteries.'});
+  reg({id:'midbrain',organ:'brain',cat:'Hindbrain',name:'Midbrain',anchorW:new V3(.15,-.45,-.04),
+    desc:'Upper brainstem containing the cerebral peduncles, substantia nigra, red nucleus, cerebral aqueduct and the nuclei of cranial nerves III and IV.',
+    clin:'Weber syndrome (ipsilateral CN III palsy, contralateral hemiplegia); Parinaud syndrome from pineal tumours (upward gaze palsy); loss of nigral dopaminergic neurones in Parkinson disease; uncal herniation compresses CN III (blown pupil).'});
+  reg({id:'pons',organ:'brain',cat:'Hindbrain',name:'Pons',primary:true,anchorW:new V3(.18,-.66,.06),
+    desc:'Bulging anterior brainstem relaying cortex to cerebellum. Contains nuclei of cranial nerves V, VI, VII and VIII and respiratory centres.',
+    clin:'Basilar artery occlusion can cause locked-in syndrome (quadriplegia, preserved vertical eye movement and consciousness). Central pontine myelinolysis follows overly rapid correction of hyponatraemia.'});
+  reg({id:'medulla',organ:'brain',cat:'Hindbrain',name:'Medulla & spinal cord',anchorW:new V3(.12,-1.05,-.15),
+    desc:'Lowest brainstem: pyramids (corticospinal decussation), olives, cranial nerves IX–XII and the cardiovascular and respiratory centres, continuous with the spinal cord.',
+    clin:'Lateral medullary (Wallenberg) syndrome from PICA/vertebral occlusion: vertigo, dysphagia, hoarseness, ipsilateral Horner and facial sensory loss, contralateral body pain and temperature loss.'});
+  reg({id:'cc',organ:'brain',cat:'Deep structures',name:'Corpus callosum',deep:true,primary:true,anchorW:new V3(0,.31,.0),
+    desc:'The largest commissure (≈ 200 million axons) linking the hemispheres: rostrum, genu, body and splenium.',
+    clin:'Callosal lesions in multiple sclerosis (Dawson fingers); disconnection syndromes after callosotomy; agenesis associated with developmental disorders; butterfly glioma crosses it.'});
+  reg({id:'latvent',organ:'brain',cat:'Ventricular system',name:'Lateral ventricles',deep:true,primary:true,anchorW:new V3(.12,.2,.05),
+    desc:'Paired C-shaped CSF cavities with frontal, body, occipital and temporal horns. Choroid plexus produces about 500 mL of CSF per day.',
+    clin:'Dilated in hydrocephalus (obstructive or communicating); normal-pressure hydrocephalus causes gait disturbance, urinary incontinence and dementia. Ventricular drains are placed into the frontal horn (Kocher point).'});
+  reg({id:'v34',organ:'brain',cat:'Ventricular system',name:'Third & fourth ventricles',deep:true,anchorW:new V3(0,-.05,.0),
+    desc:'The slit-like third ventricle sits between the thalami; the cerebral aqueduct connects it to the fourth ventricle behind the pons, which drains through the foramina of Luschka and Magendie.',
+    clin:'Aqueduct stenosis causes obstructive hydrocephalus (treated by endoscopic third ventriculostomy); colloid cysts at the foramen of Monro can cause sudden death.'});
+  reg({id:'thalamus',organ:'brain',cat:'Deep structures',name:'Thalamus',deep:true,primary:true,anchorW:new V3(.1,.05,-.08),
+    desc:'Paired egg-shaped relay station for sensory, motor, limbic and arousal pathways (VPL, VPM, LGN, MGN, VL nuclei).',
+    clin:'Lacunar infarcts cause pure sensory stroke; thalamic pain syndrome (Dejerine–Roussy); thalamic haemorrhage from hypertension; deep brain stimulation target for tremor.'});
+  reg({id:'caudate',organ:'brain',cat:'Deep structures',name:'Caudate nucleus',deep:true,anchorW:new V3(.17,.16,.3),
+    desc:'C-shaped basal ganglion following the lateral ventricle: head, body and tail. Part of the striatum with the putamen.',
+    clin:'Atrophy of the caudate head in Huntington disease ("boxcar" frontal horns); involved in obsessive–compulsive circuits.'});
+  reg({id:'lentiform',organ:'brain',cat:'Deep structures',name:'Putamen & globus pallidus',deep:true,primary:true,anchorW:new V3(.27,-.0,.08),
+    desc:'The lentiform nucleus, lateral to the internal capsule. Putamen (striatum) and globus pallidus form the basal ganglia motor loops.',
+    clin:'The putamen is the commonest site of hypertensive intracerebral haemorrhage (lenticulostriate arteries); basal ganglia circuits underlie Parkinsonism and dystonia; globus pallidus internus is a DBS target.'});
+  reg({id:'hippo',organ:'brain',cat:'Deep structures',name:'Hippocampus',deep:true,primary:true,anchorW:new V3(.27,-.3,-.05),
+    desc:'Curved structure in the floor of the temporal horn that consolidates new declarative memories, projecting via the fornix to the mammillary bodies.',
+    clin:'Early atrophy in Alzheimer disease; mesial temporal sclerosis in refractory epilepsy; CA1 neurones are highly vulnerable to hypoxia; bilateral damage causes anterograde amnesia.'});
+  reg({id:'amygdala',organ:'brain',cat:'Deep structures',name:'Amygdala',deep:true,anchorW:new V3(.27,-.36,.22),
+    desc:'Almond-shaped nuclear complex in the anterior medial temporal lobe; emotional learning, fear and threat appraisal.',
+    clin:'Bilateral damage causes Klüver–Bucy syndrome (hyperorality, hypersexuality, placidity); hyperactivity implicated in anxiety and PTSD.'});
+  reg({id:'hypo',organ:'brain',cat:'Deep structures',name:'Hypothalamus & pituitary',deep:true,anchorW:new V3(0,-.56,.25),
+    desc:'The hypothalamus controls temperature, hunger, thirst, circadian rhythm and the pituitary gland, which hangs from it by the infundibulum in the sella turcica.',
+    clin:'Pituitary macroadenomas compress the optic chiasm (bitemporal hemianopia); diabetes insipidus after stalk injury; pituitary apoplexy is an emergency.'});
+  reg({id:'pineal',organ:'brain',cat:'Deep structures',name:'Pineal gland',deep:true,anchorW:new V3(0,.04,-.3),
+    desc:'Small midline gland behind the third ventricle that secretes melatonin.',
+    clin:'Pineal tumours compress the tectum causing Parinaud syndrome and obstructive hydrocephalus. Calcification is a radiological midline landmark.'});
+  reg({id:'optic',organ:'brain',cat:'Cranial nerves',name:'Optic nerves, chiasm & tracts',anchorW:new V3(.12,-.47,.5),
+    desc:'Optic nerves meet at the chiasm, where nasal retinal fibres cross, and continue as optic tracts to the lateral geniculate nuclei.',
+    clin:'Lesion localisation: nerve → monocular loss; chiasm → bitemporal hemianopia; tract or radiation → contralateral homonymous hemianopia. Papilloedema signals raised intracranial pressure.'});
+  reg({id:'ica',organ:'brain',cat:'Circle of Willis',name:'Internal carotid arteries',anchorW:new V3(.16,-.75,.25),
+    desc:'Enter the skull through the carotid canal, run through the cavernous sinus and terminate by dividing into the anterior and middle cerebral arteries.',
+    clin:'Carotid stenosis causes TIA, amaurosis fugax and stroke (endarterectomy if symptomatic ≥ 50–70%); cavernous ICA aneurysm or carotid-cavernous fistula.'});
+  reg({id:'mca',organ:'brain',cat:'Circle of Willis',name:'Middle cerebral artery',primary:true,anchorW:new V3(.5,-.36,.24),
+    desc:'Largest ICA branch; runs in the Sylvian fissure to supply most of the lateral hemisphere, internal capsule and basal ganglia via lenticulostriate branches.',
+    clin:'Commonest stroke territory: contralateral face and arm weakness and sensory loss, aphasia (dominant) or neglect (non-dominant), gaze deviation toward the lesion. Hyperdense MCA sign on CT; target for thrombectomy.'});
+  reg({id:'aca',organ:'brain',cat:'Circle of Willis',name:'Anterior cerebral artery',anchorW:new V3(.03,.35,.5),
+    desc:'Runs in the longitudinal fissure around the genu of the corpus callosum to supply the medial frontal and parietal lobes.',
+    clin:'Contralateral leg weakness and sensory loss, urinary incontinence, abulia.'});
+  reg({id:'pca',organ:'brain',cat:'Circle of Willis',name:'Posterior cerebral artery',anchorW:new V3(.26,-.42,-.3),
+    desc:'Terminal branches of the basilar artery, curving around the midbrain to supply the occipital lobe, inferior temporal lobe and thalamus.',
+    clin:'Contralateral homonymous hemianopia with macular sparing; alexia without agraphia (dominant PCA with splenium); thalamic syndromes.'});
+  reg({id:'basilar',organ:'brain',cat:'Circle of Willis',name:'Vertebral & basilar arteries',primary:true,anchorW:new V3(.1,-.85,.06),
+    desc:'The two vertebral arteries unite at the pontomedullary junction to form the basilar artery, which supplies the brainstem and cerebellum before dividing into the PCAs.',
+    clin:'Basilar thrombosis (decreased consciousness, locked-in syndrome, "top of the basilar") carries high mortality; vertebral dissection after neck trauma causes posterior circulation stroke.'});
+  reg({id:'comm',organ:'brain',cat:'Circle of Willis',name:'Communicating arteries',anchorW:new V3(.0,-.44,.34),
+    desc:'The anterior communicating artery joins the two ACAs; posterior communicating arteries join each ICA to the PCA, closing the circle of Willis.',
+    clin:'Berry aneurysms cluster here: the AComm is the commonest site; a PComm aneurysm causes a painful pupil-involving CN III palsy. Rupture causes subarachnoid haemorrhage ("thunderclap" headache).'});
+
+  // ---- cerebral hemispheres
+  const natCrown=new THREE.Color(0xd7a593), natSulc=new THREE.Color(0x6e3433);
+  function hemisphere(side){
+    const g=new THREE.SphereGeometry(1,220,165); const p=g.attributes.position; const n=p.count;
+    const lobe=new Uint8Array(n), func=new Uint8Array(n), cav=new Float32Array(n), mott=new Float32Array(n);
+    const off=side>0?0:31.7;
+    for(let i=0;i<n;i++){
+      const x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+      const ax=x>=0?.62:.12, ay=y>=0?.70:.44, az=z>=0?1.0:1.08;
+      let X=x*ax, Y=y*ay, Z=z*az;
+      const fr=Math.max(0,z); X*=1-.2*fr*fr; Y*=1-.12*fr*fr*fr;
+      const tw=Math.exp(-(z*z)/.22)*sm(-.05,.5,x)*sm(.1,-.55,y); Y-=.2*tw; X+=.05*tw;
+      const yf=-.22+(.45-z)*.48, zc=.12-.2*y;
+      const d=y-yf, dc=z-zc;
+      const lateral=sm(.12,.4,x);
+      const gf=Math.exp(-(d*d)/.0022)*lateral*sm(-.45,-.3,z)*sm(.62,.45,z);
+      const gc=Math.exp(-(dc*dc)/.0011)*sm(0,.08,d)*sm(-.3,.05,x+.3);
+      const sx=X*1.9+off, sy=Y*1.9, sz=Z*1.9;
+      const w=noise(sx*.55+5.1,sy*.55,sz*.55)*1.1;
+      const nA=noise(sx+w,sy+w*.6,sz-w), nB=noise(sx*2.15+3.1,sy*2.15+w,sz*2.15);
+      const v=nA*.8+nB*.3;
+      const h=.5+.5*Math.cos(v*Math.PI*9.5);
+      const gyr=Math.pow(h,.42);
+      const medial=x<0?.6:1;
+      let disp=(.04*gyr-.024)*medial - .07*gf - .05*gc;
+      // ellipsoid normal
+      let nx=x/ax, ny=y/ay, nz=z/az; const nl=Math.hypot(nx,ny,nz); nx/=nl; ny/=nl; nz/=nl;
+      X+=nx*disp; Y+=ny*disp; Z+=nz*disp;
+      p.setXYZ(i, side*(.14+X), Y, Z);
+      cav[i]=clamp(gyr*(1-gf)*(1-.85*gc),0,1); mott[i]=noise(sx*7,sy*7,sz*7);
+      // lobes
+      let L;
+      if(z < -.6+.12*y) L=4;
+      else if(d<0 && z<.5 && z>-.68 && !(x<.25 && z>.15)) L=3;
+      else if(dc>0) L=1; else L=2;
+      lobe[i]=L;
+      let F=0;
+      if((L===1||L===2) && d>.03){ if(dc>0 && dc<.14) F=1; else if(dc<=0 && dc>-.14) F=2; }
+      if(side>0 && L===1 && z>.28 && z<.58 && d>0 && d<.24 && x>.3) F=3;
+      if(L===3 && z>-.05 && z<.3 && -d<.15 && x>.35) F=5;
+      if(side>0 && L===3 && z>-.48 && z<=-.05 && -d<.22 && x>.32) F=4;
+      if(L===4 && (z<-.86 || x<.08)) F=6;
+      if(L===1 && z>.64 && !F) F=7;
+      func[i]=F;
+    }
+    if(side<0){ const idx=g.index.array; for(let k=0;k<idx.length;k+=3){const t=idx[k+1]; idx[k+1]=idx[k+2]; idx[k+2]=t;} g.index.needsUpdate=true; }
+    g.computeVertexNormals();
+    g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(n*3),3));
+    const mat=physMat(0xffffff,{vertexColors:true, roughness:.62, clearcoat:.35, clearcoatRoughness:.45});
+    const m=new THREE.Mesh(g,mat); m.userData={hemi:true, lobe, func, cav, mott, side}; brain.add(m); pickables.brain.push(m);
+    const wm=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xf1e6d6, side:THREE.BackSide, roughness:.8})); wm.userData.sid=null; brain.add(wm); m.userData.wm=wm;
+    return m;
+  }
+  B.hemis=[hemisphere(1),hemisphere(-1)];
+  B.colorHemis=function(mode, sel){
+    const lc={}, fc={}; for(const k in LOBE_COL) lc[k]=new THREE.Color(LOBE_COL[k]); for(const k in FUNC_COL) fc[k]=new THREE.Color(FUNC_COL[k]);
+    const hl=new THREE.Color(0xffd36e); const c=new THREE.Color(), base=new THREE.Color();
+    B.hemis.forEach(m=>{ const u=m.userData, col=m.geometry.attributes.color, n=col.count;
+      for(let i=0;i<n;i++){
+        const cv=u.cav[i], mo=u.mott[i]*.06;
+        base.copy(natSulc).lerp(natCrown,cv); base.r+=mo; base.g+=mo*.7; base.b+=mo*.7;
+        const ln=LOBES[u.lobe[i]], fn=FUNCS[u.func[i]];
+        if(mode==='lobes'){ c.copy(lc[ln]).multiplyScalar(.5+.5*cv); }
+        else if(mode==='functional' && fn){ c.copy(fc[fn]).multiplyScalar(.55+.45*cv); }
+        else c.copy(base);
+        if(sel && (sel===ln || sel===fn)){ c.lerp(hl,.55); }
+        c.convertSRGBToLinear(); col.setXYZ(i,c.r,c.g,c.b);
+      }
+      col.needsUpdate=true; });
+  };
+
+  // ---- cerebellum
+  (function(){
+    const g=new THREE.SphereGeometry(1,200,140); const p=g.attributes.position;
+    for(let i=0;i<p.count;i++){
+      const x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+      let X=x*.5, Y=y*(y>0?.2:.26), Z=z*.33;
+      const notch=Math.exp(-(x*x)/.02)*sm(.1,-.7,z); Z+=.08*notch; Y-=.03*notch*sm(0,-1,y);
+      const a=Math.atan2(y,-z);
+      const nn=noise(x*3+9,y*3,z*3);
+      const fol=Math.sin(a*19+nn*2.4);
+      const fis=Math.exp(-Math.pow(a-.15,2)/.004)*.04;
+      const disp=.012*(fol>0?Math.sqrt(fol):-Math.sqrt(-fol)*.6)-fis-.02*notch;
+      const nl=Math.hypot(x/.5,y/.24,z/.33); X+=(x/.5)/nl*disp; Y+=(y/.24)/nl*disp; Z+=(z/.33)/nl*disp;
+      p.setXYZ(i,X,Y,Z);
+    }
+    g.computeVertexNormals();
+    const m=addMesh(brain,g,physMat(0xd9a99c,{roughness:.6,clearcoat:.3}),'cerebellum','brain'); m.position.set(0,-.62,-.62);
+    const wm=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xf1e6d6,side:THREE.BackSide})); m.add(wm);
+  })();
+  // ---- brainstem
+  const stemMat=physMat(0xdcb7a6,{roughness:.55});
+  const mid=addMesh(brain,roughen(ellip(.15,.15,.13,48,32),.008,8,2),stemMat,'midbrain','brain'); mid.position.set(0,-.44,-.12);
+  const ponsG=ellip(.18,.14,.15,64,48); (function(){const p=ponsG.attributes.position; for(let i=0;i<p.count;i++){const y=p.getY(i); const s=1+.025*Math.sin(y*90)*sm(0,.15,p.getZ(i)); p.setX(i,p.getX(i)*s); p.setZ(i,p.getZ(i)*s);} ponsG.computeVertexNormals();})();
+  const pons=addMesh(brain,ponsG,stemMat.clone(),'pons','brain'); pons.position.set(0,-.66,-.08);
+  const medG=new THREE.CylinderGeometry(.11,.075,.75,40,20); const med=addMesh(brain,medG,stemMat.clone(),'medulla','brain'); med.position.set(0,-1.08,-.2); med.rotation.x=.17;
+  [-1,1].forEach(s=>{const o=addMesh(brain,ellip(.035,.075,.03,24,16),stemMat.clone(),'medulla','brain'); o.position.set(s*.065,-.86,-.07);});
+
+  // ---- deep structures
+  const deep=new THREE.Group(); brain.add(deep); B.deep=deep;
+  const ccMat=physMat(0xf3ecdf,{roughness:.7});
+  const cc=tube([[0,-.02,.36],[0,.1,.5],[0,.24,.43],[0,.31,.15],[0,.31,-.15],[0,.26,-.4],[0,.13,-.49],[0,.06,-.41]],.05,96);
+  const ccm=addMesh(deep,cc.geo,ccMat,'cc','brain'); ccm.scale.x=3.4;
+  const ventMat=physMat(0x5fb2ea,{roughness:.3,clearcoat:.8,transparent:true,opacity:.92});
+  const grey=physMat(0xb48a86,{roughness:.6}), basal=physMat(0x9c6f8f,{roughness:.55}), hip=physMat(0xd98f4e,{roughness:.55}), amy=physMat(0xe0b03a,{roughness:.55}), thal=physMat(0x7e9bd1,{roughness:.55});
+  [1,-1].forEach(s=>{
+    capTube(deep,[[s*.1,.1,.4],[s*.11,.19,.2],[s*.12,.2,-.05],[s*.16,.13,-.32],[s*.13,.08,-.58]],.05,ventMat,'latvent','brain');
+    capTube(deep,[[s*.16,.13,-.32],[s*.28,-.06,-.3],[s*.32,-.24,-.05],[s*.31,-.3,.14]],.04,ventMat,'latvent','brain');
+    const th=addMesh(deep,ellip(.08,.07,.14,40,28),thal,'thalamus','brain'); th.position.set(s*.09,-.02,-.08);
+    capTube(deep,[[s*.17,.16,.22],[s*.18,.17,-.05],[s*.2,.12,-.28],[s*.28,-.04,-.32],[s*.31,-.18,-.08]],.03,grey,'caudate','brain');
+    const ch=addMesh(deep,ellip(.07,.08,.1,32,24),grey,'caudate','brain'); ch.position.set(s*.16,.1,.32);
+    const lf=addMesh(deep,ellip(.07,.11,.17,40,28),basal,'lentiform','brain'); lf.position.set(s*.27,-.02,.08);
+    capTube(deep,[[s*.3,-.36,.1],[s*.28,-.31,-.1],[s*.22,-.2,-.3],[s*.12,-.04,-.36]],.042,hip,'hippo','brain');
+    const am=addMesh(deep,ellip(.055,.05,.06,24,18),amy,'amygdala','brain'); am.position.set(s*.27,-.37,.22);
+  });
+  const v3=addMesh(deep,ellip(.018,.12,.2,24,18),ventMat,'v34','brain'); v3.position.set(0,-.05,0);
+  const v4=addMesh(deep,ellip(.09,.08,.05,24,18),ventMat,'v34','brain'); v4.position.set(0,-.64,-.28);
+  capTube(deep,[[0,-.13,-.12],[0,-.4,-.2],[0,-.6,-.26]],.012,ventMat,'v34','brain');
+  const hy=physMat(0xd57d8a,{roughness:.5});
+  const hyp=addMesh(deep,ellip(.07,.05,.07,24,18),hy,'hypo','brain'); hyp.position.set(0,-.36,.18);
+  capTube(deep,[[0,-.38,.2],[0,-.48,.23],[0,-.53,.25]],.016,hy,'hypo','brain');
+  const pit=addMesh(deep,ellip(.07,.045,.055,24,18),hy,'hypo','brain'); pit.position.set(0,-.57,.25);
+  const pin=addMesh(deep,ellip(.03,.025,.045,20,14),hy,'pineal','brain'); pin.position.set(0,.04,-.3);
+  // optic apparatus (on the surface)
+  const opt=physMat(0xf1e9d2,{roughness:.6});
+  [1,-1].forEach(s=>{ capTube(brain,[[s*.15,-.43,.62],[s*.08,-.46,.42],[0,-.47,.31]],.028,opt,'optic','brain');
+    capTube(brain,[[0,-.47,.31],[s*.1,-.47,.2],[s*.2,-.43,.05],[s*.22,-.35,-.08]],.024,opt,'optic','brain'); });
+  // circle of Willis
+  const ar=physMat(0xd2382f,{roughness:.32,clearcoat:.8});
+  [1,-1].forEach(s=>{
+    capTube(brain,[[s*.16,-.95,.26],[s*.15,-.62,.25],[s*.13,-.48,.2]],.033,ar,'ica','brain');
+    capTube(brain,[[s*.13,-.48,.2],[s*.3,-.46,.25],[s*.5,-.38,.24],[s*.6,-.22,.18],[s*.62,-.05,.06]],.026,ar,'mca','brain');
+    capTube(brain,[[s*.55,-.28,.22],[s*.6,-.02,.28],[s*.56,.22,.18]],.012,ar,'mca','brain');
+    capTube(brain,[[s*.6,-.15,.12],[s*.62,.08,-.12],[s*.55,.3,-.28]],.012,ar,'mca','brain');
+    capTube(brain,[[s*.13,-.48,.2],[s*.05,-.45,.32],[s*.025,-.3,.56],[s*.025,0,.72],[s*.025,.36,.52],[s*.025,.5,.02],[s*.025,.44,-.38]],.02,ar,'aca','brain');
+    capTube(brain,[[0,-.5,.06],[s*.12,-.49,.05],[s*.24,-.46,-.12],[s*.28,-.38,-.45],[s*.2,-.25,-.82]],.022,ar,'pca','brain');
+    capTube(brain,[[s*.12,-.49,.05],[s*.13,-.49,.13],[s*.13,-.48,.2]],.012,ar,'comm','brain');
+    capTube(brain,[[s*.09,-1.25,-.18],[s*.07,-.95,-.03],[s*.02,-.79,.07],[0,-.77,.085]],.024,ar,'basilar','brain');
+  });
+  capTube(brain,[[0,-.77,.085],[0,-.64,.09],[0,-.5,.06]],.028,ar,'basilar','brain');
+  capTube(brain,[[-.05,-.45,.32],[.05,-.45,.32]],.012,ar,'comm','brain');
+
+  const L=(name,ids,interior)=>layers.brain.push({name,ids,on:true,interior});
+  L('Cerebral cortex',['frontal','parietal','temporal','occipital']);
+  L('Cerebellum & brainstem',['cerebellum','midbrain','pons','medulla']);
+  L('Deep nuclei',['cc','thalamus','caudate','lentiform','hippo','amygdala','hypo','pineal'],true);
+  L('Ventricles',['latvent','v34'],true);
+  L('Circle of Willis',['ica','mca','aca','pca','basilar','comm']);
+  L('Optic pathway',['optic']);
+})();
+
+/* ---------------- state ---------------- */
+const st={organ:'heart', labels:true, xray:false, cut:'off', cutPos:.05, beating:true, bpm:72, flow:false, color:'natural', sel:null, phase:0};
+const plane=new THREE.Plane(new V3(0,0,-1),0);
+
+/* ---------------- orbit controls ---------------- */
+const views={heart:{theta:.28,phi:1.36,r:6,t:new V3(0,.22,0)}, brain:{theta:1.35,phi:1.3,r:5.2,t:new V3(0,-.18,-.08)}};
+const orb={theta:0,phi:1.3,r:4.6,t:new V3()}, goal={theta:0,phi:1.3,r:4.6,t:new V3()};
+function setView(v,instant){ goal.theta=v.theta; goal.phi=v.phi; goal.r=v.r; goal.t.copy(v.t); if(instant){orb.theta=v.theta;orb.phi=v.phi;orb.r=v.r;orb.t.copy(v.t);} }
+const ptrs=new Map(); let down=null, pinch0=0;
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(ptrs.size===1) down={x:e.clientX,y:e.clientY,moved:0}; else down=null; if(ptrs.size===2){const a=[...ptrs.values()]; pinch0=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);}});
+canvas.addEventListener('pointermove',e=>{ if(!ptrs.has(e.pointerId))return; const pr=ptrs.get(e.pointerId); const dx=e.clientX-pr.x, dy=e.clientY-pr.y;
+  if(ptrs.size===1){ goal.theta-=dx*.0075; goal.phi=clamp(goal.phi-dy*.0075,.12,Math.PI-.12); if(down) down.moved+=Math.abs(dx)+Math.abs(dy); }
+  pr.x=e.clientX; pr.y=e.clientY;
+  if(ptrs.size===2){const a=[...ptrs.values()]; const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y); if(pinch0>0){goal.r=clamp(goal.r*pinch0/d,1.4,10);} pinch0=d;} });
+function endPtr(e){ if(ptrs.has(e.pointerId)){ ptrs.delete(e.pointerId); if(down && down.moved<7 && ptrs.size===0) pick(e.clientX,e.clientY); if(ptrs.size===0) down=null; pinch0=0; if(ptrs.size===1){const a=[...ptrs.values()][0]; down=null;} } }
+canvas.addEventListener('pointerup',endPtr); canvas.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId); down=null;});
+canvas.addEventListener('wheel',e=>{e.preventDefault(); goal.r=clamp(goal.r*(1+e.deltaY*.0012),1.4,10);},{passive:false});
+
+/* ---------------- picking & selection ---------------- */
+const rc=new THREE.Raycaster();
+function chainVisible(o){ while(o){ if(!o.visible) return false; o=o.parent; } return true; }
+function pick(cx,cy){
+  const r=canvas.getBoundingClientRect(); const ndc=new THREE.Vector2(((cx-r.left)/r.width)*2-1, -((cy-r.top)/r.height)*2+1);
+  rc.setFromCamera(ndc,camera);
+  const list=pickables[st.organ].filter(m=>chainVisible(m) && !(st.xray && m.userData.xrayed));
+  const hits=rc.intersectObjects(list,false);
+  for(const h of hits){
+    if(st.cut!=='off' && plane.distanceToPoint(h.point)<0) continue;
+    const u=h.object.userData; let sid=u.sid;
+    if(u.hemi){ const i=h.face.a; sid=(st.color==='functional' && u.func[i]) ? FUNCS[u.func[i]] : LOBES[u.lobe[i]]; }
+    if(sid){ select(sid); return; }
+  }
+  select(null);
+}
+const hlCol=new THREE.Color(0xffb84d);
+function select(id){
+  if(st.sel && S[st.sel]) S[st.sel].meshes.forEach(m=>{ if(m.material.emissive && m.userData.baseEmissive) m.material.emissive.copy(m.userData.baseEmissive); });
+  st.sel=id;
+  if(id && S[id]){ S[id].meshes.forEach(m=>{ if(m.material.emissive){ if(!m.userData.ownMat){ m.material=m.material.clone(); m.userData.ownMat=true; m.userData.baseEmissive=m.material.emissive.clone(); } m.material.emissive.copy(hlCol).multiplyScalar(.45);} }); }
+  if(st.organ==='brain') B.colorHemis(st.color, id);
+  renderInfo(); renderList(); updateLabelSel();
+}
+// colours are authored in sRGB; convert material colours to linear once
+(function(){ const seen=new Set(); scene.traverse(o=>{ const m=o.material; if(!m||seen.has(m))return; seen.add(m);
+  if(m.color && !(m.vertexColors && m.color.getHex()===0xffffff)) m.color.convertSRGBToLinear(); if(m.emissive) m.emissive.convertSRGBToLinear(); }); })();
+hlCol.convertSRGBToLinear();
+// make every mesh own its material so highlighting is per-structure
+function ownMaterials(root){ root.traverse(o=>{ if(o.isMesh && o.userData.sid && !o.userData.ownMat){ o.material=o.material.clone(); o.userData.ownMat=true; o.userData.baseEmissive=o.material.emissive?o.material.emissive.clone():null; }}); }
+ownMaterials(heart); ownMaterials(brain);
+H.condMeshes=S.sa.meshes.concat(S.av.meshes,S.bb.meshes);
+
+/* ---------------- UI ---------------- */
+const $=id=>document.getElementById(id);
+function renderInfo(){
+  const s=st.sel&&S[st.sel];
+  $('selName').textContent=s?s.name:'Tap any structure';
+  $('selCat').textContent=s?s.cat:'';
+  $('selDesc').textContent=s?s.desc:(st.organ==='heart'?'Drag to rotate, pinch to zoom. Tap a chamber, valve, vessel or the conduction system to see its anatomy and clinical relevance.':'Drag to rotate, pinch to zoom. Tap a lobe, deep nucleus or artery. Switch colour mode to see lobes or functional areas.');
+  $('clinBox').hidden=!(s&&s.clin); $('selClin').textContent=s&&s.clin||'';
+  $('supBox').hidden=!(s&&s.sup); $('selSup').textContent=s&&s.sup||'';
+}
+function structVisible(id){ const L=layers[S[id].organ].find(l=>l.ids.includes(id)); return !L || L.on || (L.interior && (st.xray||st.cut!=='off') && L.on!==false); }
+function renderList(){
+  const box=$('structList'); box.innerHTML='';
+  const cats={}; Object.values(S).filter(s=>s.organ===st.organ).forEach(s=>{(cats[s.cat]=cats[s.cat]||[]).push(s);});
+  for(const c in cats){ const h=document.createElement('h4'); h.textContent=c; h.style.margin='12px 0 6px'; h.style.fontSize='12.5px'; box.appendChild(h);
+    const w=document.createElement('div'); w.className='chips';
+    cats[c].forEach(s=>{ const b=document.createElement('button'); b.className='chip'+(st.sel===s.id?' on':''); b.textContent=s.name; b.onclick=()=>focusOn(s.id); w.appendChild(b); });
+    box.appendChild(w); }
+}
+function renderLayers(){
+  const box=$('layers'); box.innerHTML='';
+  layers[st.organ].forEach(L=>{ const b=document.createElement('button'); b.className='chip'+(L.on?' on':''); b.textContent=L.name; b.setAttribute('aria-pressed',L.on);
+    b.onclick=()=>{L.on=!L.on; applyVisibility(); renderLayers();}; box.appendChild(b); });
+}
+function anchorWorld(s){
+  if(s.anchorW) return s.anchorW.clone();
+  if(s.anchorObj==='vent'||s.anchorObj==='ra'||s.anchorObj==='la'){ const o=s.anchorObj==='vent'?H.vent:H[s.anchorObj]; return o.localToWorld(new V3(...s.anchor)); }
+  if(s.anchor) return new V3(...s.anchor);
+  const b=new THREE.Box3(); s.meshes.forEach(m=>b.expandByObject(m)); return b.getCenter(new V3());
+}
+function focusOn(id){
+  const s=S[id]; const L=layers[s.organ].find(l=>l.ids.includes(id));
+  if(L && !L.on){ L.on=true; renderLayers(); }
+  if(s.deep && !st.xray && st.cut==='off'){ setXray(true); }
+  applyVisibility(); select(id);
+  const a=anchorWorld(s); goal.t.lerpVectors(views[st.organ].t,a,.6); goal.r=Math.min(goal.r,3.6);
+  const dir=a.clone().sub(views[st.organ].t); if(dir.length()>.25 && !s.deep){ goal.theta=Math.atan2(dir.x,dir.z); goal.phi=clamp(Math.acos(clamp(dir.y/dir.length(),-1,1)),.35,Math.PI-.35); }
+}
+// labels
+const lblBox=$('labels'); const lbls={};
+Object.values(S).forEach(s=>{ const d=document.createElement('div'); d.className='lbl'; d.textContent=s.name; d.tabIndex=-1; d.onclick=()=>focusOn(s.id); lblBox.appendChild(d); lbls[s.id]=d; });
+function updateLabelSel(){ for(const k in lbls) lbls[k].classList.toggle('sel',k===st.sel); }
+const centers={heart:new V3(.05,-.05,0), brain:new V3(0,-.15,-.1)};
+function updateLabels(){
+  const w=stage.clientWidth, h=stage.clientHeight; const camP=camera.position;
+  for(const id in S){ const s=S[id], d=lbls[id];
+    const hemiS=(s.cat==='Cerebral lobes'||s.cat==='Functional areas'); let show=st.labels && s.organ===st.organ && (s.primary||id===st.sel) && (hemiS ? B.hemis[0].visible : (structVisible(id) && s.meshes.some(chainVisible)));
+    if(s.deep && !(st.xray||st.cut!=='off') && id!==st.sel) show=false;
+    if(st.organ==='brain' && st.color==='functional' && s.cat==='Cerebral lobes' && id!==st.sel) show=false;
+    if(s.cat==='Functional areas' && st.color==='functional' && st.labels && (s.id==='motor'||s.id==='broca'||s.id==='wernicke'||s.id==='visual')) show=true;
+    if(!show){ d.style.display='none'; continue; }
+    const a=anchorWorld(s);
+    if(st.cut!=='off' && plane.distanceToPoint(a)<0){ if(st.organ==='brain' && Math.abs(a.x)>.05){ a.x=-a.x; } if(plane.distanceToPoint(a)<0){ d.style.display='none'; continue; } }
+    if(!s.deep && !st.xray && st.cut==='off'){ const nrm=a.clone().sub(centers[st.organ]); const toCam=camP.clone().sub(a); if(nrm.dot(toCam)< -.05 && id!==st.sel){ d.style.display='none'; continue; } }
+    const v=a.project(camera); if(v.z>1){ d.style.display='none'; continue; }
+    d.style.display='block'; d.style.transform=`translate(${(v.x*.5+.5)*w}px,${(-v.y*.5+.5)*h - 6}px) translate(-50%,-100%)`;
+  }
+}
+
+/* ---------------- visibility, x-ray, section ---------------- */
+function applyVisibility(){
+  heart.visible=st.organ==='heart'; brain.visible=st.organ==='brain';
+  const interiorOn=st.xray||st.cut!=='off';
+  ['heart','brain'].forEach(o=>layers[o].forEach(L=>{ const vis=L.on && (!L.interior || interiorOn || o==='brain');
+    L.ids.forEach(id=>S[id].meshes.forEach(m=>m.visible=vis)); }));
+  // brain cortex layer controls hemispheres too
+  const ctx=layers.brain[0].on; B.hemis.forEach(m=>{m.visible=ctx; m.userData.wm.visible=ctx;});
+  H.chords.visible=layers.heart[3].on && interiorOn;
+  H.pulses.forEach(p=>p.visible=layers.heart[4].on && interiorOn && st.beating);
+  H.flow.obj.visible=st.flow;
+  // x-ray materials
+  const xr=(m,on,op)=>{ m.material.transparent=on||!!m.material.userData.baseTransp; m.material.opacity=on?op:(m.material.userData.baseOp??1); m.material.depthWrite=!on; m.userData.xrayed=on; m.material.needsUpdate=true; };
+  ['lv','rv','ra','la'].forEach(id=>S[id].meshes.forEach(m=>{ if(m.material.side===THREE.BackSide){ m.visible=m.visible && !st.xray; return;} xr(m,st.xray,.2); }));
+  B.hemis.forEach(m=>{ xr(m,st.xray,.13); m.userData.wm.visible=m.visible && !st.xray; });
+  ['cerebellum','midbrain','pons','medulla'].forEach(id=>S[id].meshes.forEach(m=>xr(m,st.xray,.32)));
+  renderer.clippingPlanes = st.cut==='off' ? [] : [plane];
+}
+function setXray(on){ st.xray=on; $('tXray').setAttribute('aria-pressed',on); applyVisibility(); }
+function setCut(mode){
+  st.cut=mode; $('tCut').setAttribute('aria-pressed',mode!=='off');
+  document.querySelectorAll('#cutMode .chip').forEach(b=>b.classList.toggle('on',b.dataset.c===mode));
+  const v=views[st.organ];
+  const defs={heart:{coronal:5,sagittal:5,axial:0},brain:{coronal:-5,sagittal:-12,axial:5}};
+  if(mode!=='off'){ st.cutPos=defs[st.organ][mode]/100; $('cutPos').value=defs[st.organ][mode]; }
+  if(mode==='coronal'){ plane.normal.set(0,0,-1); setView({theta:0,phi:1.35,r:v.r,t:v.t}); }
+  if(mode==='sagittal'){ plane.normal.set(-1,0,0); setView({theta:Math.PI/2,phi:1.4,r:v.r,t:v.t}); }
+  if(mode==='axial'){ plane.normal.set(0,-1,0); setView({theta:.2,phi:.35,r:v.r,t:v.t}); }
+  updatePlane(); applyVisibility();
+}
+function updatePlane(){ const c=st.cutPos; const off= st.cut==='axial' ? (st.organ==='heart'?c*1.1+.15:c*.9) : (st.cut==='sagittal'? c*.9 : c*.9); plane.constant=off; }
+
+/* ---------------- controls wiring ---------------- */
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>switchOrgan(b.dataset.o));
+$('tLabels').onclick=()=>{st.labels=!st.labels; $('tLabels').setAttribute('aria-pressed',st.labels);};
+$('tXray').onclick=()=>setXray(!st.xray);
+$('tCut').onclick=()=>setCut(st.cut==='off'?(st.organ==='heart'?'coronal':'sagittal'):'off');
+$('tReset').onclick=()=>{ setView(views[st.organ]); };
+document.querySelectorAll('#cutMode .chip').forEach(b=>b.onclick=()=>setCut(b.dataset.c));
+$('cutPos').oninput=e=>{ st.cutPos=e.target.value/100; updatePlane(); };
+$('beatBtn').onclick=()=>{ st.beating=!st.beating; $('beatBtn').classList.toggle('on',st.beating); $('beatBtn').textContent=st.beating?'Beating':'Paused'; applyVisibility(); };
+$('flowBtn').onclick=()=>{ st.flow=!st.flow; $('flowBtn').classList.toggle('on',st.flow); applyVisibility(); };
+$('bpm').oninput=e=>{ st.bpm=+e.target.value; $('bpmVal').textContent=st.bpm; };
+document.querySelectorAll('#colorMode .chip').forEach(b=>b.onclick=()=>{ st.color=b.dataset.m; document.querySelectorAll('#colorMode .chip').forEach(x=>x.classList.toggle('on',x===b)); B.colorHemis(st.color,st.sel); renderLegend(); });
+$('grab').onclick=()=>$('sheet').classList.toggle('open');
+function renderLegend(){ const lg=$('legend'); lg.innerHTML='';
+  const src=st.color==='lobes'?LOBE_COL:st.color==='functional'?FUNC_COL:null; if(!src) return;
+  for(const k in src){ const s=document.createElement('span'); s.innerHTML=`<i style="background:#${src[k].toString(16).padStart(6,'0')}"></i>${S[k].name}`; lg.appendChild(s);} }
+function switchOrgan(o){
+  st.organ=o; document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.o===o));
+  $('heartCtrls').hidden=o!=='heart'; $('brainCtrls').hidden=o!=='brain'; $('ecgBox').style.display=o==='heart'?'block':'none';
+  select(null); setView(views[o]); st.cut='off'; setCut('off'); renderLayers(); renderList(); renderInfo(); renderLegend();
+  if(o==='brain') B.colorHemis(st.color,null);
+}
+
+/* ---------------- cardiac cycle ---------------- */
+const g=(t,m,s)=>Math.exp(-((t-m)*(t-m))/(2*s*s));
+function ecgV(t){ return .13*g(t,.06,.02) - .1*g(t,.155,.006) + 1*g(t,.172,.008) - .26*g(t,.19,.009) + .3*g(t,.42,.045); }
+function pulseCurve(t,a,b){ if(t<a||t>b) return 0; const u=(t-a)/(b-a); return Math.sin(u*Math.PI); }
+const ecgC=$('ecg'), ex=ecgC.getContext('2d'); let cssEcg='#0f8a57', cssGrid='rgba(0,0,0,.1)';
+function readCss(){ const cs=getComputedStyle(document.documentElement); cssEcg=cs.getPropertyValue('--ecg').trim(); cssGrid=cs.getPropertyValue('--ecg-grid').trim(); }
+readCss(); matchMedia('(prefers-color-scheme: dark)').addEventListener('change',readCss);
+let simT=0;
+function drawECG(){
+  const W=ecgC.width, Hh=ecgC.height; ex.clearRect(0,0,W,Hh);
+  ex.strokeStyle=cssGrid; ex.lineWidth=1; for(let x=0;x<W;x+=16){ex.beginPath();ex.moveTo(x,0);ex.lineTo(x,Hh);ex.stroke();} for(let y=0;y<Hh;y+=16){ex.beginPath();ex.moveTo(0,y);ex.lineTo(W,y);ex.stroke();}
+  const period=60/st.bpm, span=3; ex.strokeStyle=cssEcg; ex.lineWidth=3; ex.beginPath();
+  for(let i=0;i<=W;i+=2){ const tt=simT-span+i/W*span; const ph=((tt/period)%1+1)%1; const y=Hh*.68-ecgV(ph)*Hh*.55; i?ex.lineTo(i,y):ex.moveTo(i,y); }
+  ex.stroke(); ex.fillStyle=cssEcg; const ph=((simT/period)%1+1)%1; ex.beginPath(); ex.arc(W-3,Hh*.68-ecgV(ph)*Hh*.55,5,0,7); ex.fill();
+}
+function cardiac(dt){
+  if(st.beating) simT+=dt;
+  const period=60/st.bpm; const t=((simT/period)%1+1)%1; st.phase=t;
+  const at=st.beating?pulseCurve(t,0,.14):0, vs=st.beating?Math.pow(pulseCurve(t,.16,.5),1.2):0;
+  H.ra.scale.setScalar(1-.09*at); H.la.scale.setScalar(1-.09*at);
+  H.vent.scale.set(1-.085*vs, 1-.05*vs, 1-.085*vs);
+  H.ra.scale.multiplyScalar(1+.04*vs); H.la.scale.multiplyScalar(1+.04*vs);
+  const avOpen=st.beating ? (t<.15||t>.52 ? 1:0) : 1, slOpen=st.beating ? (t>.2&&t<.46 ? 1:0) : 0;
+  H.valves.forEach(v=>{ const tgt=v.kind==='av'?avOpen:slOpen; v.open+=(tgt-v.open)*Math.min(1,dt*18);
+    v.lf.forEach(m=>{ const o=v.open; m.position.copy(m.userData.dir).multiplyScalar(v.r*.42*o); m.scale.set(1-.55*o,1-.55*o,1+1.2*o); }); });
+  $('phase').textContent = !st.beating?'Paused': t<.15?'Atrial systole': t<.2?'Isovolumetric contraction': t<.46?'Ventricular ejection': t<.55?'Isovolumetric relaxation':'Ventricular filling';
+  // conduction pulses
+  if(st.beating){ const P=H.pulses;
+    if(t<.12){ P[0].visible=P[0].visible; P[0].position.copy(H.intern.getPoint(t/.12)); P[1].position.copy(H.avN.position); P[2].position.copy(H.avN.position); }
+    else if(t<.16){ P[0].position.copy(H.avN.position); P[1].position.copy(H.avN.position); P[2].position.copy(H.avN.position); }
+    else if(t<.2){ const u=(t-.16)/.04; P.forEach(p=>p.position.copy(H.his.getPoint(u))); }
+    else if(t<.27){ const u=(t-.2)/.07; P[0].position.copy(H.lbb.getPoint(u)); P[1].position.copy(H.rbb.getPoint(u)); P[2].position.copy(H.lbb.getPoint(u*.5)); }
+    else { P.forEach(p=>p.position.set(0,-50,0)); }
+    const glow=.4+1.6*Math.max(pulseCurve(t,0,.06),pulseCurve(t,.12,.17),pulseCurve(t,.16,.28));
+    H.condMeshes.forEach(m=>{ if(m.material.emissive && st.sel!==m.userData.sid) m.material.emissiveIntensity=glow; });
+  }
+  // blood flow
+  if(st.flow){ const F=H.flow; const sp=(st.beating?(.04+.22*vs+.05*at):.0)*(st.bpm/72);
+    F.meta.forEach((p,i)=>{ p.u=(p.u+sp*dt*(.8+.4*((i*7)%5)/5))%1; const q=F.paths[p.p].getPoint(p.u); F.pos[i*3]=q.x+p.j.x; F.pos[i*3+1]=q.y+p.j.y; F.pos[i*3+2]=q.z+p.j.z; });
+    F.obj.geometry.attributes.position.needsUpdate=true; }
+  drawECG();
+}
+
+/* ---------------- loop ---------------- */
+function resize(){ const w=stage.clientWidth, h=stage.clientHeight; renderer.setSize(w,h,false); camera.aspect=w/h;
+  const mobile=window.innerWidth<900; if(mobile) camera.setViewOffset(w,h,0,Math.round(h*.11),w,h); else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  const portrait=h>w*1.15; views.heart.r=portrait?8.8:6; views.brain.r=portrait?7.6:5.2; }
+new ResizeObserver(()=>{resize();}).observe(stage);
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  const k=1-Math.pow(.0009,dt);
+  orb.theta+=(goal.theta-orb.theta)*k; orb.phi+=(goal.phi-orb.phi)*k; orb.r+=(goal.r-orb.r)*k; orb.t.lerp(goal.t,k);
+  const sp=Math.sin(orb.phi); camera.position.set(orb.t.x+orb.r*sp*Math.sin(orb.theta), orb.t.y+orb.r*Math.cos(orb.phi), orb.t.z+orb.r*sp*Math.cos(orb.theta)); camera.lookAt(orb.t);
+  if(st.organ==='heart') cardiac(dt);
+  renderer.render(scene,camera); updateLabels();
+  requestAnimationFrame(frame);
+}
+resize();
+B.colorHemis('natural',null);
+renderLegend();
+switchOrgan('heart'); setView(views.heart,true);
+applyVisibility();
+requestAnimationFrame(frame);
+const ld=$('loading'); ld.style.opacity=0; setTimeout(()=>ld.remove(),450);
+window.__atlas={st,S,setCut,setXray,switchOrgan,focusOn,select,setView,views};
+})();
+</script>
+</body>
+</html>

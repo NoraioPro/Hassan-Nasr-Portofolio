@@ -8,6 +8,26 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
+  /* ---------- Exact section positions ---------- */
+  // extra.css renders the long home sections lazily (content-visibility:auto) with estimated heights. That keeps the
+  // first paint fast but makes positions approximate, so a first jump to #journey or #workshops landed up to ~300px off.
+  // Once the page has loaded and is idle the sections are rendered for real; an in-page link clicked before that renders
+  // them first, and a page opened with a #hash (e.g. /#contact from another page) is re-aimed after rendering.
+  const lazySections = $$('.about, .journey, .credentials, .work, .deployments, .workshops, .contact');
+  if (lazySections.length) {
+    let settled = false;
+    const settle = () => { if (settled) return; settled = true; lazySections.forEach(s => { s.style.contentVisibility = 'visible'; }); };
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href*="#"]');
+      if (a && a.pathname === location.pathname && a.hash.length > 1) settle();
+    }, true);
+    const arrived = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (arrived) { settle(); requestAnimationFrame(() => arrived.scrollIntoView({ behavior: 'instant' })); }
+    const idle = window.requestIdleCallback || (f => setTimeout(f, 1));
+    const later = () => setTimeout(() => idle(settle, { timeout: 2000 }), 1200);
+    if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true });
+  }
+
   /* ---------- Motion control ---------- */
   let paused = reduce.matches;
   const motionButton = $('#motion-toggle');
@@ -52,8 +72,9 @@
   function onScroll() {
     scrollQueued = false;
     const max = scrollMax();
-    progressBar.style.transform = `scaleX(${max > 0 ? (scrollY / max).toFixed(4) : 0})`;
-    header.classList.toggle('is-scrolled', scrollY > 24);
+    // the 404 page has no progress bar; without this guard the rest of the script stopped there
+    if (progressBar) progressBar.style.transform = `scaleX(${max > 0 ? (scrollY / max).toFixed(4) : 0})`;
+    header?.classList.toggle('is-scrolled', scrollY > 24);
   }
   addEventListener('scroll', () => { if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();

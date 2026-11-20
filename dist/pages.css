@@ -6,13 +6,17 @@
 .footer-pages a{display:inline-flex;align-items:center;min-height:40px;color:#9aa3b5;text-decoration:none;font-size:13px}
 .footer-pages a:hover,.footer-pages a:focus-visible{color:#edeae3}
 .footer{flex-wrap:wrap}
-.page-hero{padding:150px 0 40px}
-.page-hero .crumbs{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0 0 22px;font:12px/1.4 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#7d869a}
+.page-hero{padding-block:150px 40px} /* block only: the .wrap side gutter stays (the old shorthand set it to 0) */
+.page-hero .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;list-style:none;padding:0;margin:0 0 22px;font:12px/1.4 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#7d869a}
 .page-hero .crumbs a{color:#9aa3b5;text-decoration:none;display:inline-flex;min-height:40px;align-items:center}
 .page-hero .crumbs li+li::before{content:"/";margin-right:8px;color:#4b5263}
 .page-hero h1{font-size:clamp(40px,7vw,92px);line-height:.98;letter-spacing:-.03em;margin:0 0 22px;max-width:16ch}
 .page-hero h1 em{font-family:"Instrument Serif",serif;font-style:italic;font-weight:400;color:#ff7a45}
 .page-hero .lead{font-size:clamp(17px,1.6vw,21px);line-height:1.6;color:#b9c0cf;max-width:62ch;margin:0}
+/* pages whose first section carries the heading (build-pages.mjs): breadcrumb only, the section follows closely */
+.page-hero.is-crumbs{padding-block:clamp(92px,11vw,124px) 0}
+.page-hero.is-crumbs .crumbs{margin:0}
+.page-hero.is-crumbs+section{padding-top:clamp(12px,2vw,28px)}
 .page-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin:34px 0 0;padding:0;list-style:none}
 .page-facts li{border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:18px 20px;background:rgba(255,255,255,.02)}
 .page-facts strong{display:block;font-size:16px;margin-bottom:6px;color:#edeae3}

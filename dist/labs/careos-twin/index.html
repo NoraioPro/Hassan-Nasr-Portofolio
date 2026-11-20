@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CareOS Twin</title>
+<link rel="icon" href="data:,">
+<style>
+:root{
+  --bg:#EDF1F4;--surface:#FFFFFF;--surface2:#F6F8FA;--line:#D3DCE3;--line2:#E5EAEF;
+  --ink:#0F2837;--ink2:#3F5666;--ink3:#687D8B;
+  --chrome:#0D2C40;--chrome2:#153F59;--chromeInk:#E6EFF5;--chromeInk2:#9FB8C8;
+  --accent:#1A5C93;--accentSoft:#E2EDF7;--teal:#0F7464;--tealSoft:#DCF0EB;
+  --adv:#7D4C00;--advBg:#FFF4D8;--advLine:#E0A63A;--crit:#A3271C;--critSoft:#FAE2DF;
+  --sim:#584D97;--simSoft:#EBE8F7;--focus:#2F7CF6;
+  --r:6px;color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B161C;--surface:#121F26;--surface2:#16252D;--line:#29404B;--line2:#20323B;
+  --ink:#E2ECF0;--ink2:#A6BAC4;--ink3:#7D929C;
+  --chrome:#07141B;--chrome2:#0F2733;--chromeInk:#E2ECF0;--chromeInk2:#86A2B1;
+  --accent:#6EAEE0;--accentSoft:#17303F;--teal:#56C1AF;--tealSoft:#123430;
+  --adv:#F0B85A;--advBg:#2E2414;--advLine:#8A6421;--crit:#EF8A7E;--critSoft:#3A1F1C;
+  --sim:#ADA5E2;--simSoft:#25223B;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B161C;--surface:#121F26;--surface2:#16252D;--line:#29404B;--line2:#20323B;
+  --ink:#E2ECF0;--ink2:#A6BAC4;--ink3:#7D929C;
+  --chrome:#07141B;--chrome2:#0F2733;--chromeInk:#E2ECF0;--chromeInk2:#86A2B1;
+  --accent:#6EAEE0;--accentSoft:#17303F;--teal:#56C1AF;--tealSoft:#123430;
+  --adv:#F0B85A;--advBg:#2E2414;--advLine:#8A6421;--crit:#EF8A7E;--critSoft:#3A1F1C;
+  --sim:#ADA5E2;--simSoft:#25223B;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 150px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:13.5px/1.45 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--chrome)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+a{color:var(--accent)}
+code,pre,.mono{font-family:ui-monospace,"Cascadia Mono",SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- chrome ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.chrome{background:var(--chrome);color:var(--chromeInk)}
+.chrome .row{display:flex;align-items:center;gap:14px;height:44px;padding:0 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:650;letter-spacing:.01em;font-size:14.5px}
+.brand svg{width:22px;height:22px}
+.env{font-size:11.5px;font-weight:650;padding:2px 8px;border-radius:4px;background:#D99A22;color:#1B1200;letter-spacing:.02em}
+.mode{font-size:12px;color:var(--chromeInk2);display:flex;align-items:center;gap:6px}
+.mode i{width:8px;height:8px;border-radius:50%;background:#46C08F;display:inline-block}
+.mode.replay i{background:#A79AF0}
+.spacer{flex:1}
+.cbtn{background:var(--chrome2);border:1px solid #ffffff1f;color:var(--chromeInk);border-radius:var(--r);padding:5px 10px;font-size:12.5px;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.cbtn:hover{background:#ffffff1a}
+.fresh{font-size:12px;color:var(--chromeInk2)}
+
+/* ---------- patient banner ---------- */
+.banner{background:var(--surface);border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line2)}
+.banner .row{display:flex;align-items:stretch;gap:0;padding:0 16px;min-height:66px;flex-wrap:wrap}
+.who{display:flex;align-items:center;gap:12px;padding:10px 18px 10px 0;border-right:1px solid var(--line2);min-width:260px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--accentSoft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
+.who .nm{font-size:17px;font-weight:700;letter-spacing:-.005em;line-height:1.2}
+.who .dm{color:var(--ink2);font-size:13px}
+.facts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 0;padding:8px 0 8px 6px;flex:1}
+.fact{padding:0 16px;border-right:1px solid var(--line2);line-height:1.3}
+.fact:last-child{border-right:0}
+.fact .k{font-size:11.5px;color:var(--ink3)}
+.fact .v{font-weight:600;font-size:13px}
+.flags{display:flex;align-items:center;gap:8px;padding:8px 0 8px 12px}
+
+/* ---------- layout ---------- */
+.body{display:grid;grid-template-columns:212px minmax(0,1fr);min-height:calc(100vh - 110px)}
+nav.side{background:var(--surface);border-right:1px solid var(--line);padding:10px 8px;position:sticky;top:110px;align-self:start;height:calc(100vh - 110px);overflow:auto}
+nav.side .grp{font-size:11.5px;color:var(--ink3);padding:10px 10px 4px}
+nav.side button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px 10px;border-radius:var(--r);cursor:pointer;color:var(--ink2);font-weight:500;text-align:left}
+nav.side button:hover{background:var(--surface2)}
+nav.side button[aria-current="page"]{background:var(--accentSoft);color:var(--accent);font-weight:650}
+nav.side .cnt{margin-left:auto;font-size:11.5px;font-weight:700;min-width:20px;text-align:center;padding:0 6px;border-radius:9px;background:var(--advBg);color:var(--adv)}
+main{padding:16px 20px 40px;min-width:0}
+.vh{display:flex;align-items:baseline;gap:12px;margin:0 0 12px;flex-wrap:wrap}
+.vh h1{font-size:19px;margin:0;font-weight:650;letter-spacing:-.01em}
+.vh p{margin:0;color:var(--ink3);font-size:13px}
+section.view{display:none}
+section.view.on{display:block}
+
+.grid{display:grid;gap:14px}
+.c12{grid-template-columns:repeat(12,minmax(0,1fr))}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.card>.hd{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line2)}
+.card>.hd h2{font-size:13.5px;margin:0;font-weight:650}
+.card>.hd .meta{margin-left:auto;font-size:12px;color:var(--ink3)}
+.card>.bd{padding:12px 14px}
+.card>.bd.flush{padding:0}
+.muted{color:var(--ink3)}.small{font-size:12.5px}.gap{margin-top:12px}
+p{margin:0 0 8px}
+
+/* ---------- elements ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:650;padding:2px 8px;border-radius:4px;background:var(--surface2);color:var(--ink2);border:1px solid var(--line2);white-space:nowrap;line-height:1.5}
+.chip.ok,.chip.COMPLETED,.chip.pass{background:var(--tealSoft);color:var(--teal);border-color:transparent}
+.chip.adv,.chip.READY,.chip.fail{background:var(--advBg);color:var(--adv);border-color:transparent}
+.chip.crit,.chip.BLOCKED,.chip.denied,.chip.error{background:var(--critSoft);color:var(--crit);border-color:transparent}
+.chip.info,.chip.ACKNOWLEDGED{background:var(--accentSoft);color:var(--accent);border-color:transparent}
+.chip.sim{background:var(--simSoft);color:var(--sim);border-color:transparent}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:6px 12px;border-radius:var(--r);font-weight:600;cursor:pointer;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:var(--surface);color:var(--accent);border-color:var(--line)}
+.btn.sec:hover{border-color:var(--accent)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.warn{background:var(--adv);border-color:var(--adv);color:#fff}
+.btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-weight:500;text-decoration:underline;text-underline-offset:2px;font-size:inherit}
+dl.kv{display:grid;grid-template-columns:max-content 1fr;gap:5px 14px;margin:0;font-size:13px}
+dl.kv dt{color:var(--ink3)}dl.kv dd{margin:0}
+table.t{border-collapse:collapse;width:100%;font-size:13px}
+table.t th,table.t td{border-bottom:1px solid var(--line2);padding:7px 12px;text-align:left;vertical-align:top}
+table.t th{font-weight:600;color:var(--ink2);background:var(--surface2);font-size:12px;white-space:nowrap;position:sticky;top:0}
+table.t tr:last-child td{border-bottom:0}
+.tw{overflow-x:auto}
+.empty{padding:22px;text-align:center;color:var(--ink2)}
+
+/* advisory */
+.advisory{border:1px solid var(--advLine);border-left:6px solid var(--advLine);background:var(--advBg);border-radius:8px;padding:12px 16px;margin-bottom:14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start}
+.advisory .ic{color:var(--adv);margin-top:2px}
+.advisory .ic svg{width:22px;height:22px}
+.advisory h2{font-size:15px;margin:0 0 4px;color:var(--ink)}
+.advisory ul{margin:4px 0 6px;padding-left:18px}
+.advisory li{margin:2px 0}
+.advisory .src{font-size:12px;color:var(--ink2)}
+.advisory.done{border-color:var(--teal);border-left-color:var(--teal);background:var(--tealSoft)}
+.advisory.done .ic{color:var(--teal)}
+
+/* kidney card */
+.kid{display:grid;grid-template-columns:minmax(200px,1fr) minmax(220px,1.4fr);gap:18px;align-items:center}
+.big{display:flex;align-items:baseline;gap:6px}
+.big .v{font-size:38px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.big .u{color:var(--ink3);font-size:13px}
+.sub2{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.mini .m{border:1px solid var(--line2);border-radius:6px;padding:8px 10px;background:var(--surface2)}
+.mini .m .k{font-size:11.5px;color:var(--ink3)}
+.mini .m .v{font-size:16px;font-weight:650}
+.spark svg{width:100%;height:auto;display:block}
+
+/* stepper */
+.stepper{list-style:none;margin:0;padding:0}
+.stepper li{display:grid;grid-template-columns:18px 1fr;gap:10px;position:relative;padding-bottom:12px}
+.stepper li::before{content:"";position:absolute;left:8px;top:16px;bottom:-2px;width:2px;background:var(--line)}
+.stepper li:last-child::before{display:none}
+.stepper .d{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;z-index:1}
+.stepper li.completed .d{background:var(--teal);border-color:var(--teal)}
+.stepper li.completed::before{background:var(--teal)}
+.stepper li.active .d{border-color:var(--adv);background:var(--advBg);box-shadow:0 0 0 3px var(--advBg)}
+.stepper .l{font-weight:600}
+.stepper li.pending .l{color:var(--ink3);font-weight:500}
+.stepper .s{font-size:12px;color:var(--ink3)}
+
+/* flowsheet */
+.fs th.rowh,.fs td.rowh{position:sticky;left:0;background:var(--surface);z-index:1;min-width:190px;border-right:1px solid var(--line2)}
+.fs th.rowh{background:var(--surface2);z-index:2}
+.fs td.num{text-align:right;white-space:nowrap}
+.fs td.num .a{color:var(--ink3);font-size:11px;margin-left:4px}
+.fs td.cur{background:var(--accentSoft)}
+.fs .unit{display:block;font-size:11.5px;color:var(--ink3);font-weight:400}
+
+/* charts */
+.chart svg{width:100%;height:auto;display:block}
+.chart .axis{stroke:var(--line)}
+.chart .gridl{stroke:var(--line2)}
+.chart .tick{fill:var(--ink3);font-size:11px}
+.chart .band{fill:var(--accentSoft)}
+.chart .bandl{fill:var(--ink3);font-size:10.5px}
+.chart .line{fill:none;stroke:var(--accent);stroke-width:2.2}
+.chart .line.cr{stroke:var(--teal)}
+.chart .pt{fill:var(--surface);stroke:var(--accent);stroke-width:2.2;cursor:pointer}
+.chart .pt.cr{stroke:var(--teal)}
+.chart .pt.sim{stroke:var(--sim);stroke-dasharray:2 2}
+.chart .lab{fill:var(--ink);font-size:11px;font-weight:600}
+.spk .line{fill:none;stroke:var(--accent);stroke-width:2}
+.spk .pt{fill:var(--accent)}
+.spk .area{fill:var(--accentSoft)}
+
+/* pathway */
+.graph{overflow-x:auto}
+.graph svg{min-width:640px;width:100%;height:auto;display:block}
+.node rect{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.node.completed rect{fill:var(--tealSoft);stroke:var(--teal)}
+.node.active rect{fill:var(--advBg);stroke:var(--adv);stroke-width:2.5}
+.node.sel rect{stroke:var(--focus);stroke-width:2.5}
+.node text{fill:var(--ink);font-size:13px;font-weight:650}
+.node .st{fill:var(--ink2);font-size:11px;font-weight:500}
+.node,.edge{cursor:pointer}
+.node:focus,.edge:focus{outline:none}
+.node:focus-visible rect{stroke:var(--focus);stroke-width:3}
+.edge path{fill:none;stroke:var(--line);stroke-width:2.2}
+.edge path.hit{stroke:transparent!important;stroke-width:18}
+.edge.passed path{stroke:var(--teal)}
+.edge.blocked path{stroke:var(--crit);stroke-dasharray:6 5}
+.edge.sel path{stroke:var(--focus);stroke-width:3.5}
+.edge:focus-visible path{stroke:var(--focus)}
+.edge text{fill:var(--ink2);font-size:11.5px}
+.edge.blocked text{fill:var(--crit);font-weight:650}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink3);padding:8px 14px;border-top:1px solid var(--line2)}
+.rule{border-top:1px solid var(--line2);padding:12px 14px}
+.rule:first-child{border-top:0}
+.rule.sel{background:var(--accentSoft)}
+.rule .rh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rule .rh b{font-size:13.5px}
+.rule .cond{display:block;background:var(--surface2);border:1px solid var(--line2);padding:5px 8px;border-radius:4px;margin:8px 0;overflow-x:auto}
+.rule ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink2)}
+.inputs{font-size:12.5px;margin:4px 0;border-collapse:collapse}
+.inputs td{padding:2px 14px 2px 0;vertical-align:top}
+.inputs td:first-child{color:var(--ink3)}
+form.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 14px;align-items:end}
+form.settings label{font-size:12.5px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+form.settings .btns{grid-column:1/-1}
+input[type=number],input[type=text],select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 9px}
+textarea{width:100%;min-height:170px;resize:vertical;line-height:1.5;font-size:13.5px}
+
+/* tasks */
+.task{display:grid;grid-template-columns:4px 1fr auto;gap:0 14px;border-top:1px solid var(--line2);padding:12px 14px 12px 0}
+.task:first-child{border-top:0}
+.task .bar{border-radius:2px;background:var(--line)}
+.task.READY .bar{background:var(--advLine)}
+.task.BLOCKED .bar{background:var(--crit)}
+.task.ACKNOWLEDGED .bar{background:var(--accent)}
+.task.COMPLETED .bar{background:var(--teal)}
+.task .tt{font-weight:650;font-size:14px}
+.task .tm{font-size:12px;color:var(--ink3);margin:2px 0 6px}
+.task .tr{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+
+/* notes */
+.note{border-top:1px solid var(--line2);padding:12px 14px}
+.note:first-child{border-top:0}
+.note .nh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink3);margin-bottom:4px}
+.note .tx{white-space:pre-wrap}
+
+/* integration */
+.scopes{display:flex;flex-wrap:wrap;gap:5px}
+.scope{font-size:11.5px;padding:2px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--line2);font-family:ui-monospace,Menlo,Consolas,monospace}
+.scope.ok{background:var(--tealSoft);color:var(--teal);border-color:transparent}
+.scope.miss{background:var(--critSoft);color:var(--crit);text-decoration:line-through;border-color:transparent}
+.probe{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.probe .p{border:1px solid var(--line2);border-radius:6px;padding:10px 12px;background:var(--surface2)}
+.reslist button{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line2);padding:7px 12px;cursor:pointer}
+.reslist button[aria-pressed="true"]{background:var(--accentSoft);color:var(--accent)}
+pre.json{background:var(--surface2);border:1px solid var(--line2);border-radius:6px;padding:10px 12px;overflow:auto;max-height:380px;margin:0;white-space:pre}
+
+/* dialogs */
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);max-width:min(760px,94vw);width:100%;padding:0;box-shadow:0 20px 50px #0003}
+dialog::backdrop{background:rgba(8,22,30,.5)}
+.dh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line2)}
+.dh h2{margin:0;font-size:16px}
+.db{padding:14px 18px}
+.df{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--line2);background:var(--surface2);border-radius:0 0 10px 10px;flex-wrap:wrap}
+.radio{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line2);border-radius:6px;margin-bottom:6px;cursor:pointer}
+.radio:has(input:checked){border-color:var(--accent);background:var(--accentSoft)}
+label.chk{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0}
+.result{border-radius:6px;padding:10px 12px;margin-top:10px}
+.result.ok{background:var(--tealSoft)}.result.bad{background:var(--critSoft)}.result.sim{background:var(--simSoft)}
+
+/* gate, toast, footer */
+.gate{max-width:640px;margin:48px auto}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--chrome);color:var(--chromeInk);padding:9px 16px;border-radius:6px;font-size:13px;z-index:40;max-width:90vw;box-shadow:0 8px 24px #0004}
+.foot{font-size:11.5px;color:var(--ink3);padding:10px 20px 16px;border-top:1px solid var(--line);background:var(--surface)}
+.banner-replay{background:var(--simSoft);color:var(--ink);font-size:12.5px;padding:6px 16px;border-bottom:1px solid var(--line)}
+
+@media (max-width:1100px){.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}.kid{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .top{position:static}
+  .chrome .row{height:auto;flex-wrap:wrap;padding:8px 12px;gap:8px}
+  .fresh{display:none}
+  .body{grid-template-columns:1fr}
+  nav.side{position:static;height:auto;display:flex;overflow-x:auto;gap:2px;padding:6px;border-right:0;border-bottom:1px solid var(--line)}
+  nav.side .grp{display:none}
+  nav.side button{width:auto;white-space:nowrap}
+  .who{border-right:0;min-width:0}
+  .fact{padding:0 12px 0 0;border-right:0}
+  .probe{grid-template-columns:1fr}
+  main{padding:14px 12px 30px}
+}
+@media (prefers-reduced-motion:no-preference){.node rect,.edge path{transition:fill .3s,stroke .3s}}
+</style>
+<meta name="description" content="Explore a synthetic patient record: results, care pathway, tasks, notes and an audit trail. This is a recorded replay, so nothing needs to be connected."><link rel="canonical" href="https://hnasr.com/labs/careos-twin/"><meta property="og:title" content="CareOS Twin · Hassan Nasr"><meta property="og:description" content="Explore a synthetic patient record: results, care pathway, tasks, notes and an audit trail. This is a recorded replay, so nothing needs to be connected."><meta property="og:url" content="https://hnasr.com/labs/careos-twin/"><meta property="og:image" content="https://hnasr.com/assets/labs/careos-twin.webp"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="robots" content="index,follow"><style id="hn-back">.hn-back{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:inline-flex;align-items:center;gap:0;height:40px;min-width:40px;padding:0 12px;box-sizing:border-box;border-radius:999px;background:rgba(9,11,14,.78);color:#ece6d8;border:1px solid rgba(255,255,255,.18);font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s}.hn-back:hover{border-color:rgba(255,255,255,.45)}.hn-back:focus-visible{outline:2px solid #ff5b26;outline-offset:2px}.hn-back-t{display:inline-block;max-width:0;overflow:hidden;opacity:0;margin-left:0;transition:max-width .35s,opacity .25s,margin-left .35s}.hn-back:hover .hn-back-t,.hn-back:focus-visible .hn-back-t{max-width:90px;opacity:1;margin-left:8px}@media (max-width:760px){.hn-back-t{max-width:90px;opacity:1;margin-left:8px}}@media (prefers-reduced-motion:reduce){.hn-back,.hn-back-t{transition:none}}.hn-back[data-corner="bl"]{right:auto;left:calc(12px + env(safe-area-inset-left,0px))}.hn-back[data-corner="tr"]{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="tl"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="mr"]{bottom:auto;top:50%;transform:translateY(-50%)}.hn-back[data-corner="ml"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%)}.hn-back.is-compact{width:40px;padding:0;justify-content:center}.hn-back.is-compact .hn-back-t{max-width:0!important;opacity:0!important;margin-left:0!important}</style></head>
+<body><a class="hn-back" href="/labs/" aria-label="All labs"><span aria-hidden="true">←</span><span class="hn-back-t">All labs</span></a><script id="hn-back-js">(()=>{const b=document.querySelector('.hn-back');if(!b||!document.elementsFromPoint||!window.MutationObserver)return;
+const CTRL='button,a[href],input,select,textarea,[role="button"],[role="tab"],[role="slider"],[role="link"]';
+const hits=()=>{const r=b.getBoundingClientRect();let n=0;for(const[x,y]of[[r.left+r.width/2,r.top+r.height/2],[r.left+3,r.top+3],[r.right-3,r.top+3],[r.left+3,r.bottom-3],[r.right-3,r.bottom-3]]){if(document.elementsFromPoint(x,y).some(e=>e!==b&&!b.contains(e)&&e.matches(CTRL)))n++}return n};
+const P=['br','bl','tr','tl','mr','ml'];
+const place=()=>{b.dataset.corner=b.dataset.corner||'br';if(!hits())return;
+for(const compact of[b.classList.contains('is-compact'),true]){b.classList.toggle('is-compact',compact);for(const c of P){b.dataset.corner=c;if(!hits())return}}
+let best=['br',1e9];for(const c of P){b.dataset.corner=c;const n=hits();if(n<best[1])best=[c,n]}b.dataset.corner=best[0]};
+let last=0,q=0;const soon=()=>{if(q)return;q=setTimeout(()=>{q=0;last=Date.now();place()},Math.max(150,1000-(Date.now()-last)))};
+addEventListener('load',()=>{setTimeout(place,1200);new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-expanded']})});
+addEventListener('resize',soon);addEventListener('orientationchange',soon);})();</script>
+<div class="top">
+  <header class="chrome"><div class="row">
+    <div class="brand"><svg viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="6" fill="#1E5A82"/><path d="M8 13h3l1.5-4 3 8 1.5-4h3" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>CareOS Twin</div>
+    <span class="env" title="Synthetic test data only">TEST · synthetic data</span>
+    <span class="mode" id="modeLbl"><i></i><span>Connecting…</span></span>
+    <span class="spacer"></span>
+    <span class="fresh" id="fresh"></span>
+    <button class="cbtn" id="refreshBtn" type="button"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>Refresh</button>
+  </div></header>
+  <div id="replayBar" class="banner-replay hidden"></div>
+  <section class="banner" aria-label="Patient"><div class="row" id="banner"><div class="who"><div class="avatar">…</div><div><div class="nm">Loading patient context</div><div class="dm">Waiting for the EPJ launch</div></div></div></div></section>
+</div>
+
+<div class="body" id="shell">
+  <nav class="side" aria-label="Activities">
+    <div class="grp">Patient</div>
+    <button type="button" data-view="summary"><svg class="i" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Summary</button>
+    <button type="button" data-view="results"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Results</button>
+    <button type="button" data-view="problems"><svg class="i" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Problem list</button>
+    <button type="button" data-view="notes"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></svg>Journal notes</button>
+    <div class="grp">Workflow</div>
+    <button type="button" data-view="pathway"><svg class="i" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 6h10M6 8l5 8M18 8l-5 8"/></svg>Care pathway</button>
+    <button type="button" data-view="tasks"><svg class="i" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg>Tasks<span class="cnt hidden" id="taskCnt"></span></button>
+    <div class="grp">Integration</div>
+    <button type="button" data-view="integration"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>SMART &amp; FHIR</button>
+    <button type="button" data-view="audit"><svg class="i" viewBox="0 0 24 24"><path d="M12 8v4l3 2M21 12a9 9 0 1 1-9-9"/></svg>Audit trail</button>
+  </nav>
+  <main id="main">
+    <div id="gate" class="hidden"></div>
+    <section class="view" id="v-summary" aria-labelledby="h-summary"><div class="vh"><h1 id="h-summary">Summary</h1><p>Kidney function follow-up before prescription renewal</p></div><div id="summary"></div></section>
+    <section class="view" id="v-results" aria-labelledby="h-results"><div class="vh"><h1 id="h-results">Results</h1><p>Kidney measurements from the EPJ, newest first</p></div><div id="results"></div></section>
+    <section class="view" id="v-problems" aria-labelledby="h-problems"><div class="vh"><h1 id="h-problems">Problem list</h1><p>Diagnoses grouped from the patient’s consultations</p></div><div id="problems"></div></section>
+    <section class="view" id="v-notes" aria-labelledby="h-notes"><div class="vh"><h1 id="h-notes">Journal notes</h1><p>Notes dated by their consultation</p></div><div id="notes"></div></section>
+    <section class="view" id="v-pathway" aria-labelledby="h-pathway"><div class="vh"><h1 id="h-pathway">Care pathway</h1><p>Select a step or an arrow to see why the patient is where they are</p></div><div id="pathway"></div></section>
+    <section class="view" id="v-tasks" aria-labelledby="h-tasks"><div class="vh"><h1 id="h-tasks">Tasks</h1><p>Ordered by status and priority, each with its reason and evidence</p></div><div id="tasks"></div></section>
+    <section class="view" id="v-integration" aria-labelledby="h-integration"><div class="vh"><h1 id="h-integration">SMART &amp; FHIR integration</h1><p>Launch context, token claims, scope enforcement and every FHIR request</p></div><div id="integration"></div></section>
+    <section class="view" id="v-audit" aria-labelledby="h-audit"><div class="vh"><h1 id="h-audit">Audit trail</h1><p>Evaluations, state changes, acknowledgements and writes in this session</p></div><div id="audit"></div></section>
+  </main>
+</div>
+<footer class="foot">CareOS Twin prototype · Norwegian FHIR Hackathon 2026, SMART on FHIR track · Synthetic data only. Workflow rules and thresholds are illustrative and not clinically validated. Advisories prompt a clinician review; they are not diagnoses or treatment advice. KDIGO categories are shown for orientation only.</footer>
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
+<dialog id="dlg" aria-labelledby="dlgTitle"><div id="dlgBody"></div></dialog>
+
+<script>
+window.CAREOS_RUNTIME = 'artifact';
+// CareOS Twin workflow engine.
+// Plain JavaScript on purpose: the Node server imports it, and the page inlines the same file so that
+// live and replay modes evaluate with identical rules. Pure functions only: no I/O, no clock reads
+// except the evaluation time passed in.
+//
+// Every threshold here is ILLUSTRATIVE and NOT CLINICALLY VALIDATED. The problem card leaves open which
+// change over which time span is worth a warning, and who decides. These values exist to demonstrate
+// explainable workflow logic, not to advise on care.
+
+const ENGINE_VERSION = '1.0.0'
+
+const LOINC = 'http://loinc.org'
+const UCUM = 'http://unitsofmeasure.org'
+
+const SERIES = {
+    egfr: { key: 'egfr', code: '62238-1', display: 'eGFR', unitCode: 'mL/min/{1.73_m2}', min: 1, max: 200 },
+    creatinine: { key: 'creatinine', code: '14682-9', display: 'Creatinine', unitCode: 'umol/L', min: 10, max: 2000 },
+}
+
+const DEFAULT_SETTINGS = {
+    minReadings: 3,
+    freshnessDays: 365,
+    dropThreshold: 10,
+    dropWindowDays: 1095,
+}
+
+const SETTING_LIMITS = {
+    minReadings: [2, 10],
+    freshnessDays: [30, 1825],
+    dropThreshold: [1, 60],
+    dropWindowDays: [90, 3650],
+}
+
+const DEFINITION = {
+    id: 'kidney-follow-up',
+    version: '1.0.0',
+    name: 'Kidney function follow-up before prescription renewal',
+    illustrative: true,
+    states: [
+        { id: 'INTAKE', label: 'Intake', description: 'The app has launch context from the EPJ.' },
+        { id: 'REVIEW', label: 'Data review', description: 'Kidney measurements are being gathered.' },
+        { id: 'MONITORING', label: 'Monitoring', description: 'Enough readings exist to read a trend.' },
+        {
+            id: 'CLINICIAN_REVIEW_REQUIRED',
+            label: 'Clinician review',
+            description: 'A workflow rule asks a clinician to look before renewing.',
+        },
+        { id: 'FOLLOW_UP', label: 'Follow-up', description: 'Follow-up should be documented in the journal.' },
+        { id: 'COMPLETE', label: 'Complete', description: 'Follow-up is documented for this consultation.' },
+    ],
+    transitions: [
+        { id: 'T1', from: 'INTAKE', to: 'REVIEW', guard: 'G-CONTEXT', label: 'Launch context present' },
+        { id: 'T2', from: 'REVIEW', to: 'MONITORING', guard: 'R-DATA-001', label: 'Enough eGFR readings' },
+        {
+            id: 'T3',
+            from: 'MONITORING',
+            to: 'CLINICIAN_REVIEW_REQUIRED',
+            guard: 'G-REVIEW-TRIGGER',
+            label: 'Review triggered',
+        },
+        { id: 'T4', from: 'MONITORING', to: 'FOLLOW_UP', guard: 'G-STABLE', label: 'No review trigger' },
+        { id: 'T5', from: 'CLINICIAN_REVIEW_REQUIRED', to: 'FOLLOW_UP', guard: 'R-ACK-004', label: 'Review acknowledged' },
+        { id: 'T6', from: 'FOLLOW_UP', to: 'COMPLETE', guard: 'R-DOC-005', label: 'Follow-up documented' },
+    ],
+}
+
+function clampSettings(input) {
+    const out = { ...DEFAULT_SETTINGS }
+
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+        const value = Number(input?.[key])
+        const [lo, hi] = SETTING_LIMITS[key]
+
+        if (Number.isFinite(value)) {
+            out[key] = Math.min(hi, Math.max(lo, Math.round(value)))
+        }
+    }
+
+    return out
+}
+
+const DAY = 86_400_000
+
+function daysBetween(a, b) {
+    return Math.floor((Date.parse(b) - Date.parse(a)) / DAY)
+}
+
+function round(value, digits = 1) {
+    const f = 10 ** digits
+    return Math.round(value * f) / f
+}
+
+function ref(reading) {
+    return `Observation/${reading.id}`
+}
+
+function unitsOf(readings) {
+    return [...new Set(readings.map((r) => r.unitCode))]
+}
+
+// ---- Rules ---------------------------------------------------------------
+
+function ruleContext(snapshot) {
+    const ok = Boolean(snapshot.patient?.id && snapshot.encounter?.id)
+
+    return {
+        id: 'G-CONTEXT',
+        version: '1.0.0',
+        title: 'Launch context present',
+        condition: 'patient.id ≠ null AND encounter.id ≠ null',
+        inputs: { patient: snapshot.patient?.id ?? null, encounter: snapshot.encounter?.id ?? null },
+        result: ok ? 'pass' : 'fail',
+        explanation: ok
+            ? 'The EPJ supplied both a patient and an active consultation.'
+            : 'Patient or consultation context is missing. Launch the app again from a consultation.',
+        evidence: [snapshot.patient?.id && `Patient/${snapshot.patient.id}`, snapshot.encounter?.id && `Encounter/${snapshot.encounter.id}`].filter(Boolean),
+        limitations: [],
+    }
+}
+
+function ruleTrendReady(series, settings) {
+    const readings = series?.readings ?? []
+    const units = unitsOf(readings)
+    const enough = readings.length >= settings.minReadings
+    const oneUnit = units.length <= 1
+    const unavailable = series?.status && series.status !== 'ok'
+
+    let result = enough && oneUnit ? 'pass' : 'fail'
+    let explanation
+
+    if (unavailable) {
+        result = 'unavailable'
+        explanation = `eGFR data is unavailable (${series.status}): ${series.message ?? 'no detail'}.`
+    } else if (!oneUnit) {
+        explanation = `Readings use ${units.length} different units (${units.join(', ')}). A trend is only drawn within one unit.`
+    } else if (!enough) {
+        explanation = `${readings.length} of ${settings.minReadings} eGFR readings available. Not enough to read a trend.`
+    } else {
+        explanation = `${readings.length} eGFR readings in ${units[0]}. Enough to read a trend.`
+    }
+
+    return {
+        id: 'R-DATA-001',
+        version: '1.0.0',
+        title: 'Enough eGFR readings for a trend',
+        condition: `count(eGFR readings) ≥ ${settings.minReadings} AND distinct(units) = 1`,
+        inputs: { readings: readings.length, units, minReadings: settings.minReadings },
+        result,
+        explanation,
+        evidence: readings.map(ref),
+        limitations: ['Counts readings only; does not judge their clinical quality.'],
+    }
+}
+
+function ruleFreshness(series, settings, now) {
+    const readings = series?.readings ?? []
+    const newest = readings.at(-1)
+
+    if (!newest) {
+        return {
+            id: 'R-FRESH-002',
+            version: '1.0.0',
+            title: 'Recent eGFR reading',
+            condition: `days(now − newest eGFR) ≤ ${settings.freshnessDays}`,
+            inputs: { newest: null, freshnessDays: settings.freshnessDays },
+            result: 'unavailable',
+            explanation: 'No eGFR reading is available, so freshness cannot be judged.',
+            evidence: [],
+            limitations: ['Illustrative interval, not clinically validated.'],
+        }
+    }
+
+    const age = daysBetween(newest.at, now)
+    const fresh = age <= settings.freshnessDays
+
+    return {
+        id: 'R-FRESH-002',
+        version: '1.0.0',
+        title: 'Recent eGFR reading',
+        condition: `days(now − newest eGFR) ≤ ${settings.freshnessDays}`,
+        inputs: { newest: newest.at.slice(0, 10), ageDays: age, freshnessDays: settings.freshnessDays },
+        result: fresh ? 'pass' : 'fail',
+        explanation: fresh
+            ? `Newest eGFR is ${age} days old, within the ${settings.freshnessDays}-day demo interval.`
+            : `Newest eGFR is ${age} days old, older than the ${settings.freshnessDays}-day demo interval.`,
+        evidence: [ref(newest)],
+        limitations: ['Illustrative interval, not clinically validated.', 'Ignores readings outside this EPJ.'],
+    }
+}
+
+function ruleDrop(series, settings) {
+    const readings = series?.readings ?? []
+    const base = {
+        id: 'R-DROP-003',
+        version: '1.0.0',
+        title: 'Illustrative eGFR change threshold',
+        condition: `first(eGFR in last ${settings.dropWindowDays} d) − latest(eGFR) ≥ ${settings.dropThreshold}`,
+        limitations: [
+            'ILLUSTRATIVE threshold, not clinically validated. Who decides the real threshold is an open question.',
+            'Compares two values; ignores measurement variation and context.',
+            'A flag prompts a review. It is not a diagnosis.',
+        ],
+    }
+
+    if (readings.length < 2 || unitsOf(readings).length !== 1) {
+        return {
+            ...base,
+            inputs: { readings: readings.length },
+            result: 'unavailable',
+            explanation: 'At least two eGFR readings in one unit are needed to compare.',
+            evidence: readings.map(ref),
+        }
+    }
+
+    const latest = readings.at(-1)
+    const windowStart = Date.parse(latest.at) - settings.dropWindowDays * DAY
+    const inWindow = readings.filter((r) => Date.parse(r.at) >= windowStart)
+    const first = inWindow[0]
+    const drop = round(first.value - latest.value)
+    const triggered = first !== latest && drop >= settings.dropThreshold
+
+    return {
+        ...base,
+        inputs: {
+            first: `${first.value} ${first.unitCode} (${first.at.slice(0, 10)})`,
+            latest: `${latest.value} ${latest.unitCode} (${latest.at.slice(0, 10)})`,
+            change: -drop,
+            threshold: settings.dropThreshold,
+            windowDays: settings.dropWindowDays,
+        },
+        result: triggered ? 'fail' : 'pass',
+        explanation: triggered
+            ? `eGFR changed from ${first.value} to ${latest.value} (${-drop}), a fall of at least ${settings.dropThreshold}. Consider a clinician review before renewal.`
+            : `eGFR changed from ${first.value} to ${latest.value} (${drop > 0 ? -drop : '+' + -drop}), below the ${settings.dropThreshold} demo threshold.`,
+        evidence: [ref(first), ref(latest)],
+    }
+}
+
+function ruleAcknowledged(state) {
+    const ack = state.acknowledgements?.find((a) => a.actionId === 'A-REVIEW')
+
+    return {
+        id: 'R-ACK-004',
+        version: '1.0.0',
+        title: 'Clinician acknowledged the review',
+        condition: 'exists(acknowledgement for A-REVIEW)',
+        inputs: { acknowledgedAt: ack?.at ?? null, by: ack?.actor ?? null },
+        result: ack ? 'pass' : 'fail',
+        explanation: ack
+            ? `Review acknowledged in this prototype at ${ack.at.slice(11, 16)} UTC.`
+            : 'No clinician has acknowledged the kidney review yet.',
+        evidence: ack ? [`AuditEvent/${ack.auditId}`] : [],
+        limitations: ['Acknowledgement is stored locally in the prototype, not in the EPJ.'],
+    }
+}
+
+function ruleDocumented(snapshot) {
+    const notes = (snapshot.notes ?? []).filter((n) => !n.encounter || n.encounter === snapshot.encounter?.id)
+    const live = notes.filter((n) => n.source === 'live')
+    const ok = notes.length > 0
+
+    return {
+        id: 'R-DOC-005',
+        version: '1.0.0',
+        title: 'Follow-up documented in this consultation',
+        condition: 'count(journal notes for this encounter) ≥ 1',
+        inputs: { notes: notes.length, live: live.length, simulated: notes.length - live.length },
+        result: ok ? 'pass' : 'fail',
+        explanation: ok
+            ? `${notes.length} journal note(s) recorded for this consultation${live.length < notes.length ? ' (includes simulated notes)' : ''}.`
+            : 'No journal note has been written for this consultation from this app.',
+        evidence: notes.map((n) => `DocumentReference/${n.id}`),
+        limitations: ['Only counts notes written or found for the launched encounter.'],
+    }
+}
+
+// ---- Evaluation ------------------------------------------------------------
+
+function evaluate(snapshot, settingsInput, state = {}, now = new Date().toISOString()) {
+    const settings = clampSettings(settingsInput)
+    const egfr = snapshot.series?.egfr
+
+    const rules = {
+        'G-CONTEXT': ruleContext(snapshot),
+        'R-DATA-001': ruleTrendReady(egfr, settings),
+        'R-FRESH-002': ruleFreshness(egfr, settings, now),
+        'R-DROP-003': ruleDrop(egfr, settings),
+        'R-ACK-004': ruleAcknowledged(state),
+        'R-DOC-005': ruleDocumented(snapshot),
+    }
+
+    for (const rule of Object.values(rules)) {
+        rule.evaluatedAt = now
+    }
+
+    const reviewTriggered = rules['R-DROP-003'].result === 'fail' || rules['R-FRESH-002'].result === 'fail'
+    const guards = {
+        'G-CONTEXT': rules['G-CONTEXT'].result === 'pass',
+        'R-DATA-001': rules['R-DATA-001'].result === 'pass',
+        'G-REVIEW-TRIGGER': reviewTriggered,
+        'G-STABLE': !reviewTriggered,
+        'R-ACK-004': rules['R-ACK-004'].result === 'pass',
+        'R-DOC-005': rules['R-DOC-005'].result === 'pass',
+    }
+
+    const guardExplain = {
+        'G-REVIEW-TRIGGER': reviewTriggered
+            ? 'Triggered because ' +
+              [
+                  rules['R-DROP-003'].result === 'fail' && 'the eGFR change threshold was met (R-DROP-003)',
+                  rules['R-FRESH-002'].result === 'fail' && 'the newest eGFR is outside the demo interval (R-FRESH-002)',
+              ]
+                  .filter(Boolean)
+                  .join(' and ') +
+              '.'
+            : 'Not triggered: R-DROP-003 and R-FRESH-002 both passed or were unavailable.',
+        'G-STABLE': !reviewTriggered
+            ? 'No review trigger, so the pathway continues straight to follow-up.'
+            : 'Blocked: a review trigger is active.',
+    }
+
+    const transitions = DEFINITION.transitions.map((t) => {
+        const rule = rules[t.guard]
+        return {
+            transitionId: t.id,
+            sourceState: t.from,
+            targetState: t.to,
+            guardId: t.guard,
+            label: t.label,
+            passed: guards[t.guard],
+            explanation: rule ? rule.explanation : guardExplain[t.guard],
+            inputs: rule
+                ? rule.inputs
+                : { 'R-DROP-003': rules['R-DROP-003'].result, 'R-FRESH-002': rules['R-FRESH-002'].result },
+            evidenceReferences: rule ? rule.evidence : [...rules['R-DROP-003'].evidence, ...rules['R-FRESH-002'].evidence],
+        }
+    })
+
+    // Walk the pathway from INTAKE, following the first passing transition from each state.
+    const path = ['INTAKE']
+    let current = 'INTAKE'
+
+    for (let i = 0; i < DEFINITION.states.length; i++) {
+        const next = transitions.find((t) => t.sourceState === current && t.passed)
+        if (!next) break
+        current = next.targetState
+        path.push(current)
+    }
+
+    const states = {}
+    for (const s of DEFINITION.states) {
+        if (s.id === current) states[s.id] = current === 'COMPLETE' ? 'completed' : 'active'
+        else if (path.includes(s.id)) states[s.id] = 'completed'
+        else states[s.id] = 'pending'
+    }
+
+    const blocked = transitions.filter((t) => t.sourceState === current && !t.passed).map((t) => t.transitionId)
+    if (current !== 'COMPLETE' && blocked.length > 0 && !transitions.some((t) => t.sourceState === current && t.passed)) {
+        for (const t of transitions) if (blocked.includes(t.transitionId)) t.blocked = true
+    }
+
+    for (const t of transitions) {
+        t.traversed = path.includes(t.sourceState) && path.includes(t.targetState) && path.indexOf(t.targetState) === path.indexOf(t.sourceState) + 1
+    }
+
+    const actions = buildActions(snapshot, rules, current, path, state)
+    const flags = Object.values(rules).filter((r) => r.result === 'fail' && ['R-DROP-003', 'R-FRESH-002', 'R-DATA-001'].includes(r.id))
+
+    return {
+        engineVersion: ENGINE_VERSION,
+        definitionId: DEFINITION.id,
+        definitionVersion: DEFINITION.version,
+        evaluatedAt: now,
+        settings,
+        currentState: current,
+        path,
+        states,
+        transitions,
+        rules: Object.values(rules),
+        flags,
+        actions,
+    }
+}
+
+const STATUS_ORDER = { READY: 0, BLOCKED: 1, PENDING: 2, ACKNOWLEDGED: 3, COMPLETED: 4 }
+
+function buildActions(snapshot, rules, current, path, state) {
+    const actions = []
+    const acked = (id) => state.acknowledgements?.some((a) => a.actionId === id)
+    const reached = (s) => path.includes(s)
+
+    if (rules['R-DATA-001'].result !== 'pass') {
+        actions.push({
+            id: 'A-DATA',
+            title: 'Gather more eGFR readings',
+            role: 'GP',
+            priority: 1,
+            reason: rules['R-DATA-001'].explanation,
+            requiredEvidence: 'eGFR Observations in one unit',
+            status: 'READY',
+            source: 'R-DATA-001',
+            evidence: rules['R-DATA-001'].evidence,
+            simulated: false,
+        })
+    }
+
+    if (reached('CLINICIAN_REVIEW_REQUIRED')) {
+        actions.push({
+            id: 'A-REVIEW',
+            title: 'Review kidney trend before renewing the prescription',
+            role: 'GP',
+            priority: 1,
+            reason: [rules['R-DROP-003'], rules['R-FRESH-002']]
+                .filter((r) => r.result === 'fail')
+                .map((r) => r.explanation)
+                .join(' '),
+            requiredEvidence: 'eGFR trend and latest creatinine',
+            status: acked('A-REVIEW') ? 'ACKNOWLEDGED' : 'READY',
+            source: 'G-REVIEW-TRIGGER',
+            evidence: [...rules['R-DROP-003'].evidence, ...rules['R-FRESH-002'].evidence],
+            canAcknowledge: !acked('A-REVIEW'),
+            simulated: false,
+        })
+    }
+
+    if (rules['R-FRESH-002'].result === 'fail') {
+        actions.push({
+            id: 'A-NEW-EGFR',
+            title: 'Consider a new eGFR measurement',
+            role: 'GP',
+            priority: 2,
+            reason: rules['R-FRESH-002'].explanation,
+            requiredEvidence: 'A new eGFR Observation',
+            status: acked('A-NEW-EGFR') ? 'ACKNOWLEDGED' : 'READY',
+            source: 'R-FRESH-002',
+            evidence: rules['R-FRESH-002'].evidence,
+            canAcknowledge: !acked('A-NEW-EGFR'),
+            canRecord: true,
+            simulated: false,
+        })
+    }
+
+    const documented = rules['R-DOC-005'].result === 'pass'
+    actions.push({
+        id: 'A-DOCUMENT',
+        title: 'Document follow-up in the journal',
+        role: 'GP',
+        priority: 3,
+        reason: documented
+            ? rules['R-DOC-005'].explanation
+            : reached('FOLLOW_UP')
+              ? 'The pathway is at follow-up. A journal note citing the reviewed values completes it.'
+              : `Blocked until the pathway reaches Follow-up (now at ${labelOf(current)}).`,
+        requiredEvidence: 'DocumentReference for this consultation',
+        status: documented ? 'COMPLETED' : reached('FOLLOW_UP') ? 'READY' : 'BLOCKED',
+        source: 'R-DOC-005',
+        evidence: rules['R-DOC-005'].evidence,
+        canWrite: !documented,
+        simulated: false,
+    })
+
+    for (const task of snapshot.fixtures?.tasks ?? []) {
+        actions.push({
+            id: task.id,
+            title: task.title,
+            role: task.owner,
+            priority: task.priority,
+            reason: task.reason,
+            requiredEvidence: task.requiredEvidence,
+            status: acked(task.id) ? 'ACKNOWLEDGED' : task.status,
+            source: `Task/${task.id} (simulated fixture)`,
+            evidence: [],
+            canAcknowledge: !acked(task.id) && task.status !== 'COMPLETED',
+            simulated: true,
+        })
+    }
+
+    return actions.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || a.priority - b.priority)
+}
+
+function labelOf(stateId) {
+    return DEFINITION.states.find((s) => s.id === stateId)?.label ?? stateId
+}
+
+// ---- Write-back shapes (exactly what nav-epj accepts) ----------------------
+
+function buildJournalNote(context, text) {
+    return {
+        resourceType: 'DocumentReference',
+        status: 'current',
+        type: { coding: [{ system: 'urn:oid:2.16.578.1.12.4.1.1.9602', code: 'J01-2' }] },
+        subject: { reference: `Patient/${context.patient}` },
+        context: { encounter: [{ reference: `Encounter/${context.encounter}` }] },
+        description: String(text).trim(),
+        content: [{ attachment: { contentType: 'application/pdf' } }],
+    }
+}
+
+function buildKidneyObservation(context, seriesKey, value, effective) {
+    const s = SERIES[seriesKey]
+
+    return {
+        resourceType: 'Observation',
+        status: 'final',
+        code: { coding: [{ system: LOINC, code: s.code, display: s.display }] },
+        subject: { reference: `Patient/${context.patient}` },
+        encounter: { reference: `Encounter/${context.encounter}` },
+        effectiveDateTime: effective,
+        valueQuantity: { value, unit: s.unitCode, system: UCUM, code: s.unitCode },
+    }
+}
+
+function validateKidneyValue(seriesKey, raw) {
+    const s = SERIES[seriesKey]
+    if (!s) return { ok: false, error: 'Unknown measurement.' }
+    const text = String(raw ?? '').trim().replace(',', '.')
+    if (!/^\d{1,8}(\.\d{1,4})?$/.test(text)) {
+        return { ok: false, error: 'Enter a number with at most 8 integer digits and 4 decimals.' }
+    }
+    const value = Number(text)
+    if (value < s.min || value > s.max) {
+        return { ok: false, error: `${s.display} must be between ${s.min} and ${s.max} ${s.unitCode}.` }
+    }
+    return { ok: true, value }
+}
+
+function draftNoteText(snapshot, evaluation) {
+    const day = (iso) => iso.slice(0, 10).split('-').reverse().join('.')
+    const fmt = (r) => `${r.value} ${r.unit || r.unitCode} (${day(r.at)})`
+    const eg = snapshot.series?.egfr?.readings ?? []
+    const cr = snapshot.series?.creatinine?.readings ?? []
+    const lines = ['Kidney function reviewed before prescription renewal.']
+    if (eg.length) lines.push(`eGFR: ${eg.map(fmt).join(', ')}.`)
+    if (cr.length) lines.push(`Creatinine: latest ${fmt(cr.at(-1))}.`)
+    const flagged = evaluation.flags.filter((f) => f.id !== 'R-DATA-001')
+    if (flagged.length) lines.push(`Workflow flags reviewed: ${flagged.map((f) => f.id).join(', ')} (illustrative rules).`)
+    lines.push('Assessment and plan: ')
+    return lines.join('\n')
+}
+
+const MAX_NOTE_LENGTH = 2000
+
+// ---- Informational kidney summaries -----------------------------------------
+// KDIGO 2012 GFR categories are a published classification of a single value. They are shown for
+// orientation only and do not drive any workflow rule. The slope is plain arithmetic over the readings.
+
+const GFR_CATEGORIES = [
+    { id: 'G1', min: 90, label: 'Normal or high' },
+    { id: 'G2', min: 60, label: 'Mildly decreased' },
+    { id: 'G3a', min: 45, label: 'Mildly to moderately decreased' },
+    { id: 'G3b', min: 30, label: 'Moderately to severely decreased' },
+    { id: 'G4', min: 15, label: 'Severely decreased' },
+    { id: 'G5', min: 0, label: 'Kidney failure range' },
+]
+
+function gfrCategory(value) {
+    if (!Number.isFinite(value)) return null
+    return GFR_CATEGORIES.find((c) => value >= c.min) ?? null
+}
+
+// Least-squares slope in units per year. Needs two or more readings spanning at least 30 days.
+function slopePerYear(readings) {
+    if (!readings || readings.length < 2) return null
+    const t0 = Date.parse(readings[0].at)
+    const pts = readings.map((r) => [(Date.parse(r.at) - t0) / (365.25 * DAY), r.value])
+    const span = pts.at(-1)[0] - pts[0][0]
+    if (span < 30 / 365.25) return null
+    const n = pts.length
+    const mx = pts.reduce((s, p) => s + p[0], 0) / n
+    const my = pts.reduce((s, p) => s + p[1], 0) / n
+    const sxx = pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0)
+    const sxy = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0)
+    return { perYear: round(sxy / sxx, 1), spanYears: round(span, 1), n }
+}
+
+const ACK_REASONS = [
+    { id: 'reviewed-plan-documented', label: 'Reviewed. Plan documented in the journal' },
+    { id: 'reviewed-new-sample', label: 'Reviewed. New eGFR will be taken' },
+    { id: 'reviewed-no-change', label: 'Reviewed. No change needed now' },
+    { id: 'not-relevant', label: 'Not relevant for this consultation' },
+]
+
+// Simulated, clearly labeled fixtures. nav-epj does not expose CarePlan or Task, so the pathway's plan and
+// coordination tasks live here. They are never sent to the EPJ and never mixed silently with live data.
+
+const FIXTURE_CARE_PLAN = {
+    resourceType: 'CarePlan',
+    id: 'sim-careplan-kidney',
+    status: 'active',
+    intent: 'plan',
+    title: 'Kidney function follow-up (simulated fixture)',
+    description: 'Illustrative care plan used to demonstrate pathway coordination. Not from the EPJ.',
+    simulated: true,
+}
+
+const FIXTURE_TASKS = [
+    {
+        id: 'sim-task-medication-review',
+        title: 'Medication review at renewal',
+        owner: 'GP',
+        priority: 2,
+        status: 'PENDING',
+        reason: 'Simulated care-plan step: review renally cleared medicines when renewing.',
+        requiredEvidence: 'Current medication list (not available in this demo)',
+    },
+    {
+        id: 'sim-task-coordinator',
+        title: 'Book follow-up consultation',
+        owner: 'Care coordinator',
+        priority: 4,
+        status: 'PENDING',
+        reason: 'Simulated care-plan step owned by the practice coordinator.',
+        requiredEvidence: 'Appointment (not modeled in this demo)',
+    },
+]
+
+// Replay snapshot: a fully synthetic patient for offline demos. It is NOT one of the nav-epj seeded patients
+// and NOT live interoperability. Shown only with a replay banner.
+const ICPC2 = 'urn:oid:2.16.578.1.12.4.1.1.7170'
+const ICD10 = 'urn:oid:2.16.578.1.12.4.1.1.7110'
+const EGFR_UNIT = 'mL/min/1.73 m2'
+
+// Shaped like nav-epj's responses: one consultation per reading, diagnoses grouped from per-consultation
+// Conditions in ICPC-2 and ICD-10, display units next to UCUM codes, notes dated by their consultation.
+const REPLAY_VISITS = [
+    ['replay-e2', '2023-03-14T08:10:00Z', 68, 82],
+    ['replay-e3', '2023-11-21T08:40:00Z', 63, 88],
+    ['replay-e4', '2024-08-06T09:05:00Z', 57, 97],
+    ['replay-e5', '2025-06-17T07:55:00Z', 52, 104],
+]
+
+const REPLAY_SNAPSHOT = {
+    mode: 'replay',
+    retrievedAt: '2026-11-09T10:15:00Z',
+    patient: { id: 'replay-p1', name: 'Kari Fjell (synthetic replay)', age: 78, identifier: '•••••••••••', gender: 'female' },
+    encounter: { id: 'replay-e1', status: 'in-progress', start: '2026-11-09T09:30:00Z', organization: 'Replay Legekontor' },
+    encounters: [
+        { id: 'replay-e1', status: 'in-progress', start: '2026-11-09T09:30:00Z', current: true },
+        { id: 'replay-e6', status: 'cancelled', start: '2025-11-04T09:00:00Z', current: false },
+        ...REPLAY_VISITS.map(([id, start]) => ({ id, status: 'finished', start, current: false })).reverse(),
+    ],
+    clinician: { id: 'replay-pr1', name: 'Replay clinician', verified: false },
+    scopes: {
+        requested: 'openid fhirUser launch patient/Patient.r patient/Encounter.s patient/Condition.s patient/Observation.s patient/Observation.r patient/Observation.c patient/DocumentReference.s patient/DocumentReference.c patient/DocumentReference.r',
+        granted: 'openid fhirUser launch patient/Patient.r patient/Encounter.s patient/Condition.s patient/Observation.s patient/Observation.r patient/Observation.c patient/DocumentReference.s patient/DocumentReference.c patient/DocumentReference.r',
+    },
+    capabilities: { writeNote: true, writeObservation: true, readBack: true },
+    conditions: [
+        { id: 'replay-c1', label: 'Hypertensjon uten organkomplikasjoner', code: 'K86', system: ICPC2, count: 4, first: REPLAY_VISITS[0][1], latest: REPLAY_VISITS[3][1], inCurrent: false, references: [] },
+        { id: 'replay-c2', label: 'Nyresvikt / nedsatt nyrefunksjon', code: 'U99', system: ICPC2, count: 3, first: REPLAY_VISITS[1][1], latest: REPLAY_VISITS[3][1], inCurrent: false, references: [] },
+        { id: 'replay-c3', label: 'Kronisk nyresykdom, stadium 3', code: 'N18.3', system: ICD10, count: 3, first: REPLAY_VISITS[1][1], latest: REPLAY_VISITS[3][1], inCurrent: false, references: [] },
+        { id: 'replay-c4', label: 'Diabetes type 2', code: 'T90', system: ICPC2, count: 4, first: REPLAY_VISITS[0][1], latest: REPLAY_VISITS[3][1], inCurrent: false, references: [] },
+    ],
+    conditionsStatus: { status: 'ok' },
+    series: {
+        egfr: {
+            status: 'ok',
+            code: '62238-1',
+            readings: REPLAY_VISITS.map(([, at, v], i) => ({ id: `replay-o${i + 1}`, value: v, unit: EGFR_UNIT, unitCode: 'mL/min/{1.73_m2}', at })),
+        },
+        creatinine: {
+            status: 'ok',
+            code: '14682-9',
+            readings: REPLAY_VISITS.map(([, at, , v], i) => ({ id: `replay-o${i + 5}`, value: v, unit: 'µmol/L', unitCode: 'umol/L', at })),
+        },
+    },
+    notes: [
+        { id: 'replay-n1', description: 'Kjent hypertensjon. Redusert eGFR, nyrefunksjon følges. Ny kontroll om ett år.', createdAt: REPLAY_VISITS[3][1], encounter: 'replay-e5', source: 'live' },
+        { id: 'replay-n2', description: 'Stabilt blodtrykk. eGFR lett redusert, kontroll med blodprøver.', createdAt: REPLAY_VISITS[2][1], encounter: 'replay-e4', source: 'live' },
+    ],
+    notesStatus: { status: 'ok', message: '2 journal note(s) in the replay journal.' },
+    fixtures: { carePlan: FIXTURE_CARE_PLAN, tasks: FIXTURE_TASKS },
+    requests: [],
+    resources: {},
+}
+
+
+// ================================================================= helpers
+const $ = (s, el = document) => el.querySelector(s)
+const $$ = (s, el = document) => [...el.querySelectorAll(s)]
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '—')
+const fmtTime = (iso) => (iso ? new Date(iso).toLocaleString('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—')
+const fmtClock = (iso) => (iso ? new Date(iso).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' }) : '')
+const daysAgo = (iso) => Math.floor((Date.now() - Date.parse(iso)) / 86400000)
+const ago = (iso) => { const d = daysAgo(iso); return d < 1 ? 'today' : d < 60 ? `${d} days ago` : d < 730 ? `${Math.round(d / 30.4)} months ago` : `${(d / 365.25).toFixed(1)} years ago` }
+const STATUS_TEXT = { completed: 'Done', active: 'Current', pending: 'Not reached' }
+const ENC_STATUS = { 'in-progress': 'Ongoing', finished: 'Finished', planned: 'Planned', cancelled: 'Cancelled' }
+const ICON = {
+  warn: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3l10 18H2zM12 10v5M12 18h.01"/></svg>',
+  check: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>',
+  pen: '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  info: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+  play: '<svg class="i" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg>',
+}
+function codeSystemName(system) {
+  return { 'urn:oid:2.16.578.1.12.4.1.1.7170': 'ICPC-2', 'urn:oid:2.16.578.1.12.4.1.1.7110': 'ICD-10', 'ICPC-2': 'ICPC-2', 'ICD-10': 'ICD-10' }[system] ?? system ?? 'unknown system'
+}
+function initials(name) { return String(name ?? '?').replace(/\(.*?\)/g, '').trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase() }
+// nav-epj stores names in capitals (SIGRUN MOEN); show them in title case and leave mixed-case names alone.
+function titleCase(name) { const n = String(name ?? ''); return n !== n.toUpperCase() ? n : n.toLowerCase().replace(/(^|[\s-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()) }
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.add('hidden'), 3800) }
+
+// ================================================================= backends
+class HttpError extends Error { constructor(status, message) { super(message); this.status = status } }
+
+const LiveBackend = {
+  mode: 'live', csrf: '',
+  async request(path, body) {
+    const init = body === undefined ? { credentials: 'same-origin' } : { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json', 'x-csrf-token': this.csrf }, body: JSON.stringify(body) }
+    let res
+    try { res = await fetch(path, init) } catch { throw new HttpError(0, 'The CareOS server could not be reached.') }
+    let data = null
+    try { data = await res.json() } catch { /* not JSON */ }
+    if (!res.ok) throw new HttpError(res.status, data?.error ?? `Request failed with HTTP ${res.status}.`)
+    return data
+  },
+  async load() { const d = await this.request('/api/careos/snapshot'); this.csrf = d.csrf; return d },
+  settings(s) { return this.request('/api/careos/settings', s) },
+  acknowledge(actionId, reason) { return this.request('/api/careos/acknowledge', reason ? { actionId, reason } : { actionId }) },
+  note(text) { return this.request('/api/careos/note', { text }) },
+  observation(series, value) { return this.request('/api/careos/observation', { series, value }) },
+  tokens() { return this.request('/api/careos/tokens') },
+  probe() { return this.request('/api/careos/scope-probe') },
+}
+
+const ReplayBackend = {
+  mode: 'replay',
+  init() {
+    const sn = (this.snapshot = JSON.parse(JSON.stringify(REPLAY_SNAPSHOT)))
+    sn.retrievedAt = new Date().toISOString()
+    for (const s of Object.values(sn.series)) for (const r of s.readings) sn.resources[`Observation/${r.id}`] = { resourceType: 'Observation', id: r.id, status: 'final', code: { coding: [{ system: 'http://loinc.org', code: s.code }] }, effectiveDateTime: r.at, valueQuantity: { value: r.value, unit: r.unit, system: 'http://unitsofmeasure.org', code: r.unitCode } }
+    sn.resources['Patient/replay-p1'] = { resourceType: 'Patient', id: 'replay-p1', name: [{ text: sn.patient.name }], identifier: [{ system: 'urn:oid:2.16.578.1.12.4.1.4.1', value: '•••••••••••' }], gender: 'female' }
+    for (const c of sn.conditions) sn.resources[`Condition/${c.id}`] = { resourceType: 'Condition', id: c.id, category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-category', code: 'encounter-diagnosis' }] }], code: { coding: [{ system: c.system, code: c.code, display: c.label }] } }
+    for (const e of sn.encounters) sn.resources[`Encounter/${e.id}`] = { resourceType: 'Encounter', id: e.id, status: e.status, period: { start: e.start }, class: { system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode', code: 'VR' } }
+    for (const n of sn.notes) sn.resources[`DocumentReference/${n.id}`] = { resourceType: 'DocumentReference', id: n.id, status: 'current', description: n.description, context: { encounter: [{ reference: `Encounter/${n.encounter}` }] } }
+    sn.requests = [{ at: sn.retrievedAt, method: '—', path: 'Replay fixtures loaded locally', status: 0, ms: 0, outcome: 'No network request in replay mode' }]
+    this.settings_ = { ...DEFAULT_SETTINGS }; this.acks = []; this.audit = []; this.last = null; this.seq = 0
+  },
+  ev(reason) {
+    const evaluation = evaluate(this.snapshot, this.settings_, { acknowledgements: this.acks })
+    if (this.last !== evaluation.currentState) {
+      this.push({ type: this.last ? 'state-changed' : 'evaluated', source: 'workflow-engine', previousState: this.last ?? undefined, newState: evaluation.currentState, reason: this.last ? `${reason}: ${labelOf(this.last)} → ${labelOf(evaluation.currentState)}` : `First evaluation: pathway at ${labelOf(evaluation.currentState)}` })
+      this.last = evaluation.currentState
+    }
+    return { snapshot: this.snapshot, evaluation, audit: this.audit, acknowledgements: this.acks }
+  },
+  push(e) { const ev = { id: `replay-audit-${++this.seq}`, at: new Date().toISOString(), actor: 'Replay clinician', ...e }; this.audit.push(ev); return ev },
+  async load() { if (!this.snapshot) this.init(); return this.ev('Data refreshed') },
+  async settings(s) { this.settings_ = clampSettings(s); this.push({ type: 'settings-changed', source: 'ui', reason: `Illustrative rule settings changed to ${JSON.stringify(this.settings_)}` }); return this.ev('Rule settings changed') },
+  async acknowledge(actionId, reasonId) {
+    const reason = ACK_REASONS.find((r) => r.id === reasonId)?.label
+    const e = this.push({ type: 'acknowledged', source: 'ui', reason: `Acknowledged action ${actionId}${reason ? ': ' + reason : ''} (local replay record)` })
+    this.acks.push({ actionId, at: e.at, actor: 'Replay clinician', auditId: e.id, reason }); return this.ev(`Action ${actionId} acknowledged`)
+  },
+  async note(text) {
+    const sn = this.snapshot, id = `sim-note-${++this.seq}`
+    const payload = buildJournalNote({ patient: sn.patient.id, encounter: sn.encounter.id }, text)
+    sn.notes.unshift({ id, description: text, createdAt: sn.encounter.start, encounter: sn.encounter.id, source: 'simulated' })
+    sn.resources[`DocumentReference/${id}`] = { ...payload, id, simulated: true }
+    this.push({ type: 'write-back', source: 'replay', reason: `Simulated journal note ${id}. Nothing was sent to an EPJ.` })
+    return { ...this.ev('Journal note recorded (simulated)'), created: { reference: `DocumentReference/${id}`, status: 'simulated' }, readBack: { verified: false, summary: text, message: 'Replay mode: nothing was sent to an EPJ, so there is nothing to read back.' }, payload }
+  },
+  async observation(series, raw) {
+    const v = validateKidneyValue(series, raw); if (!v.ok) throw new HttpError(400, v.error)
+    const sn = this.snapshot, id = `sim-obs-${++this.seq}`, at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), def = SERIES[series]
+    const payload = buildKidneyObservation({ patient: sn.patient.id, encounter: sn.encounter.id }, series, v.value, at)
+    const unit = series === 'egfr' ? 'mL/min/1.73 m2' : 'µmol/L'
+    sn.series[series].readings.push({ id, value: v.value, unit, unitCode: def.unitCode, at, simulated: true })
+    sn.resources[`Observation/${id}`] = { ...payload, id, simulated: true }
+    this.push({ type: 'write-back', source: 'replay', reason: `Simulated ${def.display} ${v.value} ${def.unitCode} (${id}). Nothing was sent to an EPJ.` })
+    return { ...this.ev('Measurement recorded (simulated)'), created: { reference: `Observation/${id}`, status: 'simulated' }, readBack: { verified: false, summary: `${v.value} ${unit}`, message: 'Replay mode: nothing was sent to an EPJ.' }, payload }
+  },
+  async tokens() {
+    const now = Math.floor(Date.now() / 1000)
+    return {
+      replay: true, granted: this.snapshot.scopes.granted, requested: this.snapshot.scopes.requested, expiresIn: 1800,
+      accessToken: { format: 'jwt', claims: { iss: 'https://replay.example/oidc', aud: 'https://replay.example/fhir', exp: now + 1800, iat: now, scope: this.snapshot.scopes.granted, client_id: 'hackathon-public', patient: 'replay-p1', encounter: 'replay-e1' }, withheld: [] },
+      idToken: { format: 'jwt', claims: { iss: 'https://replay.example/oidc', aud: 'hackathon-public', exp: now + 1800, iat: now, fhirUser: 'Practitioner/replay-pr1' }, withheld: ['pid'] },
+      tokenResponse: { patient: 'replay-p1', encounter: 'replay-e1', refreshToken: 'absent' },
+    }
+  },
+  async probe() {
+    return { replay: true,
+      allowed: { path: 'Patient/replay-p1', status: 200, expectation: 'patient/Patient.r is granted' },
+      refused: { path: 'PractitionerRole?practitioner=replay-pr1', status: 403, expectation: 'patient/PractitionerRole.s is not granted', outcome: { severity: 'error', code: 'forbidden', diagnostics: 'Example of the refusal nav-epj returns. Run this probe in live mode to see the real response.' } } }
+  },
+}
+
+// ================================================================= state
+const S = { backend: null, data: null, view: 'summary', selEdge: null, selNode: null, selRule: null, selRes: null, tokens: null, probe: null, busy: false }
+
+function apply(data) { if (data?.snapshot) S.data = { ...S.data, ...data }; else if (data?.audit && S.data) S.data.audit = data.audit; render() }
+
+async function boot() {
+  if (window.CAREOS_RUNTIME === 'artifact') return startReplay()
+  try { S.backend = LiveBackend; apply(await LiveBackend.load()) } catch (e) { showGate(e) }
+}
+async function startReplay() {
+  S.backend = ReplayBackend; S.tokens = null; S.probe = null
+  $('#gate').classList.add('hidden'); $$('section.view').forEach((s) => s.classList.remove('hidden'))
+  apply(await ReplayBackend.load())
+}
+function showGate(e) {
+  $$('section.view').forEach((s) => s.classList.add('hidden'))
+  const g = $('#gate'); g.classList.remove('hidden')
+  const noSession = e.status === 401
+  $('#modeLbl span').textContent = noSession ? 'No active launch' : 'Not connected'
+  $('#banner').innerHTML = `<div class="who"><div class="avatar">—</div><div><div class="nm">No patient in context</div><div class="dm">${noSession ? 'Launch the app from a consultation in the EPJ' : 'Patient data could not be loaded'}</div></div></div>`
+  g.innerHTML = `<div class="card gate"><div class="hd"><h2>${noSession ? 'Launch CareOS Twin from the EPJ' : 'The patient data did not load'}</h2></div><div class="bd">
+    ${noSession ? `<ol><li>Log in to nav-epj with your own test clinician (HelseID → TestIDP).</li><li>Open the reserved patient at their organisation and start a consultation, or pick one marked “Pågår nå”.</li><li>Choose <b>Hackathon starter</b> in the app picker. You will land here with the patient loaded.</li></ol><p class="muted small">Sessions live in server memory for up to 30 minutes and reset when the server restarts.</p>`
+      : `<p>${esc(e.message)}</p><p class="muted small">Try Refresh, or launch again from the app picker.</p>`}
+    <div class="btns"><button class="btn sec" id="replayBtn" type="button">${ICON.play}Open offline replay</button></div>
+    <p class="muted small">The replay uses a synthetic patient stored in this page. It is labeled on every screen and is not live interoperability.</p></div></div>`
+  $('#replayBtn').addEventListener('click', startReplay)
+}
+
+// ================================================================= render
+function render() {
+  if (!S.data) return
+  const { snapshot: sn, evaluation: ev } = S.data
+  renderChrome(sn, ev)
+  const views = { summary: vSummary, results: vResults, problems: vProblems, notes: vNotes, pathway: vPathway, tasks: vTasks, integration: vIntegration, audit: vAudit }
+  for (const [k, fn] of Object.entries(views)) $('#' + k).innerHTML = fn(sn, ev)
+  bindView()
+  route()
+}
+
+function renderChrome(sn, ev) {
+  const m = $('#modeLbl'); m.classList.toggle('replay', sn.mode === 'replay')
+  $('span', m).textContent = sn.mode === 'live' ? 'Live · nav-epj FHIR R4' : 'Offline replay'
+  $('#fresh').textContent = `Data retrieved ${fmtClock(sn.retrievedAt)}`
+  const rb = $('#replayBar')
+  rb.classList.toggle('hidden', sn.mode !== 'replay')
+  rb.innerHTML = sn.mode === 'replay' ? `<b>Offline replay.</b> Synthetic patient and fixtures stored in this page. No EPJ is contacted and nothing is written.${window.CAREOS_RUNTIME === 'server' ? ' <button class="link" id="backLive" type="button">Return to live</button>' : ''}` : ''
+  const cur = DEFINITION.states.find((s) => s.id === ev.currentState)
+  const advisories = ev.actions.filter((a) => a.id === 'A-REVIEW' && a.status === 'READY').length
+  $('#banner').innerHTML = `
+    <div class="who"><div class="avatar" aria-hidden="true">${esc(initials(sn.patient.name))}</div>
+      <div><div class="nm">${esc(titleCase(sn.patient.name))}</div><div class="dm">${sn.patient.age != null ? esc(sn.patient.age) + ' y' : 'Age not recorded'}${sn.patient.gender ? ' · ' + esc(sn.patient.gender) : ''}</div></div></div>
+    <div class="facts">
+      <div class="fact"><div class="k">Fødselsnummer</div><div class="v mono">${esc(sn.patient.identifier)}</div></div>
+      <div class="fact"><div class="k">Consultation</div><div class="v">${esc(ENC_STATUS[sn.encounter.status] ?? sn.encounter.status)} · ${esc(fmtClock(sn.encounter.start))}</div></div>
+      <div class="fact"><div class="k">Practice</div><div class="v">${esc(sn.encounter.organization ?? 'Not recorded')}</div></div>
+      <div class="fact"><div class="k">Clinician</div><div class="v">${esc(titleCase(sn.clinician.name))}</div></div>
+    </div>
+    <div class="flags">
+      <span class="chip ${ev.currentState === 'CLINICIAN_REVIEW_REQUIRED' ? 'adv' : ev.currentState === 'COMPLETE' ? 'ok' : 'info'}" title="Care pathway state">Pathway: ${esc(cur.label)}</span>
+      ${advisories ? `<span class="chip adv">${ICON.warn}${advisories} advisory</span>` : ''}
+      ${sn.mode === 'replay' ? '<span class="chip sim">Replay</span>' : ''}
+    </div>`
+  const ready = ev.actions.filter((a) => a.status === 'READY').length
+  const c = $('#taskCnt'); c.textContent = ready; c.classList.toggle('hidden', !ready)
+}
+
+// ---------- charts ----------
+function lineChart(readings, opts) {
+  const W = 640, H = 230, L = 46, R = 30, T = 16, B = 34
+  const xs = readings.map((r) => Date.parse(r.at)), ys = readings.map((r) => r.value)
+  let x0 = Math.min(...xs), x1 = Math.max(...xs); if (x0 === x1) { x0 -= 864e5 * 30; x1 += 864e5 * 30 }
+  let y0 = Math.min(...ys), y1 = Math.max(...ys); const pad = Math.max((y1 - y0) * 0.25, 3); y0 = Math.max(0, y0 - pad); y1 += pad
+  const X = (v) => L + ((v - x0) / (x1 - x0)) * (W - L - R), Y = (v) => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B)
+  const yt = [...Array(5)].map((_, i) => y0 + ((y1 - y0) * i) / 4)
+  const bands = (opts.bands ?? []).filter((b) => b.hi > y0 && b.lo < y1).map((b) => {
+    const top = Y(Math.min(b.hi, y1)), bot = Y(Math.max(b.lo, y0))
+    return `<rect class="band" x="${L}" y="${top}" width="${W - L - R}" height="${Math.max(0, bot - top)}" opacity="${b.o}"/><text class="bandl" x="${W - R - 4}" y="${top + 12}" text-anchor="end">${esc(b.label)}</text>`
+  }).join('')
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria)}">${bands}
+    ${yt.map((v) => `<line class="gridl" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tick" x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v)}</text>`).join('')}
+    <line class="axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>
+    ${readings.map((r) => `<text class="tick" x="${X(Date.parse(r.at))}" y="${H - B + 16}" text-anchor="middle">${esc(r.at.slice(0, 7))}</text>`).join('')}
+    <polyline class="line ${opts.cls}" points="${readings.map((r) => `${X(Date.parse(r.at)).toFixed(1)},${Y(r.value).toFixed(1)}`).join(' ')}"/>
+    ${readings.map((r) => `<g><circle class="pt ${opts.cls}${r.simulated ? ' sim' : ''}" cx="${X(Date.parse(r.at))}" cy="${Y(r.value)}" r="5" tabindex="0" role="button" data-res="Observation/${esc(r.id)}" aria-label="${esc(`${r.value} ${r.unit || r.unitCode} on ${fmtDate(r.at)}`)}"><title>${esc(`${r.value} ${r.unit || r.unitCode}, ${fmtDate(r.at)}`)}</title></circle><text class="lab" x="${X(Date.parse(r.at))}" y="${Y(r.value) - 10}" text-anchor="middle">${esc(r.value)}</text></g>`).join('')}
+    <text class="tick" x="${L}" y="11">${esc(opts.unit)}</text></svg>`
+}
+function sparkline(readings) {
+  if (readings.length < 2) return ''
+  const W = 300, H = 74, P = 6
+  const xs = readings.map((r) => Date.parse(r.at)), ys = readings.map((r) => r.value)
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys) - 2, y1 = Math.max(...ys) + 2
+  const X = (v) => P + ((v - x0) / (x1 - x0 || 1)) * (W - 2 * P), Y = (v) => P + (1 - (v - y0) / (y1 - y0 || 1)) * (H - 2 * P)
+  const pts = readings.map((r) => `${X(Date.parse(r.at)).toFixed(1)},${Y(r.value).toFixed(1)}`)
+  return `<svg class="spk" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polygon class="area" points="${P},${H - P} ${pts.join(' ')} ${W - P},${H - P}"/><polyline class="line" points="${pts.join(' ')}"/>${readings.map((r) => `<circle class="pt" cx="${X(Date.parse(r.at))}" cy="${Y(r.value)}" r="2.6"/>`).join('')}</svg>`
+}
+const GFR_BANDS = [{ lo: 60, hi: 90, label: 'G2', o: 0.35 }, { lo: 45, hi: 60, label: 'G3a', o: 0.7 }, { lo: 30, hi: 45, label: 'G3b', o: 1 }, { lo: 15, hi: 30, label: 'G4', o: 1 }]
+
+// ---------- shared bits ----------
+function evidence(refs) {
+  const have = S.data?.snapshot?.resources ?? {}
+  refs = [...new Set(refs ?? [])]
+  return refs.length ? refs.map((r) => (have[r] ? `<button class="link mono" data-res="${esc(r)}" type="button">${esc(r)}</button>` : r.startsWith('AuditEvent/') ? `<a href="#audit" class="mono">${esc(r)}</a>` : `<span class="mono">${esc(r)}</span>`)).join(', ') : '<span class="muted">none</span>'
+}
+function inputsTable(inputs) {
+  return `<table class="inputs"><tbody>${Object.entries(inputs ?? {}).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(Array.isArray(v) ? v.join(', ') || '—' : typeof v === 'object' && v !== null ? JSON.stringify(v) : v ?? '—')}</td></tr>`).join('')}</tbody></table>`
+}
+function seriesState(s) { return s.status !== 'ok' ? `<span class="chip ${esc(s.status)}">${esc(s.status)}</span> <span class="small">${esc(s.message ?? '')}</span>` : '' }
+
+// ================================================================= views
+function advisory(sn, ev) {
+  const a = ev.actions.find((x) => x.id === 'A-REVIEW')
+  if (!a) return ''
+  const ack = S.data.acknowledgements?.find((k) => k.actionId === 'A-REVIEW')
+  if (a.status === 'ACKNOWLEDGED') return `<div class="advisory done" role="status"><div class="ic">${ICON.check}</div><div><h2>Kidney review acknowledged</h2><p class="small">${esc(ack?.reason ?? 'Acknowledged')} · ${esc(ack ? fmtTime(ack.at) : '')} · recorded in this prototype’s audit trail, not in the EPJ.</p></div><div class="btns"><button class="btn sm sec" data-compose="note" type="button">${ICON.pen}Write note</button></div></div>`
+  const reasons = ev.rules.filter((r) => ['R-DROP-003', 'R-FRESH-002'].includes(r.id) && r.result === 'fail')
+  return `<div class="advisory" role="alert"><div class="ic">${ICON.warn}</div><div>
+      <h2>Kidney function review suggested before renewing the prescription</h2>
+      <ul>${reasons.map((r) => `<li>${esc(r.explanation)} <button class="link small" data-rule="${esc(r.id)}" type="button">${esc(r.id)}</button></li>`).join('')}</ul>
+      <div class="src">Workflow advisory from illustrative rules (${esc(ev.definitionId)} v${esc(ev.definitionVersion)}). Evidence: ${evidence(a.evidence)}</div></div>
+    <div class="btns"><button class="btn sm warn" data-ack="A-REVIEW" type="button">Acknowledge…</button><button class="btn sm sec" data-compose="note" type="button">${ICON.pen}Write note</button></div></div>`
+}
+
+function vSummary(sn, ev) {
+  const eg = sn.series.egfr, cr = sn.series.creatinine
+  const last = eg.readings.at(-1), cat = last ? gfrCategory(last.value) : null, slope = slopePerYear(eg.readings), crl = cr.readings.at(-1)
+  const kidney = eg.status !== 'ok' || !last ? `<div class="bd">${seriesState(eg) || '<p class="muted">No eGFR readings.</p>'}</div>` : `<div class="bd"><div class="kid">
+      <div><div class="small muted">eGFR · LOINC 62238-1</div>
+        <div class="big"><span class="v">${esc(last.value)}</span><span class="u">${esc(last.unit || last.unitCode)}</span></div>
+        <div class="small muted">${esc(fmtDate(last.at))} · ${esc(ago(last.at))}${last.simulated ? ' · <span class="chip sim">simulated</span>' : ''}</div>
+        <div class="sub2">${cat ? `<span class="chip info" title="KDIGO 2012 GFR category, shown for orientation only">KDIGO ${esc(cat.id)} · ${esc(cat.label)}</span>` : ''}</div>
+        <div class="mini">
+          <div class="m"><div class="k">Change per year</div><div class="v">${slope ? `${slope.perYear > 0 ? '+' : ''}${esc(slope.perYear)} <span class="small muted">mL/min/1.73 m2</span>` : '—'}</div><div class="small muted">${slope ? `${esc(slope.n)} readings over ${esc(slope.spanYears)} y` : 'Needs two readings'}</div></div>
+          <div class="m"><div class="k">Creatinine · 14682-9</div><div class="v">${crl ? `${esc(crl.value)} <span class="small muted">${esc(crl.unit || crl.unitCode)}</span>` : '—'}</div><div class="small muted">${crl ? esc(fmtDate(crl.at)) : esc(cr.message ?? 'No readings')}</div></div>
+        </div></div>
+      <div><div class="spark">${sparkline(eg.readings)}</div><div class="small muted">eGFR ${esc(eg.readings[0].value)} → ${esc(last.value)} since ${esc(fmtDate(eg.readings[0].at))}. <button class="link" data-goto="results" type="button">Open results</button></div></div>
+    </div></div>`
+  const problems = sn.conditionsStatus.status === 'ok' ? `<div class="tw"><table class="t"><tbody>${sn.conditions.slice(0, 5).map((c) => `<tr><td><b>${esc(c.label)}</b><div class="small muted">${esc(c.code)} · ${esc(codeSystemName(c.system))}</div></td><td class="small muted">${esc(fmtDate(c.latest))}</td></tr>`).join('')}</tbody></table></div>` : `<div class="bd">${seriesState(sn.conditionsStatus)}</div>`
+  const open = ev.actions.filter((a) => ['READY', 'BLOCKED', 'PENDING'].includes(a.status)).slice(0, 4)
+  const notes = [...sn.notes].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')).slice(0, 2)
+  return `${advisory(sn, ev)}<div class="grid c12">
+    <div class="card s8"><div class="hd"><h2>Kidney function</h2><span class="meta">${esc(eg.readings.length)} readings</span></div>${kidney}</div>
+    <div class="card s4"><div class="hd"><h2>Care pathway</h2><span class="meta"><button class="link" data-goto="pathway" type="button">Details</button></span></div><div class="bd">
+      <ol class="stepper">${DEFINITION.states.filter((s) => s.id !== 'CLINICIAN_REVIEW_REQUIRED' || ev.path.includes(s.id)).map((s) => `<li class="${ev.states[s.id]}"><span class="d">${ev.states[s.id] === 'completed' ? '✓' : ''}</span><div><div class="l">${esc(s.label)}<span class="sr"> (${STATUS_TEXT[ev.states[s.id]]})</span></div>${ev.states[s.id] === 'active' ? `<div class="s">${esc(s.description)}</div>` : ''}</div></li>`).join('')}</ol></div></div>
+    <div class="card s5"><div class="hd"><h2>Problem list</h2><span class="meta"><button class="link" data-goto="problems" type="button">All ${esc(sn.conditions.length)}</button></span></div>${problems}</div>
+    <div class="card s4"><div class="hd"><h2>Open tasks</h2><span class="meta"><button class="link" data-goto="tasks" type="button">All tasks</button></span></div><div class="bd flush">${open.length ? open.map((a) => `<div class="task ${a.status}"><span class="bar"></span><div><div class="tt">${esc(a.title)}</div><div class="tm">${esc(a.role)}${a.simulated ? ' · simulated' : ''}</div></div><div class="tr"><span class="chip ${a.status}">${a.status}</span></div></div>`).join('') : '<div class="empty">No open tasks.</div>'}</div></div>
+    <div class="card s3"><div class="hd"><h2>Latest notes</h2><span class="meta"><button class="link" data-goto="notes" type="button">Journal</button></span></div><div class="bd flush">${notes.length ? notes.map((n) => `<div class="note"><div class="nh">${esc(fmtDate(n.createdAt))}${n.source === 'simulated' ? ' <span class="chip sim">simulated</span>' : ''}</div><div class="tx small">${esc(n.description.slice(0, 160))}${n.description.length > 160 ? '…' : ''}</div></div>`).join('') : `<div class="empty small">${esc(sn.notesStatus?.message ?? 'No notes.')}</div>`}</div></div>
+  </div>`
+}
+
+function vResults(sn, ev) {
+  const eg = sn.series.egfr.readings, cr = sn.series.creatinine.readings
+  const dates = [...new Set([...eg, ...cr].map((r) => r.at.slice(0, 10)))].sort().reverse()
+  const cell = (rs, d) => {
+    const i = rs.findIndex((r) => r.at.slice(0, 10) === d); if (i < 0) return '<td class="num muted">—</td>'
+    const r = rs[i], prev = rs[i - 1], arrow = prev ? (r.value < prev.value ? '↓' : r.value > prev.value ? '↑' : '→') : ''
+    return `<td class="num"><button class="link" data-res="Observation/${esc(r.id)}" type="button">${esc(r.value)}</button><span class="a" aria-label="${arrow === '↓' ? 'lower than previous' : arrow === '↑' ? 'higher than previous' : ''}">${arrow}</span>${r.simulated ? ' <span class="chip sim">sim</span>' : ''}</td>`
+  }
+  const rule = ev.rules.find((r) => r.id === 'R-DATA-001')
+  const egChart = eg.length >= 2 ? `<div class="chart">${lineChart(eg, { cls: '', unit: 'eGFR, mL/min/1.73 m2', bands: GFR_BANDS, aria: `eGFR from ${eg[0].value} to ${eg.at(-1).value} between ${fmtDate(eg[0].at)} and ${fmtDate(eg.at(-1).at)}` })}</div><p class="small muted">Shaded bands show KDIGO GFR categories for orientation.</p>` : `<div class="empty small">${esc(rule.explanation)}</div>`
+  const crChart = cr.length >= 2 ? `<div class="chart">${lineChart(cr, { cls: 'cr', unit: 'Creatinine, µmol/L', aria: `Creatinine from ${cr[0].value} to ${cr.at(-1).value}` })}</div>` : `<div class="empty small">${esc(sn.series.creatinine.message ?? 'Fewer than two creatinine readings.')}</div>`
+  return `<div class="grid c12">
+    <div class="card s12"><div class="hd"><h2>Flowsheet</h2><span class="meta">Newest first · select a value to open its Observation</span></div><div class="bd flush"><div class="tw"><table class="t fs">
+      <thead><tr><th class="rowh">Measurement</th>${dates.map((d) => `<th>${esc(fmtDate(d))}</th>`).join('') || '<th>No readings</th>'}</tr></thead>
+      <tbody>
+        <tr><td class="rowh"><b>eGFR</b><span class="unit">mL/min/1.73 m2 · LOINC 62238-1</span></td>${dates.map((d) => cell(eg, d)).join('')}</tr>
+        <tr><td class="rowh"><b>Creatinine</b><span class="unit">µmol/L · LOINC 14682-9</span></td>${dates.map((d) => cell(cr, d)).join('')}</tr>
+        <tr><td class="rowh"><span class="muted">KDIGO GFR category</span><span class="unit">derived, informational</span></td>${dates.map((d) => { const r = eg.find((x) => x.at.slice(0, 10) === d); const c = r && gfrCategory(r.value); return `<td class="num muted">${c ? esc(c.id) : '—'}</td>` }).join('')}</tr>
+      </tbody></table></div></div></div>
+    <div class="card s6"><div class="hd"><h2>eGFR trend</h2><span class="meta">${seriesState(sn.series.egfr)}</span></div><div class="bd">${egChart}</div></div>
+    <div class="card s6"><div class="hd"><h2>Creatinine</h2></div><div class="bd">${crChart}<p class="small muted">Shown next to eGFR, never combined into a score.</p></div></div>
+    <div class="card s12"><div class="hd"><h2>Data quality</h2></div><div class="bd"><dl class="kv">
+      <dt>Trend readiness</dt><dd><span class="chip ${esc(rule.result)}">${rule.result === 'pass' ? 'ready' : esc(rule.result)}</span> ${esc(rule.explanation)}</dd>
+      <dt>Units</dt><dd>eGFR ${esc([...new Set(eg.map((r) => r.unitCode))].join(', ') || '—')} · creatinine ${esc([...new Set(cr.map((r) => r.unitCode))].join(', ') || '—')} (UCUM). Trends are only drawn within one unit.</dd>
+      <dt>Status filter</dt><dd>Only final, amended and corrected Observations are used. ${esc([sn.series.egfr.message, sn.series.creatinine.message].filter((m) => m && /left out/.test(m)).join(' ') || 'No readings were left out.')}</dd>
+      <dt>Source</dt><dd>${sn.mode === 'live' ? 'Observation?subject=…&amp;code=http://loinc.org|… on nav-epj, retrieved ' + esc(fmtTime(sn.retrievedAt)) : 'Replay fixtures'}</dd></dl></div></div>
+  </div>`
+}
+
+function vProblems(sn) {
+  const st = sn.conditionsStatus
+  if (st.status !== 'ok') return `<div class="card"><div class="bd">${seriesState(st)}</div></div>`
+  return `<div class="card"><div class="hd"><h2>Diagnoses</h2><span class="meta">${esc(sn.conditions.length)} grouped from ${esc(sn.conditions.reduce((s, c) => s + c.count, 0))} encounter diagnoses</span></div><div class="bd flush"><div class="tw"><table class="t">
+    <thead><tr><th>Problem</th><th>Code</th><th>System</th><th>Consultations</th><th>First recorded</th><th>Latest</th><th>This visit</th><th>Source</th></tr></thead>
+    <tbody>${sn.conditions.map((c) => `<tr><td><b>${esc(c.label)}</b></td><td class="mono">${esc(c.code ?? '—')}</td><td>${esc(codeSystemName(c.system))}</td><td>${esc(c.count)}</td><td>${esc(fmtDate(c.first))}</td><td>${esc(fmtDate(c.latest))}</td><td>${c.inCurrent ? '<span class="chip adv">yes</span>' : '<span class="muted">—</span>'}</td><td>${c.id ? `<button class="link mono" data-res="Condition/${esc(c.id)}" type="button">Condition/${esc(c.id)}</button>` : '—'}</td></tr>`).join('')}</tbody></table></div></div></div>
+    <p class="small muted">nav-epj records one Condition per diagnosis per consultation. CareOS groups them by code system and code. ICPC-2 and ICD-10 codes for the same problem stay separate, as the EPJ stores them.</p>`
+}
+
+function vNotes(sn) {
+  const notes = [...sn.notes].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+  return `<div class="card"><div class="hd"><h2>Journal</h2><span class="meta">${esc(sn.notesStatus?.message ?? '')}</span><button class="btn sm" data-compose="note" type="button">${ICON.plus}New note</button></div><div class="bd flush">
+    ${notes.length ? notes.map((n) => `<div class="note"><div class="nh"><b>${esc(fmtDate(n.createdAt))}</b>${n.encounter === sn.encounter.id ? '<span class="chip adv">this consultation</span>' : ''}${n.source === 'simulated' ? '<span class="chip sim">simulated</span>' : ''}<button class="link mono" data-res="DocumentReference/${esc(n.id)}" type="button">DocumentReference/${esc(n.id)}</button></div><div class="tx">${esc(n.description)}</div></div>`).join('') : '<div class="empty">No notes found. Write one for this consultation with New note.</div>'}
+  </div></div>`
+}
+
+// ---------- pathway ----------
+const POS = { INTAKE: [80, 90], REVIEW: [250, 90], MONITORING: [420, 90], CLINICIAN_REVIEW_REQUIRED: [530, 220], FOLLOW_UP: [640, 90], COMPLETE: [810, 90] }
+function edgePath(t) {
+  const [x1, y1] = POS[t.sourceState], [x2, y2] = POS[t.targetState]
+  if (y1 === y2) return { d: `M${x1 + 62} ${y1} L${x2 - 66} ${y2}`, lx: (x1 + x2) / 2, ly: y1 - 38 }
+  if (y2 > y1) return { d: `M${x1} ${y1 + 26} C ${x1} ${y2}, ${x2 - 120} ${y2}, ${x2 - 78} ${y2}`, lx: x1 - 14, ly: (y1 + y2) / 2 + 12, anchor: 'end' }
+  return { d: `M${x1 + 74} ${y1} C ${x2 + 40} ${y1}, ${x2} ${y1 - 40}, ${x2} ${y2 + 30}`, lx: x2 + 14, ly: (y1 + y2) / 2 + 12, anchor: 'start' }
+}
+function vPathway(sn, ev) {
+  const edges = ev.transitions.map((t) => {
+    const p = edgePath(t), cls = t.traversed ? 'passed' : t.blocked ? 'blocked' : ''
+    const status = t.traversed ? 'passed' : t.blocked ? 'blocked' : t.passed ? 'guard passes' : 'guard not met'
+    return `<g class="edge ${cls}${S.selEdge === t.transitionId ? ' sel' : ''}" tabindex="0" role="button" data-edge="${t.transitionId}" aria-label="${esc(`${t.label}: ${labelOf(t.sourceState)} to ${labelOf(t.targetState)}, ${status}`)}"><path class="hit" d="${p.d}"/><path d="${p.d}" marker-end="url(#arr-${cls || 'idle'})"/><text x="${p.lx}" y="${p.ly}" text-anchor="${p.anchor ?? 'middle'}">${esc(t.label)}${t.blocked ? ' · blocked' : ''}</text></g>`
+  }).join('')
+  const nodes = DEFINITION.states.map((s) => {
+    const [x, y] = POS[s.id], st = ev.states[s.id], w = s.id === 'CLINICIAN_REVIEW_REQUIRED' ? 150 : 124
+    return `<g class="node ${st}${S.selNode === s.id ? ' sel' : ''}" tabindex="0" role="button" data-node="${s.id}" aria-label="${esc(`${s.label}: ${STATUS_TEXT[st]}`)}"><rect x="${x - w / 2}" y="${y - 26}" width="${w}" height="52" rx="8"/><text x="${x}" y="${y - 3}" text-anchor="middle">${esc(s.label)}</text><text class="st" x="${x}" y="${y + 14}" text-anchor="middle">${st === 'completed' ? '✓ ' : st === 'active' ? '● ' : ''}${STATUS_TEXT[st]}</text></g>`
+  }).join('')
+  const marker = (id, col) => `<marker id="arr-${id}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${col}"/></marker>`
+  return `<div class="grid c12">
+    <div class="card s8"><div class="hd"><h2>${esc(DEFINITION.name)}</h2><span class="meta">${esc(ev.definitionId)} v${esc(ev.definitionVersion)} · illustrative</span></div>
+      <div class="bd graph"><svg viewBox="0 0 900 280" role="group" aria-label="Care pathway graph"><defs>${marker('idle', 'var(--line)')}${marker('passed', 'var(--teal)')}${marker('blocked', 'var(--crit)')}</defs>${edges}${nodes}</svg></div>
+      <div class="legend"><span>✓ Done</span><span>● Current</span><span>Solid teal: traversed</span><span>Dashed red: blocked, with reason</span></div></div>
+    <div class="card s4"><div class="hd"><h2>Explanation</h2></div><div class="bd">${pathDetail(sn, ev)}</div></div>
+    <div class="card s7"><div class="hd"><h2>Rule evaluations</h2><span class="meta">engine v${esc(ev.engineVersion)} · ${esc(fmtTime(ev.evaluatedAt))}</span></div><div class="bd flush">${ev.rules.map(ruleBlock).join('')}</div></div>
+    <div class="card s5"><div class="hd"><h2>Illustrative rule settings</h2></div><div class="bd"><p class="small muted">Not clinically validated. Changing a value re-runs the same deterministic rules and is recorded in the audit trail.</p>
+      <form class="settings" id="settingsForm">
+        <label>Minimum eGFR readings<input type="number" name="minReadings" min="2" max="10" value="${ev.settings.minReadings}"></label>
+        <label>Freshness interval (days)<input type="number" name="freshnessDays" min="30" max="1825" value="${ev.settings.freshnessDays}"></label>
+        <label>eGFR fall that prompts review<input type="number" name="dropThreshold" min="1" max="60" value="${ev.settings.dropThreshold}"></label>
+        <label>Comparison window (days)<input type="number" name="dropWindowDays" min="90" max="3650" value="${ev.settings.dropWindowDays}"></label>
+        <div class="btns"><button class="btn sm" type="submit">Apply</button><button class="btn sm sec" type="button" id="resetSettings">Reset</button></div></form></div></div>
+  </div>`
+}
+function ruleBlock(r) {
+  return `<div class="rule${S.selRule === r.id ? ' sel' : ''}" id="rule-${esc(r.id)}"><div class="rh"><b>${esc(r.title)}</b><span class="chip ${esc(r.result)}">${r.result === 'fail' ? 'flag' : esc(r.result)}</span><span class="muted small">${esc(r.id)} · v${esc(r.version)}</span></div>
+    <code class="cond">${esc(r.condition)}</code>${inputsTable(r.inputs)}<p class="small">${esc(r.explanation)}</p><div class="small">Evidence: ${evidence(r.evidence)}</div>
+    ${r.limitations?.length ? `<ul>${r.limitations.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>` : ''}</div>`
+}
+function pathDetail(sn, ev) {
+  if (S.selEdge) {
+    const t = ev.transitions.find((x) => x.transitionId === S.selEdge)
+    const st = t.traversed ? ['pass', 'Traversed'] : t.blocked ? ['BLOCKED', 'Blocked'] : t.passed ? ['pass', 'Guard passes'] : ['', 'Guard not met']
+    return `<h3>${esc(labelOf(t.sourceState))} → ${esc(labelOf(t.targetState))}</h3><p><span class="chip ${st[0]}">${st[1]}</span> <span class="muted small">${esc(t.transitionId)} · ${esc(t.guardId)}</span></p><p>${esc(t.explanation)}</p><p class="small muted">Inputs</p>${inputsTable(t.inputs)}<p class="small muted">Evidence</p><p class="small">${evidence(t.evidenceReferences)}</p>${ev.rules.some((r) => r.id === t.guardId) ? `<button class="link" data-rule="${esc(t.guardId)}" type="button">Open rule ${esc(t.guardId)}</button>` : ''}`
+  }
+  const id = S.selNode ?? ev.currentState, s = DEFINITION.states.find((x) => x.id === id), out = ev.transitions.filter((t) => t.sourceState === id)
+  return `<h3>${esc(s.label)}</h3><p><span class="chip ${ev.states[id] === 'active' ? 'adv' : ev.states[id] === 'completed' ? 'ok' : ''}">${STATUS_TEXT[ev.states[id]]}</span></p><p>${esc(s.description)}</p>
+    ${out.length ? `<p class="small muted">What happens next</p><ul class="small">${out.map((t) => `<li><button class="link" data-edge="${t.transitionId}" type="button">${esc(t.label)} → ${esc(labelOf(t.targetState))}</button>${t.passed ? ' · passes' : ` · not met: ${esc(t.explanation)}`}</li>`).join('')}</ul>` : '<p class="muted">Final state.</p>'}`
+}
+
+// ---------- tasks ----------
+function vTasks(sn, ev) {
+  const replay = sn.mode === 'replay'
+  return `<div class="grid c12"><div class="card s8"><div class="hd"><h2>Workflow tasks</h2><span class="meta">${esc(ev.actions.length)} tasks</span></div><div class="bd flush">
+    ${ev.actions.map((a) => `<div class="task ${a.status}"><span class="bar"></span><div><div class="tt">${esc(a.title)}</div><div class="tm">${esc(a.role)} · priority ${esc(a.priority)} · ${esc(a.source)}${a.simulated ? ' · <span class="chip sim">simulated fixture</span>' : ''}</div>
+      <p class="small">${esc(a.reason)}</p><div class="small muted">Required evidence: ${esc(a.requiredEvidence)}</div><div class="small">Evidence: ${evidence(a.evidence)}</div></div>
+      <div class="tr"><span class="chip ${a.status}">${a.status}</span><div class="btns">${a.canAcknowledge ? `<button class="btn sm sec" data-ack="${esc(a.id)}" type="button">Acknowledge…</button>` : ''}${a.canWrite ? `<button class="btn sm" data-compose="note" type="button">${ICON.pen}${replay ? 'Note (simulated)' : 'Write note'}</button>` : ''}${a.canRecord ? `<button class="btn sm sec" data-compose="obs" type="button">${ICON.plus}${replay ? 'eGFR (simulated)' : 'Record eGFR'}</button>` : ''}</div></div></div>`).join('')}
+  </div></div>
+  <div class="card s4"><div class="hd"><h2>Write to the EPJ</h2></div><div class="bd"><p class="small">Only the two shapes nav-epj accepts are sent: a journal note (DocumentReference J01-2) or a measurement (Observation, one LOINC code, UCUM unit). Patient and consultation always come from the launch session.</p>
+    <div class="btns"><button class="btn sm" data-compose="note" type="button">${ICON.pen}Journal note</button><button class="btn sm sec" data-compose="obs" type="button">${ICON.plus}Kidney measurement</button></div>
+    ${!replay && !sn.capabilities.writeNote ? '<p class="small"><span class="chip denied">unavailable</span> Notes need patient/DocumentReference.c and .r.</p>' : ''}
+    ${!replay && !sn.capabilities.writeObservation ? '<p class="small"><span class="chip denied">unavailable</span> Measurements need patient/Observation.c and .r.</p>' : ''}</div></div></div>`
+}
+
+// ---------- integration ----------
+function vIntegration(sn) {
+  const req = sn.scopes.requested.split(/\s+/).filter(Boolean), got = sn.scopes.granted.split(/\s+/).filter(Boolean)
+  const resources = Object.keys(sn.resources).sort(), sel = S.selRes && sn.resources[S.selRes] ? S.selRes : resources[0]
+  const tk = S.tokens, pr = S.probe
+  const claims = (c) => !c ? '' : c.format !== 'jwt' ? `<p class="small muted">${c.format === 'opaque' ? 'Opaque token: not a JWT, nothing to decode.' : 'Not issued.'}</p>` : `<table class="inputs"><tbody>${Object.entries(c.claims).map(([k, v]) => `<tr><td class="mono">${esc(k)}</td><td class="mono">${esc(['exp', 'iat', 'nbf'].includes(k) ? `${v} (${fmtTime(new Date(v * 1000).toISOString())})` : typeof v === 'object' ? JSON.stringify(v) : v)}</td></tr>`).join('')}</tbody></table>${c.withheld?.length ? `<p class="small muted">Withheld: ${esc(c.withheld.join(', '))}</p>` : ''}`
+  const probeBox = (p, kind) => !p ? '' : `<div class="p"><div class="btns"><b>${kind}</b><span class="chip ${p.status === 200 ? 'ok' : p.status === 403 ? 'crit' : ''}">${p.status ?? 'n/a'}</span></div><div class="mono small">GET ${esc(p.path ?? '—')}</div><div class="small muted">${esc(p.expectation)}</div>${p.outcome ? `<div class="small">OperationOutcome: ${esc([p.outcome.severity, p.outcome.code].filter(Boolean).join(' · '))}${p.outcome.diagnostics ? ` — ${esc(p.outcome.diagnostics)}` : ''}</div>` : ''}${p.wwwAuthenticate ? `<div class="small mono">WWW-Authenticate: ${esc(p.wwwAuthenticate)}</div>` : ''}</div>`
+  return `<div class="grid c12">
+    <div class="card s5"><div class="hd"><h2>SMART launch context</h2></div><div class="bd"><dl class="kv">
+      <dt>Mode</dt><dd>${sn.mode === 'live' ? 'Live · nav-epj FHIR R4' : 'Replay · local fixtures'}</dd>
+      <dt>Client</dt><dd class="mono">hackathon-public (token auth none, PKCE)</dd>
+      <dt>Patient</dt><dd class="mono">Patient/${esc(sn.patient.id)}</dd><dt>Encounter</dt><dd class="mono">Encounter/${esc(sn.encounter.id)}</dd>
+      <dt>fhirUser</dt><dd class="mono">Practitioner/${esc(sn.clinician.id)}</dd>
+      <dt>Identity</dt><dd>${sn.clinician.verified ? 'ID token verified: signature, issuer, audience, expiry' : 'Not verified (replay)'}</dd>
+      <dt>Tokens</dt><dd>${sn.mode === 'live' ? 'Held in the server session only' : 'None in replay mode'}</dd></dl></div></div>
+    <div class="card s7"><div class="hd"><h2>Scopes</h2><span class="meta">${req.every((s) => got.includes(s)) ? 'All requested scopes granted' : 'Some scopes not granted'}</span></div><div class="bd">
+      <p class="small muted">Requested in SCOPES</p><div class="scopes">${req.map((s) => `<span class="scope ${got.includes(s) ? 'ok' : 'miss'}" title="${got.includes(s) ? 'granted' : 'requested, not granted'}">${esc(s)}</span>`).join('')}</div>
+      <p class="small muted gap">Granted in the token response</p><div class="scopes">${got.map((s) => `<span class="scope ok">${esc(s)}</span>`).join('')}</div></div></div>
+    <div class="card s6"><div class="hd"><h2>Token inspection</h2><span class="meta"><button class="btn sm sec" id="loadTokens" type="button">${tk ? 'Reload' : 'Decode tokens'}</button></span></div><div class="bd">
+      ${tk ? `${tk.replay ? '<p class="small"><span class="chip sim">replay example</span></p>' : ''}<p class="small muted">Access token · expires in ${esc(Math.round(tk.expiresIn / 60))} min</p>${claims(tk.accessToken)}<p class="small muted">ID token</p>${claims(tk.idToken)}<p class="small muted">Refresh token: ${esc(tk.tokenResponse.refreshToken)}</p><p class="small muted">Claims are decoded on the server from an allowlist. Raw tokens and signatures never reach this page.</p>` : '<p class="small muted">Decode the access token and ID token to compare what was asked for with what was granted.</p>'}</div></div>
+    <div class="card s6"><div class="hd"><h2>Scope enforcement</h2><span class="meta"><button class="btn sm sec" id="runProbe" type="button">${ICON.play}Run probe</button></span></div><div class="bd">
+      ${pr ? `${pr.replay ? '<p class="small"><span class="chip sim">replay example</span></p>' : ''}<div class="probe">${probeBox(pr.allowed, 'Allowed read')}${probeBox(pr.refused, 'Out-of-scope read')}</div>` : '<p class="small muted">Makes one read the token allows and one it does not, using the session token. The FHIR server should answer 200 and 403 with an OperationOutcome.</p>'}</div></div>
+    <div class="card s12"><div class="hd"><h2>FHIR requests</h2><span class="meta">${esc(sn.requests.length)} requests · no headers or tokens recorded</span></div><div class="bd flush"><div class="tw"><table class="t"><thead><tr><th>Time</th><th>Method</th><th>Path</th><th>Status</th><th>ms</th><th>Outcome</th></tr></thead><tbody>
+      ${sn.requests.map((r) => `<tr><td>${esc(r.at.slice(11, 19))}</td><td>${esc(r.method)}</td><td class="mono">${esc(r.path)}</td><td>${r.status ? `<span class="chip ${r.status < 300 ? 'ok' : 'crit'}">${r.status}</span>` : '—'}</td><td>${esc(r.ms)}</td><td>${esc(r.outcome)}</td></tr>`).join('')}</tbody></table></div></div></div>
+    <div class="card s8"><div class="hd"><h2>${sel ? esc(sel) : 'Resource'}</h2><span class="meta">identifiers masked · contact data removed</span></div><div class="bd">${sel ? `<pre class="json">${esc(JSON.stringify(sn.resources[sel], null, 2))}</pre>` : '<p class="muted">No resources loaded.</p>'}</div></div>
+    <div class="card s4"><div class="hd"><h2>Retrieved resources</h2><span class="meta">${esc(resources.length)}</span></div><div class="bd flush reslist">${resources.map((r) => `<button data-res="${esc(r)}" aria-pressed="${r === sel}" type="button" class="mono">${esc(r)}</button>`).join('')}</div></div>
+  </div>`
+}
+
+// ---------- audit ----------
+function vAudit() {
+  const a = [...(S.data.audit ?? [])].reverse()
+  return `<div class="card"><div class="hd"><h2>Events</h2><span class="meta">${esc(a.length)} events</span><button class="btn sm sec" id="exportBtn" type="button">Export explanation</button></div><div class="bd flush"><div class="tw"><table class="t"><thead><tr><th>Time</th><th>Event</th><th>Actor</th><th>Source</th><th>State</th><th>Detail</th></tr></thead><tbody>
+    ${a.map((e) => `<tr><td>${esc(fmtTime(e.at))}</td><td>${esc(e.type)}</td><td class="mono">${esc(e.actor)}</td><td>${esc(e.source)}</td><td>${e.newState ? esc((e.previousState ? labelOf(e.previousState) + ' → ' : '') + labelOf(e.newState)) : '—'}</td><td>${esc(e.reason)}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No events yet.</td></tr>'}</tbody></table></div></div></div>`
+}
+function exportExplanation(fmt) {
+  const { snapshot: sn, evaluation: ev, audit } = S.data
+  const obj = { generatedAt: new Date().toISOString(), mode: sn.mode, disclaimer: 'Illustrative workflow rules, not clinically validated.', context: { patient: `Patient/${sn.patient.id}`, encounter: `Encounter/${sn.encounter.id}`, clinician: `Practitioner/${sn.clinician.id}` }, definition: { id: ev.definitionId, version: ev.definitionVersion, engine: ev.engineVersion }, settings: ev.settings, currentState: ev.currentState, path: ev.path, rules: ev.rules, transitions: ev.transitions, actions: ev.actions.map(({ id, title, status, reason, evidence, simulated }) => ({ id, title, status, reason, evidence, simulated })), audit }
+  if (fmt === 'json') return JSON.stringify(obj, null, 2)
+  return [`# CareOS Twin workflow explanation`, '', `Generated ${obj.generatedAt} · ${sn.mode} mode · ${obj.disclaimer}`, '', `Context: ${obj.context.patient}, ${obj.context.encounter}, ${obj.context.clinician}`, `Definition: ${ev.definitionId} v${ev.definitionVersion} (engine ${ev.engineVersion})`, `Settings: ${JSON.stringify(ev.settings)}`, '', `## Current state: ${labelOf(ev.currentState)}`, `Path: ${ev.path.map(labelOf).join(' → ')}`, '', '## Rules',
+    ...ev.rules.flatMap((r) => [`### ${r.id} v${r.version}: ${r.title} — ${r.result}`, `Condition: \`${r.condition}\``, `Inputs: ${JSON.stringify(r.inputs)}`, r.explanation, `Evidence: ${r.evidence.join(', ') || 'none'}`, ...(r.limitations ?? []).map((l) => `- ${l}`), '']),
+    '## Tasks', ...ev.actions.map((x) => `- [${x.status}] ${x.title}${x.simulated ? ' (simulated)' : ''}: ${x.reason}`), '', '## Audit', ...audit.map((e) => `- ${e.at} ${e.type}: ${e.reason}`)].join('\n')
+}
+
+// ================================================================= dialogs
+function openDialog(html) { $('#dlgBody').innerHTML = html; const d = $('#dlg'); if (!d.open) d.showModal() }
+function closeDialog() { $('#dlg').close() }
+
+function openAck(id) {
+  const a = S.data.evaluation.actions.find((x) => x.id === id)
+  const reasons = id === 'A-REVIEW' ? ACK_REASONS : []
+  openDialog(`<div class="dh">${ICON.check}<h2 id="dlgTitle">Acknowledge task</h2></div><div class="db"><p><b>${esc(a?.title ?? id)}</b></p><p class="small">${esc(a?.reason ?? '')}</p>
+    ${reasons.length ? `<p class="small muted">Reason</p>${reasons.map((r, i) => `<label class="radio"><input type="radio" name="ackReason" value="${esc(r.id)}"${i === 0 ? ' checked' : ''}><span>${esc(r.label)}</span></label>`).join('')}` : ''}
+    <p class="small muted">Recorded in this prototype’s audit trail. Nothing is written to the EPJ.</p></div>
+    <div class="df"><button class="btn sec" id="dlgCancel" type="button">Cancel</button><button class="btn" id="ackYes" type="button">Acknowledge</button></div>`)
+  $('#dlgCancel').addEventListener('click', closeDialog)
+  $('#ackYes').addEventListener('click', () => { const r = $('input[name=ackReason]:checked')?.value; closeDialog(); call(() => S.backend.acknowledge(id, r), 'Acknowledged and recorded in the audit trail.') })
+  $('#ackYes').focus()
+}
+
+function openComposer(kind) {
+  const sn = S.data.snapshot, ctx = { patient: sn.patient.id, encounter: sn.encounter.id }, replay = sn.mode === 'replay'
+  const can = replay || (kind === 'note' ? sn.capabilities.writeNote : sn.capabilities.writeObservation)
+  if (kind === 'note') {
+    const text = draftNoteText(sn, S.data.evaluation)
+    openDialog(`<div class="dh">${ICON.pen}<h2 id="dlgTitle">Journal note · ${esc(titleCase(sn.patient.name))}</h2></div><div class="db">
+      <label class="small muted" for="noteText">Note text for this consultation (becomes the note’s description)</label>
+      <textarea id="noteText" maxlength="${MAX_NOTE_LENGTH}">${esc(text)}</textarea>
+      <div class="small muted"><span id="noteLen">${text.length}</span> / ${MAX_NOTE_LENGTH} characters · narrative only, nothing computes from it</div>
+      <details><summary class="small">Exact payload (DocumentReference)</summary><pre class="json" id="notePreview">${esc(JSON.stringify(buildJournalNote(ctx, text), null, 2))}</pre></details>
+      <label class="chk"><input type="checkbox" id="confirm"><span class="small">I have reviewed the text and want to save it to this consultation.${replay ? ' Replay: simulated, nothing is sent.' : ''}</span></label>
+      <div id="dlgResult"></div></div>
+      <div class="df">${can ? '' : '<span class="chip denied">write scope missing</span>'}<button class="btn sec" id="dlgCancel" type="button">Close</button><button class="btn" id="dlgSend" type="button" disabled>${replay ? 'Record simulated note' : 'Sign and save'}</button></div>`)
+    const ta = $('#noteText')
+    const sync = () => { $('#dlgSend').disabled = S.busy || !can || !$('#confirm').checked || !ta.value.trim() }
+    ta.addEventListener('input', () => { $('#noteLen').textContent = ta.value.length; $('#notePreview').textContent = JSON.stringify(buildJournalNote(ctx, ta.value || ' '), null, 2); sync() })
+    $('#confirm').addEventListener('change', sync)
+    $('#dlgSend').addEventListener('click', () => submit('note', ta.value))
+  } else {
+    openDialog(`<div class="dh">${ICON.plus}<h2 id="dlgTitle">New kidney measurement</h2></div><div class="db">
+      <div class="btns"><label class="small">Measurement <select id="obsSeries"><option value="egfr">eGFR · LOINC 62238-1 · mL/min/{1.73_m2}</option><option value="creatinine">Creatinine · LOINC 14682-9 · umol/L</option></select></label>
+      <label class="small">Value <input type="text" id="obsValue" inputmode="decimal" maxlength="13"></label></div>
+      <p class="small muted" id="obsErr">Same LOINC code and UCUM unit as the seeded readings. Effective time is now (UTC).</p>
+      <details><summary class="small">Exact payload (Observation)</summary><pre class="json" id="obsPreview">Enter a value to preview.</pre></details>
+      <label class="chk"><input type="checkbox" id="confirm"><span class="small">I confirm this value for this consultation.${replay ? ' Replay: simulated, nothing is sent.' : ''}</span></label>
+      <div id="dlgResult"></div></div>
+      <div class="df">${can ? '' : '<span class="chip denied">write scope missing</span>'}<button class="btn sec" id="dlgCancel" type="button">Close</button><button class="btn" id="dlgSend" type="button" disabled>${replay ? 'Record simulated value' : 'Save measurement'}</button></div>`)
+    const sync = () => {
+      const v = validateKidneyValue($('#obsSeries').value, $('#obsValue').value)
+      $('#obsErr').textContent = $('#obsValue').value && !v.ok ? v.error : 'Same LOINC code and UCUM unit as the seeded readings. Effective time is now (UTC).'
+      $('#obsPreview').textContent = v.ok ? JSON.stringify(buildKidneyObservation(ctx, $('#obsSeries').value, v.value, new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')), null, 2) : 'Enter a valid value to preview.'
+      $('#dlgSend').disabled = S.busy || !can || !$('#confirm').checked || !v.ok
+    }
+    $('#obsValue').addEventListener('input', sync); $('#obsSeries').addEventListener('change', sync); $('#confirm').addEventListener('change', sync)
+    $('#dlgSend').addEventListener('click', () => submit('obs', $('#obsValue').value, $('#obsSeries').value))
+    $('#obsValue').focus()
+  }
+  $('#dlgCancel').addEventListener('click', closeDialog)
+}
+
+function resultBox(r) {
+  if (r.error) return `<div class="result bad" role="alert"><b>Not saved.</b> ${esc(r.error)}</div>`
+  if (r.created.status === 'simulated') return `<div class="result sim" role="status"><b>Simulated, not sent.</b> Recorded locally as <span class="mono">${esc(r.created.reference)}</span>. ${esc(r.readBack.message)}</div>`
+  return `<div class="result ${r.readBack.verified ? 'ok' : 'bad'}" role="status"><b>Saved to the EPJ.</b> HTTP 201 · <span class="mono">${esc(r.created.reference)}</span><br>${esc(r.readBack.message)}${r.readBack.summary ? `<br>Read back: “${esc(r.readBack.summary.slice(0, 200))}”` : ''}<br><span class="small muted">The note appears in the journal editor and measurements in the Målinger tab in nav-epj.</span></div>`
+}
+
+async function submit(kind, value, series) {
+  if (S.busy) return
+  S.busy = true; const b = $('#dlgSend'); b.disabled = true; b.textContent = 'Saving…'
+  let r
+  try {
+    r = kind === 'note' ? await S.backend.note(value) : await S.backend.observation(series, value)
+    if (r.snapshot) apply(r); else apply(await S.backend.load())
+    toast(r.created.status === 'simulated' ? 'Recorded locally (simulated).' : 'Saved to the EPJ and read back.')
+  } catch (e) { r = { error: e.message } }
+  S.busy = false
+  $('#dlgResult').innerHTML = resultBox(r)
+  if (!r.error) { b.textContent = 'Saved'; $('#dlgCancel').textContent = 'Done'; $('#dlgCancel').focus() } else { b.textContent = 'Try again'; b.disabled = false }
+}
+
+function openExport() {
+  const show = (fmt) => {
+    openDialog(`<div class="dh"><h2 id="dlgTitle">Workflow explanation</h2></div><div class="db"><div class="btns"><button class="chip${fmt === 'md' ? ' info' : ''}" data-fmt="md" type="button">Markdown</button><button class="chip${fmt === 'json' ? ' info' : ''}" data-fmt="json" type="button">JSON</button></div>
+      <textarea readonly id="expText" class="mono"></textarea><span class="small muted" id="expNote"></span></div>
+      <div class="df"><button class="btn sec" id="dlgCancel" type="button">Close</button>${window.CAREOS_RUNTIME === 'server' ? '<button class="btn sec" id="expDl" type="button">Download</button>' : ''}<button class="btn" id="expCopy" type="button">Copy</button></div>`)
+    $('#expText').value = exportExplanation(fmt)
+    $$('[data-fmt]', $('#dlgBody')).forEach((b) => b.addEventListener('click', () => show(b.dataset.fmt)))
+    $('#dlgCancel').addEventListener('click', closeDialog)
+    $('#expCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#expText').value); $('#expNote').textContent = 'Copied.' } catch { $('#expText').select(); $('#expNote').textContent = 'Select the text and copy it.' } })
+    $('#expDl')?.addEventListener('click', () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('#expText').value], { type: 'text/plain' })); a.download = `careos-explanation.${fmt === 'json' ? 'json' : 'md'}`; a.click(); URL.revokeObjectURL(a.href) })
+  }
+  show('md')
+}
+
+// ================================================================= events
+function bindView() {
+  $('#settingsForm')?.addEventListener('submit', (e) => { e.preventDefault(); const f = new FormData(e.target); call(() => S.backend.settings(Object.fromEntries([...f].map(([k, v]) => [k, Number(v)]))), 'Settings applied and rules re-evaluated.') })
+  $('#resetSettings')?.addEventListener('click', () => call(() => S.backend.settings(DEFAULT_SETTINGS), 'Settings reset.'))
+  $('#exportBtn')?.addEventListener('click', openExport)
+  $('#backLive')?.addEventListener('click', () => location.reload())
+  $('#loadTokens')?.addEventListener('click', async () => { try { S.tokens = await S.backend.tokens(); render() } catch (e) { toast(e.message) } })
+  $('#runProbe')?.addEventListener('click', async (ev) => { ev.target.disabled = true; try { S.probe = await S.backend.probe(); render(); toast('Probe finished.') } catch (e) { toast(e.message); ev.target.disabled = false } })
+}
+async function call(fn, okMsg) { try { apply(await fn()); if (okMsg) toast(okMsg) } catch (e) { toast(e.message); if (e.status === 401) showGate(e) } }
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-rule],[data-res],[data-edge],[data-node],[data-goto],[data-ack],[data-compose],[data-view]')
+  if (!t || !S.data && !t.dataset.view) return
+  if (t.dataset.view) { go(t.dataset.view) }
+  else if (t.dataset.rule) { if ($('#dlg').open) closeDialog(); S.selRule = t.dataset.rule; S.selEdge = null; go('pathway'); render(); setTimeout(() => $('#rule-' + CSS.escape(t.dataset.rule))?.scrollIntoView({ block: 'center' }), 30) }
+  else if (t.dataset.res) { if ($('#dlg').open) closeDialog(); S.selRes = t.dataset.res; go('integration'); render(); setTimeout(() => $('pre.json')?.scrollIntoView({ block: 'center' }), 30) }
+  else if (t.dataset.edge) { S.selEdge = t.dataset.edge; S.selNode = null; render() }
+  else if (t.dataset.node) { S.selNode = t.dataset.node; S.selEdge = null; render() }
+  else if (t.dataset.goto) { go(t.dataset.goto) }
+  else if (t.dataset.ack) { openAck(t.dataset.ack) }
+  else if (t.dataset.compose) { openComposer(t.dataset.compose) }
+})
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[role=button][data-edge],[role=button][data-node],[role=button][data-res]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })) }
+})
+$('#refreshBtn').addEventListener('click', async () => { if (!S.backend) return boot(); try { apply(await S.backend.load()); toast('Data refreshed from ' + (S.backend.mode === 'live' ? 'nav-epj.' : 'replay fixtures.')) } catch (e) { showGate(e) } })
+
+const VIEWS = ['summary', 'results', 'problems', 'notes', 'pathway', 'tasks', 'integration', 'audit']
+function go(v) { if (location.hash.slice(1) !== v) location.hash = v; else route() }
+function route() {
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'summary'
+  S.view = v
+  $$('section.view').forEach((s) => s.classList.toggle('on', s.id === 'v-' + v))
+  $$('nav.side button').forEach((b) => (b.dataset.view === v ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')))
+}
+window.addEventListener('hashchange', () => { route(); scrollTo(0, 0) })
+route()
+boot()
+</script>
+</body>
+</html>

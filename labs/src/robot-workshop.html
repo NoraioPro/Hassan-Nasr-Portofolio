@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Robot Workshop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blueprint:#14304f; --deep:#0c2440; --chalk:#eef2f5; --safety:#f2c230; --volt:#3fc1c9; --plywood:#c89b6a; --coral:#ef6f5e;
+  --panel:rgba(238,242,245,.94); --panel-ink:#0c2440; --panel-soft:#4a6382; --panel-line:rgba(12,36,64,.14);
+  --btn:#ffffff; --btn-ink:#0c2440;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --panel:rgba(12,36,64,.92); --panel-ink:#eef2f5; --panel-soft:#a9bdd4; --panel-line:rgba(238,242,245,.16);
+    --btn:#1d3d63; --btn-ink:#eef2f5; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --panel:rgba(12,36,64,.92); --panel-ink:#eef2f5; --panel-soft:#a9bdd4; --panel-line:rgba(238,242,245,.16);
+  --btn:#1d3d63; --btn-ink:#eef2f5; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--blueprint);color:var(--panel-ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:fixed;inset:0;touch-action:none}
+#stage canvas{display:block;width:100%;height:100%;outline:none}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--safety);outline-offset:2px}
+
+/* mission card */
+#mission{position:fixed;left:calc(14px + env(safe-area-inset-left,0px));top:calc(14px + env(safe-area-inset-top,0px));
+  width:min(290px,calc(100vw - 28px));background:var(--panel);border-radius:14px;padding:14px 16px 12px;
+  box-shadow:0 10px 30px rgba(4,14,28,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#tabs{display:flex;gap:6px;margin-bottom:10px}
+#tabs button{flex:1;border:1.5px solid var(--panel-line);background:transparent;color:var(--panel-ink);border-radius:8px;padding:5px 0;font-weight:700;font-size:14px}
+#tabs button[aria-current="true"]{background:var(--safety);border-color:var(--safety);color:#0c2440}
+#tabs button:disabled{opacity:.35;cursor:not-allowed}
+#mTitle{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:22px;line-height:1.1;margin:0 0 2px;letter-spacing:-.01em}
+#mGoal{margin:0 0 10px;font-size:14px;color:var(--panel-soft);line-height:1.35}
+#checklist{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+#checklist li{display:flex;align-items:center;gap:8px;font-size:14px}
+#checklist .box{width:18px;height:18px;border-radius:5px;border:2px solid var(--panel-line);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+#checklist li.done .box{background:var(--volt);border-color:var(--volt);color:#0c2440}
+#checklist li.next{font-weight:700}
+#checklist li.next .box{border-color:var(--safety)}
+#phase{margin:10px 0 0;padding-top:9px;border-top:1px solid var(--panel-line);font-size:13.5px;color:var(--panel-soft)}
+#mission.collapsed #body{display:none}
+#collapse{position:absolute;right:10px;top:10px;border:0;background:transparent;color:var(--panel-soft);font-size:13px;padding:2px 4px}
+
+/* tools */
+#tools{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));top:calc(14px + env(safe-area-inset-top,0px));display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:50vw}
+.tool{border:0;background:var(--panel);color:var(--panel-ink);border-radius:999px;padding:9px 14px;font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(4,14,28,.25)}
+#vrBtn{background:var(--safety);color:#0c2440;display:none}
+
+/* guide subtitle */
+#guide{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  width:min(640px,calc(100vw - 28px));background:var(--panel);border-radius:16px;padding:12px 14px 12px 16px;display:flex;gap:12px;align-items:flex-start;
+  box-shadow:0 12px 34px rgba(4,14,28,.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#avatar{flex:none;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 50% 46%,#bff6f8 0 22%,var(--volt) 23% 40%,#0c2440 41% 100%);box-shadow:0 0 0 3px rgba(63,193,201,.35)}
+#gText{flex:1;min-width:0}
+#gName{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:15px;color:var(--volt);margin:0 0 2px}
+#gLine{margin:0;font-size:16px;line-height:1.45;max-width:62ch}
+#nextBtn{flex:none;align-self:flex-end;border:0;background:var(--safety);color:#0c2440;border-radius:10px;padding:9px 14px;font-weight:700}
+#nextBtn[hidden]{display:none}
+
+/* touch joystick */
+#joy{position:fixed;left:calc(22px + env(safe-area-inset-left,0px));bottom:calc(var(--guide-h,110px) + 86px + env(safe-area-inset-bottom,0px));width:112px;height:112px;border-radius:50%;
+  background:rgba(238,242,245,.14);border:2px solid rgba(238,242,245,.35);display:none;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(242,194,48,.85)}
+.touch #joy{display:block}
+
+#hint{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:220px;font-size:13px;line-height:1.4;color:var(--chalk);opacity:.8;text-shadow:0 1px 3px rgba(0,0,0,.5);text-align:right}
+
+/* intro overlay */
+#intro{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 60%,rgba(20,48,79,.55),rgba(8,24,44,.92));z-index:5;padding:24px}
+#intro .wrap{max-width:560px;color:var(--chalk)}
+#intro h1{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;font-size:clamp(46px,10vw,92px);line-height:.92;letter-spacing:-.035em;margin:0 0 18px}
+#intro h1 span{display:block;color:transparent;-webkit-text-stroke:2px var(--safety)}
+#intro p{font-size:18px;line-height:1.5;margin:0 0 26px;max-width:46ch;color:#d4e0ec}
+#enter{border:0;background:var(--safety);color:#0c2440;border-radius:12px;padding:15px 24px;font-weight:700;font-size:18px}
+#intro small{display:block;margin-top:18px;color:#a9bdd4;font-size:14px;line-height:1.5}
+#intro.hide{opacity:0;pointer-events:none;transition:opacity .5s}
+
+#mission{transition:opacity .4s}
+body.touring #mission{opacity:0;pointer-events:none}
+#stations{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--guide-h,110px) + 26px + env(safe-area-inset-bottom,0px));display:flex;gap:4px;padding:5px;background:var(--panel);border-radius:999px;box-shadow:0 8px 24px rgba(4,14,28,.28);max-width:calc(100vw - 28px);overflow-x:auto;scrollbar-width:none;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#stations::-webkit-scrollbar{display:none}
+#stations button{border:0;background:transparent;color:var(--panel-ink);border-radius:999px;padding:8px 13px;font-weight:700;font-size:14px;white-space:nowrap;position:relative}
+#stations button:hover{background:var(--panel-line)}
+#stations button.needed{background:var(--safety);color:#0c2440}
+#stations button.needed::after{content:"";position:absolute;inset:0;border-radius:999px;border:2px solid var(--safety);animation:ping 1.6s ease-out infinite;pointer-events:none}
+@keyframes ping{from{opacity:.9;transform:scale(1)}to{opacity:0;transform:scale(1.3)}}
+#stations.flash{animation:flashbar 1.2s ease-in-out infinite}
+@keyframes flashbar{0%,100%{box-shadow:0 0 0 0 rgba(242,194,48,0),0 8px 24px rgba(4,14,28,.28)}50%{box-shadow:0 0 0 6px rgba(242,194,48,.85),0 8px 24px rgba(4,14,28,.28)}}
+#tourBar{position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top,0px));display:none;align-items:center;gap:12px;background:var(--panel);border-radius:999px;padding:7px 7px 7px 16px;box-shadow:0 8px 24px rgba(4,14,28,.3);z-index:3;max-width:calc(100vw - 28px)}
+#tourBar.on{display:flex}
+#tourDots{display:flex;gap:5px;flex:none}
+#tourDots i{width:8px;height:8px;border-radius:4px;background:var(--panel-line);transition:width .3s,background .3s}
+#tourDots i.on{background:var(--volt);width:22px}
+#tourDots i.past{background:var(--volt);opacity:.5}
+#tourLabel{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#skipTour{flex:none;border:0;background:var(--btn);color:var(--btn-ink);border-radius:999px;padding:7px 13px;font-weight:700;font-size:13px}
+@media (max-width:640px){
+  #mission{padding:12px 13px 10px}
+  #mTitle{font-size:19px}
+  #hint{display:none}
+  #gLine{font-size:15px}
+  #tools{max-width:44vw}
+  .tool{padding:8px 11px;font-size:13px}
+  #mission{top:calc(62px + env(safe-area-inset-top,0px))}
+  #tourBar{top:calc(64px + env(safe-area-inset-top,0px))}
+  #stations button{padding:7px 10px;font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){#intro.hide{transition:none}#stations button.needed::after,#stations.flash{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage" aria-label="3D robot workshop"></div>
+
+<section id="mission" aria-live="polite">
+  <button id="collapse" aria-expanded="true">Hide</button>
+  <div id="tabs" role="group" aria-label="Missions"></div>
+  <div id="body">
+    <h2 id="mTitle">First wheels</h2>
+    <p id="mGoal"></p>
+    <ul id="checklist"></ul>
+    <p id="phase"></p>
+  </div>
+</section>
+
+<div id="tools">
+  <button class="tool" id="tourBtn">Tour</button>
+  <button class="tool" id="autoBtn" aria-pressed="true">Auto camera on</button>
+  <button class="tool" id="vrBtn">Enter VR</button>
+  <button class="tool" id="voiceBtn" aria-pressed="false">Voice off</button>
+  <button class="tool" id="resetBtn">Start over</button>
+</div>
+
+<div id="guide" role="status">
+  <div id="avatar" aria-hidden="true"></div>
+  <div id="gText"><p id="gName">Volt</p><p id="gLine">…</p></div>
+  <button id="nextBtn">Next</button>
+</div>
+
+<div id="tourBar" role="region" aria-label="Guided tour"><div id="tourDots" aria-hidden="true"></div><span id="tourLabel"></span><button id="skipTour">Skip tour</button></div>
+<nav id="stations" aria-label="Fly to a station">
+  <button data-st="overview">Overview</button><button data-st="shelf">Parts shelf</button><button data-st="bench">Workbench</button><button data-st="console">Console</button><button data-st="arena">Test arena</button>
+</nav>
+
+<div id="joy" aria-hidden="true"><div id="knob"></div></div>
+<div id="hint">Drag to look around. WASD or arrow keys to walk. Click things to use them, or click the floor to jump there.</div>
+
+<div id="intro">
+  <div class="wrap">
+    <h1>Robot<span>Workshop</span></h1>
+    <p>Build a working robot one part at a time. Volt, your guide, explains what each part does, then you program it and test it in the arena.</p>
+    <button id="enter">Enter the workshop</button>
+    <small>Works with mouse, touch, or a VR headset. Three missions, about fifteen minutes.</small>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+if(isTouch) document.documentElement.classList.add('touch');
+if(isTouch) $('hint').textContent='Drag to look. Use the joystick to walk. Tap things to use them, or tap the floor to jump there.';
+
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+
+/* ---------------- content ---------------- */
+const PARTS={
+  chassis:{name:'Chassis',req:[],
+    lesson:['Chassis attached. This is the robot’s skeleton: a stiff frame that every other part bolts onto.',
+            'Engineers want it light but strong, so they use materials like aluminium or tough plastic. A heavier frame needs bigger motors and drains the battery faster.']},
+  battery:{name:'Battery pack',req:['chassis'],why:'The battery needs something to sit on. Start with the chassis.',
+    lesson:['Battery locked in. Every robot needs a power source, and this 7.4-volt lithium pack is ours.',
+            'See how it sits low and near the middle? Heavy parts go low so the robot doesn’t tip over when it turns.']},
+  motors:{name:'Drive motors',req:['chassis'],why:'The motors bolt onto the frame. Attach the chassis first.',
+    lesson:['Two motors in. A motor is an actuator: a part that turns electrical energy into movement.',
+            'With two motors the robot can steer by spinning them at different speeds. That’s called differential drive, and it’s how robot vacuums turn.']},
+  wheels:{name:'Wheels',req:['motors'],why:'Wheels need something to spin them. Attach the drive motors first.',
+    lesson:['Wheels on. Each one fits straight onto a motor shaft.',
+            'Big wheels cover more ground per turn but need more force to get going. Engineers call that the trade-off between torque and speed.']},
+  brain:{name:'Microcontroller',req:['battery','motors'],why:'The brain can’t think without power, and it needs motors to control. Add the battery and the motors first.',
+    lesson:['The brain is wired in. This microcontroller is a tiny computer that runs your program one instruction at a time.',
+            'The red and black wires bring it power from the battery. It decides when each motor spins and for how long.']},
+  sensor:{name:'Distance sensor',req:['brain'],why:'A sensor sends its readings to the brain. Wire in the microcontroller first.',
+    lesson:['Sensor online. It sends out a sound pulse too high for you to hear, then times how long the echo takes to come back.',
+            'A quick echo means something is close. Bats find their way in the dark the same way, and now so can our robot.']},
+  gripper:{name:'Gripper arm',req:['brain'],why:'The gripper is controlled by the brain. Wire in the microcontroller first.',
+    lesson:['Gripper mounted. It’s another actuator, but instead of moving the robot it moves things in the world.',
+            'Warehouse robots use grippers like this to lift packages off shelves all day long.']}
+};
+const PART_ORDER=['chassis','battery','motors','wheels','brain','sensor','gripper'];
+
+const MISSIONS=[
+  {title:'First wheels',goal:'Build a rover, then program it to reach the flag.',parts:['chassis','battery','motors','wheels','brain'],
+   mode:'seq',blocks:['F','L','R'],
+   arena:{start:[1,6,0],goal:[4,2],walls:[[2,4],[2,5],[3,3],[5,4],[0,1],[6,1]]},
+   intro:['Welcome to the workshop! I’m Volt, and I’ll be your guide today.',
+          'Here you learn robotics the way engineers do: by building one. Every robot needs a body, power, a way to move, and a brain.',
+          'The parts shelf is on your left. Click the glowing part to attach it to the robot on the workbench. Let’s start with the chassis.'],
+   built:['Your rover is complete! Body, power, motors and brain, all connected.',
+          'But a robot does nothing until it has a program. Use the console to the right of the workbench.',
+          'Your task is to drive to the flag in the test arena. Each Forward block moves one square, and turns happen on the spot.'],
+   success:['Flag reached! You just wrote a sequence: a list of steps the computer follows in order.','One quick question before the next mission.'],
+   quiz:{q:'Why did the brain need the battery before it could work?',
+         options:['A computer needs electrical power to run','The battery makes the robot heavier','The battery stores the program'],
+         answer:0,explain:['Exactly. No power, no thinking. That’s why power and wiring come first in every robot design.'],
+         hint:'Not quite. Think about what happens to a laptop when its battery runs out.'}},
+  {title:'Seeing the world',goal:'Add a sensor and use rules so the rover finds the flag by itself.',parts:['sensor'],
+   mode:'rules',
+   arena:{start:[0,6,0],goal:[5,6],walls:[[0,4],[1,0],[1,2],[1,6],[2,6],[3,1],[4,0],[4,5],[5,5],[6,2]]},
+   intro:['Mission two. A sequence only works when you know the map in advance, and real robots usually don’t.',
+          'The arena is full of crates now, and the path is too twisty to plan step by step. Our rover needs to sense the world and react to it.',
+          'Grab the distance sensor from the shelf and mount it on the front.'],
+   built:['Sensor ready. Now we program with rules instead of steps.',
+          'A rule says: when you sense this, do that. The brain checks the sensor, picks an action, acts, then checks again, over and over. That’s called a control loop.',
+          'On the console, choose what the robot does when it sees a crate, then press Run.'],
+   success:['It found the flag on its own! You never told it the path. You gave it a rule, and the rule found the path.','Robot vacuums clean rooms they’ve never seen in much the same way.'],
+   quiz:{q:'What does a control loop repeat, over and over?',
+         options:['Sense, decide, act','Charge, rest, charge','Spin the wheels faster and faster'],
+         answer:0,explain:['Right. Sense, decide, act is the heartbeat of almost every robot, from Mars rovers to self-driving cars.'],
+         hint:'Look at the console. What does the robot check before every single move?'}},
+  {title:'Helping hands',goal:'Fit a gripper, then carry the red cube to the yellow zone.',parts:['gripper'],
+   mode:'seq',blocks:['F','L','R','G','D'],
+   arena:{start:[0,6,0],cube:[0,3],zone:[3,3],walls:[[1,4],[2,4],[4,2],[5,5],[3,1],[6,3]]},
+   intro:['Final mission. Robots don’t only move around. They change things in the world.',
+          'There’s a red cube in the arena and a yellow drop zone. Our rover needs a way to carry the cube.',
+          'Attach the gripper arm from the shelf.'],
+   built:['Gripper ready. You have two new blocks now: Grab and Drop.',
+          'Drive onto the cube’s square, grab it, carry it to the yellow zone, and drop it there.'],
+   success:['Delivered! You combined moving and handling objects, which is exactly what warehouse and factory robots do.'],
+   quiz:{q:'The motors and the gripper are both which kind of part?',
+         options:['Actuators: they create movement','Sensors: they measure things','Controllers: they make decisions'],
+         answer:0,explain:['Yes! Sensors measure, controllers decide, actuators act. You’ve now built all three.'],
+         hint:'Think about what the gripper does. Does it measure, decide, or move?'}}
+];
+const FINALE=['That’s every mission complete. You built a robot from a bare frame to a working machine.',
+  'Along the way you learned about power, actuators, controllers, sequences, sensors and control loops. That’s the core of robotics.',
+  'You can replay any mission from the tabs at the top left whenever you like.'];
+
+const BLOCK={F:{label:'Forward',fill:'#f2c230',ink:'#0c2440'},L:{label:'Turn left',fill:'#3fc1c9',ink:'#0c2440'},R:{label:'Turn right',fill:'#3fc1c9',ink:'#0c2440'},
+  G:{label:'Grab',fill:'#ef6f5e',ink:'#0c2440'},D:{label:'Drop',fill:'#ef6f5e',ink:'#0c2440'}};
+
+/* ---------------- state ---------------- */
+const progress=store.get('robotWorkshop.v1',{completed:[]});
+const state={mission:0,phase:'intro',attached:new Set(),program:[],rules:{wall:'R',clear:'F'},pc:-1,ruleActive:null,
+  inArena:false,abort:false,quizWrong:false};
+
+/* ---------------- three setup ---------------- */
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.xr.enabled=true;
+$('stage').appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x10283f);
+scene.fog=new THREE.Fog(0x10283f,13,30);
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.05,80);
+camera.rotation.order='YXZ';
+const rig=new THREE.Group();rig.add(camera);scene.add(rig);
+const EYE=1.6;
+rig.position.set(0.9,0,3.7);camera.position.y=EYE;
+let yaw=0,pitch=0;
+(function aim(){const t=new THREE.Vector3(-0.4,1.0,-2.6);const dx=t.x-rig.position.x,dz=t.z-rig.position.z,dy=t.y-EYE;
+  yaw=Math.atan2(-dx,-dz);pitch=Math.atan2(dy,Math.hypot(dx,dz));})();
+
+const M=(color,o={})=>new THREE.MeshStandardMaterial(Object.assign({color,roughness:.6,metalness:.08},o));
+function box(w,h,d,c,o){return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),c instanceof THREE.Material?c:M(c,o))}
+function cyl(r,h,c,o,seg=24){return new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),c instanceof THREE.Material?c:M(c,o))}
+function sph(r,c,o){return new THREE.Mesh(new THREE.SphereGeometry(r,20,14),c instanceof THREE.Material?c:M(c,o))}
+function canvasTex(w,h,draw,rep){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=4;if(rep){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1])}return t}
+
+/* lights */
+const hemi=new THREE.HemisphereLight(0xdfe9ff,0x3a2c1c,.55);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1dc,.85);
+sun.position.set(4,9,5);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera,{left:-10,right:12,top:8,bottom:-8,near:1,far:25});sun.shadow.bias=-0.0008;
+scene.add(sun);
+function lamp(x,z,color=0xffd9a0,int=.9){
+  const shade=new THREE.Mesh(new THREE.ConeGeometry(.32,.3,24,1,true),M(0xf2c230,{side:THREE.DoubleSide,roughness:.4}));
+  shade.position.set(x,3.6,z);scene.add(shade);
+  const cord=cyl(.01,1.6,0x222831);cord.position.set(x,4.55,z);scene.add(cord);
+  const bulb=sph(.07,M(0xffffff,{emissive:0xfff0c8,emissiveIntensity:2}));bulb.position.set(x,3.5,z);scene.add(bulb);
+  const p=new THREE.PointLight(color,int,7,1.8);p.position.set(x,3.4,z);scene.add(p);
+}
+lamp(0,-3);lamp(7.2,-3.4,0xdff3ff,.8);lamp(-2.6,-2.2,0xffd9a0,.6);
+
+/* room */
+const ROOM={x0:-8,x1:12,z0:-7,z1:6};
+const floorTex=canvasTex(512,512,(c,w,h)=>{c.fillStyle='#1d4470';c.fillRect(0,0,w,h);
+  c.strokeStyle='rgba(150,190,230,.18)';c.lineWidth=1;for(let i=0;i<=w;i+=32){c.beginPath();c.moveTo(i,0);c.lineTo(i,h);c.stroke();c.beginPath();c.moveTo(0,i);c.lineTo(w,i);c.stroke();}
+  c.strokeStyle='rgba(170,210,245,.42)';c.lineWidth=2;for(let i=0;i<=w;i+=128){c.beginPath();c.moveTo(i,0);c.lineTo(i,h);c.stroke();c.beginPath();c.moveTo(0,i);c.lineTo(w,i);c.stroke();}
+},[5,3.25]);
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(ROOM.x1-ROOM.x0,ROOM.z1-ROOM.z0),M(0xffffff,{map:floorTex,roughness:.85}));
+floor.rotation.x=-Math.PI/2;floor.position.set((ROOM.x0+ROOM.x1)/2,0,(ROOM.z0+ROOM.z1)/2);floor.receiveShadow=true;
+floor.userData.kind='floor';scene.add(floor);
+
+const wallMat=M(0x1b3655,{roughness:.9});
+function wall(w,h,x,z,ry){const m=box(w,h,.2,wallMat);m.position.set(x,h/2,z);m.rotation.y=ry;m.receiveShadow=true;scene.add(m);return m}
+wall(20,5,2,-7.1,0);wall(13,5,-8.1,-.5,Math.PI/2);wall(13,5,12.1,-.5,Math.PI/2);wall(20,5,2,6.1,0);
+// wainscot stripe
+const stripe=box(20,.08,.05,M(0xf2c230,{emissive:0x5a4300}));stripe.position.set(2,1.05,-6.97);scene.add(stripe);
+
+// pegboard behind bench
+const peg=canvasTex(512,256,(c,w,h)=>{c.fillStyle='#c89b6a';c.fillRect(0,0,w,h);c.fillStyle='rgba(60,40,20,.55)';
+  for(let y=12;y<h;y+=22)for(let x=12;x<w;x+=22){c.beginPath();c.arc(x,y,3.2,0,7);c.fill();}});
+const pegboard=new THREE.Mesh(new THREE.PlaneGeometry(4.2,2.1),M(0xffffff,{map:peg,roughness:.8}));
+pegboard.position.set(0,2.1,-6.98);scene.add(pegboard);
+// tools on pegboard
+[[-1.4,2.4,0x3fc1c9],[-0.9,2.2,0xef6f5e],[1.1,2.5,0xf2c230],[1.6,2.0,0x3fc1c9]].forEach(([x,y,c],i)=>{
+  const t=box(i%2?.08:.5,i%2?.6:.08,.04,c);t.position.set(x,y,-6.94);t.rotation.z=i*0.3-.4;scene.add(t);});
+
+// poster: how a robot works
+const poster=canvasTex(768,1024,(c,w,h)=>{
+  c.fillStyle='#eef2f5';c.fillRect(0,0,w,h);
+  c.fillStyle='#0c2440';c.font='800 74px "Bricolage Grotesque", sans-serif';c.fillText('How a robot',52,120);c.fillText('works',52,196);
+  const boxes=[['Sense','sensors measure the world','#3fc1c9',300],['Think','the brain decides','#f2c230',500],['Act','motors make it move','#ef6f5e',700]];
+  boxes.forEach(([t,s,col,y],i)=>{c.fillStyle=col;rrPath(c,52,y,w-104,140,22);c.fill();c.fillStyle='#0c2440';c.font='800 56px "Bricolage Grotesque", sans-serif';c.fillText(t,86,y+68);
+    c.font='400 32px "Atkinson Hyperlegible", sans-serif';c.fillText(s,86,y+112);
+    if(i<2){c.strokeStyle='#0c2440';c.lineWidth=6;c.beginPath();c.moveTo(w/2,y+150);c.lineTo(w/2,y+190);c.stroke();c.beginPath();c.moveTo(w/2-14,y+178);c.lineTo(w/2,y+194);c.lineTo(w/2+14,y+178);c.stroke();}});
+  c.fillStyle='#4a6382';c.font='400 30px "Atkinson Hyperlegible", sans-serif';c.fillText('Then it does it all again.',52,920);c.fillText('Power keeps every step running.',52,962);
+});
+const posterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1.5,2),M(0xffffff,{map:poster,roughness:.9}));
+posterMesh.position.set(-4.6,2.3,-6.98);scene.add(posterMesh);
+
+/* bench */
+const bench=new THREE.Group();bench.position.set(0,0,-3);scene.add(bench);
+const plyTex=canvasTex(256,256,(c,w,h)=>{c.fillStyle='#c89b6a';c.fillRect(0,0,w,h);for(let i=0;i<40;i++){c.strokeStyle=`rgba(120,80,40,${.08+Math.random()*.12})`;c.lineWidth=1+Math.random()*2;c.beginPath();const y=Math.random()*h;c.moveTo(0,y);c.bezierCurveTo(w*.3,y+8,w*.6,y-8,w,y+Math.random()*6);c.stroke();}});
+const top=box(2.6,.08,1.4,M(0xffffff,{map:plyTex,roughness:.7}));top.position.y=.86;top.castShadow=top.receiveShadow=true;bench.add(top);
+[[-1.2,-.6],[1.2,-.6],[-1.2,.6],[1.2,.6]].forEach(([x,z])=>{const l=box(.08,.82,.08,0x2a3644,{metalness:.5});l.position.set(x,.41,z);l.castShadow=true;bench.add(l)});
+const shelfLow=box(2.5,.04,1.3,0x2a3644,{metalness:.4});shelfLow.position.y=.25;bench.add(shelfLow);
+const turntable=new THREE.Group();turntable.position.set(0,.9,0);bench.add(turntable);
+const disc=cyl(.62,.04,0x2a3644,{metalness:.6,roughness:.35},48);disc.position.y=.02;disc.receiveShadow=true;turntable.add(disc);
+const discRing=new THREE.Mesh(new THREE.TorusGeometry(.62,.012,8,64),M(0xf2c230,{emissive:0x806000}));discRing.rotation.x=Math.PI/2;discRing.position.y=.04;turntable.add(discRing);
+
+/* ---------------- part builders ---------------- */
+function tube(points,color,r=.012){return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p))),20,r,6),M(color,{roughness:.5}))}
+const BUILD={
+  chassis(){const g=new THREE.Group();
+    const deck=box(.7,.08,.9,0x3b4a5c,{metalness:.45,roughness:.45});deck.position.y=.16;g.add(deck);
+    const b1=box(.72,.07,.05,0xf2c230);b1.position.set(0,.16,-.47);g.add(b1);
+    const b2=box(.72,.07,.04,0xf2c230);b2.position.set(0,.16,.465);g.add(b2);
+    const cm=box(.08,.07,.08,0x22303e);cm.position.set(0,.1,.36);g.add(cm);
+    const cs=sph(.05,0x9aa7b4,{metalness:.7,roughness:.3});cs.position.set(0,.05,.36);g.add(cs);
+    for(let i=0;i<6;i++){const h=cyl(.018,.082,0x1b2633);h.position.set(-.25+i*.1,.161,.38);g.add(h)}
+    return g},
+  battery(){const g=new THREE.Group();
+    const b=box(.36,.14,.22,0x2f8f5b,{roughness:.5});b.position.set(0,.27,.22);g.add(b);
+    const s=box(.362,.03,.222,0xeef2f5);s.position.set(0,.27,.22);g.add(s);
+    const t1=cyl(.022,.04,0xd8433b);t1.position.set(.1,.36,.22);g.add(t1);
+    const t2=cyl(.022,.04,0x1a1f26);t2.position.set(-.1,.36,.22);g.add(t2);
+    return g},
+  motors(){const g=new THREE.Group();
+    [-1,1].forEach(s=>{const m=cyl(.068,.18,0xaab6c2,{metalness:.75,roughness:.3});m.rotation.z=Math.PI/2;m.position.set(s*.27,.115,0);g.add(m);
+      const cap=cyl(.072,.03,0xef6f5e);cap.rotation.z=Math.PI/2;cap.position.set(s*.19,.115,0);g.add(cap);
+      const br=box(.12,.04,.16,0x22303e);br.position.set(s*.27,.05+.07,0);br.position.y=.2-.03;g.add(br);});
+    return g},
+  wheels(){const g=new THREE.Group();g.userData.spin=[];
+    [-1,1].forEach(s=>{const wg=new THREE.Group();wg.position.set(s*.42,.14,0);
+      const tire=cyl(.14,.08,0x1d2228,{roughness:.9},32);tire.rotation.z=Math.PI/2;wg.add(tire);
+      const hub=cyl(.065,.086,0xf2c230,{roughness:.4},20);hub.rotation.z=Math.PI/2;wg.add(hub);
+      const sp=box(.088,.2,.03,0x2a3644);wg.add(sp);const sp2=box(.088,.03,.2,0x2a3644);wg.add(sp2);
+      g.add(wg);g.userData.spin.push(wg)});
+    return g},
+  brain(){const g=new THREE.Group();
+    const bd=box(.28,.02,.2,0x2c6bb3,{roughness:.4});bd.position.set(0,.21,-.14);g.add(bd);
+    const ch=box(.1,.03,.1,0x111820,{roughness:.3,metalness:.3});ch.position.set(0,.235,-.14);g.add(ch);
+    for(let i=0;i<5;i++){const p=box(.012,.02,.03,0xd9c27a,{metalness:.8});p.position.set(-.1+i*.05,.23,-.225);g.add(p)}
+    const led=sph(.016,M(0xff4d3d,{emissive:0xff2a1a,emissiveIntensity:1.5}));led.position.set(.11,.23,-.07);g.add(led);g.userData.led=led;
+    g.add(tube([[.1,.38,.22],[.12,.42,.1],[.1,.26,-.05]],0xd8433b));
+    g.add(tube([[-.1,.38,.22],[-.12,.42,.1],[-.08,.26,-.05]],0x1a1f26));
+    g.add(tube([[.12,.22,-.1],[.2,.2,-.05],[.27,.18,0]],0x3fc1c9,.008));
+    g.add(tube([[-.12,.22,-.1],[-.2,.2,-.05],[-.27,.18,0]],0x3fc1c9,.008));
+    return g},
+  sensor(){const g=new THREE.Group();
+    const post=box(.04,.09,.04,0x22303e);post.position.set(0,.245,-.4);g.add(post);
+    const mt=box(.26,.1,.04,0x2c6bb3);mt.position.set(0,.33,-.43);g.add(mt);
+    [-1,1].forEach(s=>{const e=cyl(.045,.05,0xc4ced8,{metalness:.7,roughness:.25});e.rotation.x=Math.PI/2;e.position.set(s*.07,.33,-.47);g.add(e);
+      const pupil=cyl(.032,.052,0x0f1a24);pupil.rotation.x=Math.PI/2;pupil.position.set(s*.07,.33,-.471);g.add(pupil);});
+    const beam=new THREE.Mesh(new THREE.ConeGeometry(.22,1,24,1,true),new THREE.MeshBasicMaterial({color:0x3fc1c9,transparent:true,opacity:.22,depthWrite:false,side:THREE.DoubleSide}));
+    beam.rotation.x=Math.PI/2;beam.position.set(0,.33,-.98);beam.visible=false;g.add(beam);g.userData.beam=beam;
+    return g},
+  gripper(){const g=new THREE.Group();
+    const base=cyl(.06,.05,0x22303e);base.position.set(0,.225,-.28);g.add(base);
+    const arm=box(.05,.05,.34,0xef6f5e);arm.position.set(0,.23,-.46);g.add(arm);
+    const wr=box(.15,.05,.05,0x22303e);wr.position.set(0,.23,-.64);g.add(wr);
+    const f=[-1,1].map(s=>{const fi=box(.025,.12,.07,0xaab6c2,{metalness:.7,roughness:.3});fi.position.set(s*.06,.18,-.68);g.add(fi);return fi});
+    g.userData.fingers=f;const hold=new THREE.Object3D();hold.position.set(0,.16,-.69);g.add(hold);g.userData.hold=hold;
+    return g}
+};
+function shadowize(o){o.traverse(m=>{if(m.isMesh&&!(m.material&&m.material.transparent)){m.castShadow=true;m.receiveShadow=true}})}
+
+/* ---------------- robot ---------------- */
+let robot=new THREE.Group();robot.userData.kind='robot';turntable.add(robot);robot.position.y=.04;
+const robotParts={};
+function rebuildRobot(){
+  Object.keys(robotParts).forEach(k=>{robot.remove(robotParts[k]);delete robotParts[k]});
+  PART_ORDER.forEach(id=>{if(state.attached.has(id)){const p=BUILD[id]();shadowize(p);robotParts[id]=p;robot.add(p)}});
+}
+
+/* ---------------- parts shelf ---------------- */
+const pedestals={};
+function makeLabel(){const c=document.createElement('canvas');c.width=512;c.height=160;const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));s.scale.set(.9,.28,1);s.userData.c=c;s.userData.t=t;return s}
+function drawLabel(s,title,sub,accent){const c=s.userData.c,x=c.getContext('2d');x.clearRect(0,0,512,160);
+  x.fillStyle='rgba(12,36,64,.86)';rrPath(x,8,10,496,140,26);x.fill();
+  if(accent){x.strokeStyle='#f2c230';x.lineWidth=6;rrPath(x,8,10,496,140,26);x.stroke()}
+  x.fillStyle='#eef2f5';x.font='800 50px "Bricolage Grotesque", sans-serif';x.textAlign='center';x.fillText(title,256,74);
+  x.fillStyle=accent?'#f2c230':'#a9bdd4';x.font='700 32px "Atkinson Hyperlegible", sans-serif';x.fillText(sub,256,122);s.userData.t.needsUpdate=true}
+(function shelf(){
+  const C=new THREE.Vector2(-.2,-1.5),R=3.9;
+  PART_ORDER.forEach((id,i)=>{
+    const a=THREE.MathUtils.degToRad(122+i*17);
+    const x=C.x+Math.cos(a)*R,z=C.y-Math.sin(a)*R;
+    const g=new THREE.Group();g.position.set(x,0,z);g.lookAt(C.x,0,C.y);g.userData={kind:'part',id};scene.add(g);
+    const base=cyl(.26,.84,0x2a4a70,{roughness:.7},28);base.position.y=.42;base.castShadow=base.receiveShadow=true;g.add(base);
+    const cap=cyl(.3,.05,0x3b4a5c,{metalness:.5,roughness:.35},28);cap.position.y=.865;g.add(cap);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.31,.02,8,48),new THREE.MeshBasicMaterial({color:0xf2c230}));ring.rotation.x=Math.PI/2;ring.position.y=.9;ring.visible=false;g.add(ring);
+    const holder=new THREE.Group();holder.position.y=1.05;g.add(holder);
+    const model=BUILD[id]();const bb=new THREE.Box3().setFromObject(model);const sz=bb.getSize(new THREE.Vector3()),ct=bb.getCenter(new THREE.Vector3());
+    const sc=.5/Math.max(sz.x,sz.y,sz.z);model.position.set(-ct.x*sc,-ct.y*sc,-ct.z*sc);model.scale.setScalar(sc);
+    if(model.userData.beam) model.userData.beam.visible=false;
+    shadowize(model);holder.add(model);
+    const label=makeLabel();label.position.set(x,1.62,z);scene.add(label);
+    pedestals[id]={g,ring,holder,model,label,base};
+  });
+})();
+
+/* ---------------- arena ---------------- */
+const CELL=.9,N=7,ARENA=new THREE.Vector3(7.2,0,-3.4),ARENA_TOP=.12;
+const arenaGroup=new THREE.Group();scene.add(arenaGroup);
+(function(){
+  const plat=box(N*CELL+.5,ARENA_TOP,N*CELL+.5,0x2a3644,{roughness:.6,metalness:.3});plat.position.set(ARENA.x,ARENA_TOP/2,ARENA.z);plat.receiveShadow=true;arenaGroup.add(plat);
+  const gridTex=canvasTex(700,700,(c,w,h)=>{c.fillStyle='#eef2f5';c.fillRect(0,0,w,h);c.strokeStyle='#9fb3c8';c.lineWidth=3;
+    for(let i=0;i<=N;i++){const p=i*w/N;c.beginPath();c.moveTo(p,0);c.lineTo(p,h);c.stroke();c.beginPath();c.moveTo(0,p);c.lineTo(w,p);c.stroke();}});
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(N*CELL,N*CELL),M(0xffffff,{map:gridTex,roughness:.9}));g.rotation.x=-Math.PI/2;g.position.set(ARENA.x,ARENA_TOP+.002,ARENA.z);g.receiveShadow=true;arenaGroup.add(g);
+  const edge=new THREE.Mesh(new THREE.TorusGeometry(1,.02,4,4),M(0xf2c230,{emissive:0x806000}));
+  edge.scale.set(N*CELL/1.414+.02,N*CELL/1.414+.02,1);edge.rotation.set(Math.PI/2,0,Math.PI/4);edge.position.set(ARENA.x,ARENA_TOP+.01,ARENA.z);arenaGroup.add(edge);
+})();
+const arenaDyn=new THREE.Group();scene.add(arenaDyn);
+const crateTex=canvasTex(256,256,(c,w,h)=>{c.fillStyle='#b5773a';c.fillRect(0,0,w,h);c.strokeStyle='#7a4a1e';c.lineWidth=14;c.strokeRect(7,7,w-14,h-14);
+  c.lineWidth=12;c.beginPath();c.moveTo(14,14);c.lineTo(w-14,h-14);c.stroke();c.strokeStyle='rgba(90,55,25,.4)';c.lineWidth=2;for(let y=40;y<h;y+=44){c.beginPath();c.moveTo(14,y);c.lineTo(w-14,y);c.stroke()}});
+const crateMat=M(0xffffff,{map:crateTex,roughness:.85});
+function cellPos(c,r,y=ARENA_TOP){return new THREE.Vector3(ARENA.x+(c-3)*CELL,y,ARENA.z+(r-3)*CELL)}
+let cube=null,flag=null,zone=null;
+function buildArena(){
+  while(arenaDyn.children.length)arenaDyn.remove(arenaDyn.children[0]);
+  cube=flag=zone=null;
+  const A=MISSIONS[state.mission].arena;
+  A.walls.forEach(([c,r])=>{const k=box(.78,.42,.78,crateMat);k.position.copy(cellPos(c,r,ARENA_TOP+.21));k.rotation.y=(c*7+r*3)%5*.04;k.castShadow=k.receiveShadow=true;arenaDyn.add(k)});
+  if(A.goal){flag=new THREE.Group();flag.position.copy(cellPos(A.goal[0],A.goal[1]));
+    const pad=new THREE.Mesh(new THREE.RingGeometry(.22,.36,40),new THREE.MeshBasicMaterial({color:0x3fc1c9,side:THREE.DoubleSide}));pad.rotation.x=-Math.PI/2;pad.position.y=.01;flag.add(pad);
+    const pole=cyl(.015,.8,0xeef2f5,{metalness:.6});pole.position.set(.22,.4,.22);flag.add(pole);
+    const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(.32,-.1);sh.lineTo(0,-.2);
+    const fl=new THREE.Mesh(new THREE.ShapeGeometry(sh),M(0xf2c230,{side:THREE.DoubleSide,emissive:0x5a4300}));fl.position.set(.22,.78,.22);flag.add(fl);flag.userData.cloth=fl;
+    arenaDyn.add(flag)}
+  if(A.zone){zone=new THREE.Mesh(new THREE.PlaneGeometry(.8,.8),new THREE.MeshBasicMaterial({color:0xf2c230,transparent:true,opacity:.75}));zone.rotation.x=-Math.PI/2;zone.position.copy(cellPos(A.zone[0],A.zone[1],ARENA_TOP+.006));arenaDyn.add(zone)}
+  if(A.cube){cube=box(.22,.22,.22,0xd8433b,{roughness:.4});cube.castShadow=true;placeCube()}
+}
+function placeCube(){const A=MISSIONS[state.mission].arena;if(!cube)return;arenaDyn.attach(cube);cube.rotation.set(0,0,0);cube.scale.setScalar(1);cube.position.copy(cellPos(A.cube[0],A.cube[1],ARENA_TOP+.11))}
+
+/* ---------------- terminal (console) ---------------- */
+const TW=1024,TH=640;const termCanvas=document.createElement('canvas');termCanvas.width=TW;termCanvas.height=TH;const tctx=termCanvas.getContext('2d');
+const termTex=new THREE.CanvasTexture(termCanvas);termTex.encoding=THREE.sRGBEncoding;termTex.anisotropy=8;
+const terminal=new THREE.Group();terminal.position.set(2.85,0,-1.55);scene.add(terminal);
+(function(){const dx=rig.position.x-terminal.position.x,dz=rig.position.z-terminal.position.z;terminal.rotation.y=Math.atan2(dx,dz)*.8;})();
+const stand=box(.12,1,.12,0x2a3644,{metalness:.5});stand.position.y=.5;stand.castShadow=true;terminal.add(stand);
+const foot=box(.7,.05,.5,0x2a3644,{metalness:.5});foot.position.y=.025;terminal.add(foot);
+const frame=box(1.72,1.1,.08,0x1b2633,{metalness:.4,roughness:.4});frame.position.set(0,1.4,-.02);frame.castShadow=true;terminal.add(frame);
+const screen=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1),new THREE.MeshBasicMaterial({map:termTex,toneMapped:false}));
+screen.position.set(0,1.4,.025);screen.userData.kind='terminal';terminal.add(screen);
+const termGlow=new THREE.PointLight(0x7fd8ff,.35,3);termGlow.position.set(0,1.4,.6);terminal.add(termGlow);
+let termRegions=[],termHover=null;
+
+/* ---------------- Volt (guide) ---------------- */
+const volt=new THREE.Group();volt.userData.kind='volt';scene.add(volt);
+const vBody=sph(.17,0xeef2f5,{roughness:.35,metalness:.1});volt.add(vBody);
+const visor=new THREE.Mesh(new THREE.SphereGeometry(.172,24,12,Math.PI/2-.9,1.8,1.05,.9),M(0x0c2440,{roughness:.2,metalness:.3}));volt.add(visor);
+const eye=new THREE.Mesh(new THREE.CircleGeometry(.045,24),new THREE.MeshBasicMaterial({color:0x7ff3f8}));eye.position.set(0,.01,.176);volt.add(eye);
+const ant=cyl(.008,.12,0x2a3644);ant.position.y=.2;volt.add(ant);
+const antTip=sph(.025,M(0xf2c230,{emissive:0xf2c230,emissiveIntensity:.8}));antTip.position.y=.27;volt.add(antTip);
+const halo=new THREE.Mesh(new THREE.TorusGeometry(.24,.012,8,48),M(0x3fc1c9,{emissive:0x3fc1c9,emissiveIntensity:.7}));halo.rotation.x=Math.PI/2.4;volt.add(halo);
+const vLight=new THREE.PointLight(0x3fc1c9,.5,2.2);volt.add(vLight);
+volt.position.set(-1,1.8,-1.8);
+const voltTarget=new THREE.Vector3(-1,1.8,-1.8);
+const POSTS={build:[-1.7,1.75,-1.2],program:[1.75,1.95,-.85],running:[5.2,2.3,-.2],quiz:[1.75,1.95,-.85],celebrate:[5.2,2.3,-.2],done:[1.75,1.95,-.85],intro:[-1,1.8,-1.8]};
+
+// speech panel (in-world)
+const PW=1024,PH=360;const pCanvas=document.createElement('canvas');pCanvas.width=PW;pCanvas.height=PH;const pctx=pCanvas.getContext('2d');
+const pTex=new THREE.CanvasTexture(pCanvas);pTex.encoding=THREE.sRGBEncoding;
+const panel=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3*PH/PW),new THREE.MeshBasicMaterial({map:pTex,transparent:true,toneMapped:false,depthWrite:false}));
+panel.userData.kind='panel';scene.add(panel);
+
+/* ---------------- canvas helpers ---------------- */
+function rrPath(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function wrap(c,text,maxW){const words=text.split(' ');const out=[];let cur='';for(const w of words){const t=cur?cur+' '+w:w;if(c.measureText(t).width>maxW&&cur){out.push(cur);cur=w}else cur=t}if(cur)out.push(cur);return out}
+const FONT_H='"Bricolage Grotesque", sans-serif',FONT_B='"Atkinson Hyperlegible", sans-serif';
+
+/* ---------------- dialog ---------------- */
+let dlg={lines:[''],i:0,done:null,finished:true};
+let voiceOn=store.get('robotWorkshop.voice',false);
+function say(lines,done){dlg={lines:[].concat(lines),i:0,done:done||null,finished:false};showLine()}
+function showLine(){
+  const line=dlg.lines[dlg.i];$('gLine').textContent=line;
+  const more=dlg.i<dlg.lines.length-1;const btn=$('nextBtn');
+  btn.hidden=!(more||dlg.done);btn.textContent=more?'Next':'Continue';
+  drawPanel();speak(line);
+}
+function guideNext(){
+  if(dlg.finished)return;
+  if(dlg.i<dlg.lines.length-1){dlg.i++;showLine();blip(660,.05);return}
+  const d=dlg.done;dlg.done=null;dlg.finished=true;$('nextBtn').hidden=true;drawPanel();if(d){blip(660,.05);d()}
+}
+function speak(t){if(!voiceOn||!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.03;u.pitch=1.25;speechSynthesis.speak(u)}catch(e){}}
+function drawPanel(){
+  const c=pctx;c.clearRect(0,0,PW,PH);
+  c.fillStyle='rgba(12,36,64,.93)';rrPath(c,6,6,PW-12,PH-12,34);c.fill();
+  c.strokeStyle='#3fc1c9';c.lineWidth=5;rrPath(c,6,6,PW-12,PH-12,34);c.stroke();
+  c.fillStyle='#3fc1c9';c.font=`800 38px ${FONT_H}`;c.fillText('Volt',40,62);
+  c.fillStyle='#eef2f5';c.font=`400 36px ${FONT_B}`;
+  const lines=wrap(c,dlg.lines[dlg.i]||'',PW-80);const L=lines.slice(0,5);
+  L.forEach((l,i)=>c.fillText(i===4&&lines.length>5?l+'…':l,40,112+i*46));
+  const more=dlg.i<dlg.lines.length-1||dlg.done;
+  if(more){c.fillStyle='#f2c230';c.font=`700 30px ${FONT_B}`;c.textAlign='right';c.fillText(dlg.i<dlg.lines.length-1?'Click to continue':'Click to go on',PW-40,62);c.textAlign='left'}
+  pTex.needsUpdate=true;
+}
+
+/* ---------------- sound ---------------- */
+let actx=null;
+function blip(f=520,d=.08,type='sine',v=.06){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();
+  o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(actx.destination);const t=actx.currentTime;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.start(t);o.stop(t+d+.02)}catch(e){}}
+function chord(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.22,'triangle',.05),i*90))}
+
+/* ---------------- tweens ---------------- */
+const tweens=[];let now=performance.now();
+function tween(ms,fn){return new Promise(res=>{tweens.push({t0:now,ms:Math.max(1,ms),fn,res})})}
+const wait=ms=>tween(ms,()=>{});
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+
+/* ---------------- HUD ---------------- */
+function nextPart(){const m=MISSIONS[state.mission];return m.parts.find(id=>!state.attached.has(id)&&PARTS[id].req.every(r=>state.attached.has(r)))||null}
+function missionOfPart(id){return MISSIONS.findIndex(m=>m.parts.includes(id))}
+function updateHUD(){
+  const m=MISSIONS[state.mission];
+  $('mTitle').textContent=m.title;$('mGoal').textContent=m.goal;
+  const np=state.phase==='build'?nextPart():null;
+  $('checklist').innerHTML=m.parts.map(id=>{const done=state.attached.has(id);return `<li class="${done?'done':''} ${id===np?'next':''}"><span class="box">${done?'✓':''}</span>${PARTS[id].name}</li>`}).join('')+
+    `<li class="${state.phase==='quiz'||state.phase==='done'||progress.completed.includes(state.mission)?'done':''}"><span class="box">${state.phase==='quiz'||progress.completed.includes(state.mission)?'✓':''}</span>${m.mode==='rules'?'Find the flag with rules':(m.arena.cube?'Deliver the cube':'Reach the flag')}</li>`;
+  const ph={intro:'Listen to Volt.',build:np?`Click the ${PARTS[np].name.toLowerCase()} on the parts shelf.`:'Click a glowing part on the shelf.',
+    program:m.mode==='rules'?'Set the rules on the console, then press Run.':'Add blocks on the console, then press Run.',running:'Watch the arena.',
+    quiz:'Answer Volt’s question on the console.',done:'All missions complete.',celebrate:'Mission accomplished!',attaching:'Attaching the part.',tour:'Taking the tour.'}[state.phase];
+  $('phase').textContent=ph;
+  $('tabs').innerHTML=MISSIONS.map((mm,i)=>`<button aria-current="${i===state.mission}" ${i>progress.completed.length||state.phase==='running'||state.phase==='tour'?'disabled':''} aria-label="Mission ${i+1}: ${mm.title}">${i+1}</button>`).join('');
+  [...$('tabs').children].forEach((b,i)=>b.onclick=()=>{if(i!==state.mission||state.phase==='done')startMission(i)});
+  PART_ORDER.forEach(id=>{const p=pedestals[id];const mi=missionOfPart(id);const on=state.attached.has(id);
+    p.holder.visible=!on;p.ring.visible=state.phase==='build'&&id===np;
+    const later=mi>state.mission;
+    drawLabel(p.label,PARTS[id].name,on?'On the robot':later?`Mission ${mi+1}`:(id===np&&state.phase==='build'?'Click to attach':'Ready'),id===np&&state.phase==='build');
+    p.label.material.opacity=later?.55:1;});
+  drawTerminal();
+}
+
+/* ---------------- terminal drawing ---------------- */
+function tBtn(x,y,w,h,label,fill,ink,key,disabled,fontSize=30){
+  const c=tctx;const hov=termHover===key&&!disabled;
+  c.globalAlpha=disabled?.35:1;c.fillStyle=fill;rrPath(c,x,y,w,h,14);c.fill();
+  if(hov){c.strokeStyle='#eef2f5';c.lineWidth=5;rrPath(c,x,y,w,h,14);c.stroke()}
+  c.fillStyle=ink;c.font=`700 ${fontSize}px ${FONT_B}`;c.textAlign='center';c.textBaseline='middle';c.fillText(label,x+w/2,y+h/2+1);c.textAlign='left';c.textBaseline='alphabetic';c.globalAlpha=1;
+  if(!disabled)termRegions.push({x,y,w,h,key});
+}
+function drawTerminal(){
+  const c=tctx,m=MISSIONS[state.mission];termRegions=[];
+  c.fillStyle='#0c2440';c.fillRect(0,0,TW,TH);
+  c.fillStyle='rgba(127,216,255,.035)';for(let y=0;y<TH;y+=6)c.fillRect(0,y,TW,2);
+  c.fillStyle='#eef2f5';c.font=`800 36px ${FONT_H}`;c.fillText('Robot console',40,62);
+  c.fillStyle='#7f9bb9';c.font=`400 26px ${FONT_B}`;c.textAlign='right';c.fillText(`Mission ${state.mission+1}: ${m.title}`,TW-40,60);c.textAlign='left';
+  c.fillStyle='rgba(238,242,245,.12)';c.fillRect(40,82,TW-80,2);
+
+  if(state.phase==='done'){
+    c.fillStyle='#f2c230';c.font=`800 54px ${FONT_H}`;c.fillText('All missions complete',40,170);
+    c.fillStyle='#c8d6e5';c.font=`400 30px ${FONT_B}`;c.fillText('Replay a mission to practise again.',40,222);
+    MISSIONS.forEach((mm,i)=>tBtn(40,270+i*100,TW-80,80,`Replay mission ${i+1}: ${mm.title}`,'#1d3d63','#eef2f5','replay:'+i,false));
+  } else if(state.phase==='quiz'){
+    const q=m.quiz;c.fillStyle='#3fc1c9';c.font=`700 26px ${FONT_B}`;c.fillText('Quick check',40,130);
+    c.fillStyle='#eef2f5';c.font=`800 40px ${FONT_H}`;wrap(c,q.q,TW-80).forEach((l,i)=>c.fillText(l,40,182+i*48));
+    q.options.forEach((o,i)=>tBtn(40,290+i*104,TW-80,86,o,'#1d3d63','#eef2f5','q:'+i,false,32));
+  } else if(state.phase==='tour'){
+    c.fillStyle='#eef2f5';c.font=`800 46px ${FONT_H}`;c.fillText('Program your robot here',40,170);
+    c.fillStyle='#c8d6e5';c.font=`400 30px ${FONT_B}`;
+    ['Click blocks to add steps to a program.','Press Run to test it in the arena.','Each step lights up while the robot runs it.'].forEach((l,i)=>c.fillText(l,40,240+i*48));
+    ['F','F','R'].forEach((b,i)=>{const x=40+i*190;c.fillStyle=BLOCK[b].fill;rrPath(c,x,430,176,58,12);c.fill();c.fillStyle=BLOCK[b].ink;c.font=`700 26px ${FONT_B}`;c.fillText(`${i+1}  ${BLOCK[b].label}`,x+14,468)});
+  } else if(state.phase==='build'||state.phase==='intro'){
+    c.fillStyle='#eef2f5';c.font=`800 46px ${FONT_H}`;c.fillText('Build the robot first',40,170);
+    c.fillStyle='#c8d6e5';c.font=`400 30px ${FONT_B}`;c.fillText('Parts still needed:',40,226);
+    m.parts.filter(id=>!state.attached.has(id)).forEach((id,i)=>{c.fillStyle='#f2c230';c.beginPath();c.arc(56,272+i*48,8,0,7);c.fill();c.fillStyle='#eef2f5';c.fillText(PARTS[id].name,78,282+i*48)});
+  } else if(m.mode==='rules'){
+    drawRules(m);
+  } else drawSeq(m);
+  termTex.needsUpdate=true;
+}
+function drawSeq(m){
+  const c=tctx,run=state.phase==='running';
+  const cw=176,ch=58,gx=10,gy=10,x0=40,y0=104,per=5;
+  if(!state.program.length){c.fillStyle='#7f9bb9';c.font=`400 30px ${FONT_B}`;c.fillText('Your program is empty. Click the blocks below to add steps.',x0,150);
+    c.fillText('Click a step up here to remove it.',x0,192)}
+  state.program.forEach((b,i)=>{const col=i%per,row=Math.floor(i/per);const x=x0+col*(cw+gx),y=y0+row*(ch+gy);
+    const B=BLOCK[b];const active=state.pc===i;
+    c.globalAlpha=run&&!active?.6:1;c.fillStyle=B.fill;rrPath(c,x,y,cw,ch,12);c.fill();
+    if(active){c.strokeStyle='#ffffff';c.lineWidth=6;rrPath(c,x-3,y-3,cw+6,ch+6,14);c.stroke()}
+    if(termHover==='rm:'+i&&!run){c.strokeStyle='#0c2440';c.lineWidth=4;c.beginPath();c.moveTo(x+cw-26,y+14);c.lineTo(x+cw-12,y+28);c.moveTo(x+cw-12,y+14);c.lineTo(x+cw-26,y+28);c.stroke()}
+    c.fillStyle=B.ink;c.font=`700 26px ${FONT_B}`;c.fillText(`${i+1}  ${B.label}`,x+14,y+38);c.globalAlpha=1;
+    if(!run)termRegions.push({x,y,w:cw,h:ch,key:'rm:'+i});});
+  const n=m.blocks.length,bw=(TW-80-(n-1)*12)/n;
+  m.blocks.forEach((b,i)=>tBtn(40+i*(bw+12),460,bw,70,'+ '+BLOCK[b].label,BLOCK[b].fill,BLOCK[b].ink,'add:'+b,run||state.program.length>=25,28));
+  tBtn(40,548,150,70,'Undo','#1d3d63','#eef2f5','undo',run||!state.program.length);
+  tBtn(204,548,150,70,'Clear','#1d3d63','#eef2f5','clear',run||!state.program.length);
+  c.fillStyle='#7f9bb9';c.font=`400 24px ${FONT_B}`;c.fillText(`${state.program.length} of 25 steps`,376,592);
+  if(run)tBtn(TW-260,548,220,70,'Stop','#ef6f5e','#0c2440','stop',false,34);
+  else tBtn(TW-260,548,220,70,'Run','#f2c230','#0c2440','run',false,34);
+}
+function drawRules(m){
+  const c=tctx,run=state.phase==='running';
+  const row=(y,title,key,opts)=>{
+    const lit=state.ruleActive===key;
+    if(lit){c.fillStyle='rgba(63,193,201,.18)';rrPath(c,28,y-46,TW-56,150,16);c.fill()}
+    c.fillStyle=lit?'#3fc1c9':'#eef2f5';c.font=`800 34px ${FONT_H}`;c.fillText(title,40,y);
+    opts.forEach(([v,label],i)=>{const sel=state.rules[key]===v;tBtn(40+i*300,y+20,284,70,label,sel?'#f2c230':'#1d3d63',sel?'#0c2440':'#eef2f5',`rule:${key}:${v}`,run,30)});
+  };
+  row(148,'When the sensor sees a crate','wall',[['L','Turn left'],['R','Turn right']]);
+  row(330,'When the path ahead is clear','clear',[['F','Move forward'],['L','Turn left']]);
+  c.fillStyle='#7f9bb9';c.font=`400 26px ${FONT_B}`;
+  c.fillText('The robot repeats: sense, decide, act.',40,500);c.fillText('It stops when it reaches the flag.',40,536);
+  if(run)tBtn(TW-260,548,220,70,'Stop','#ef6f5e','#0c2440','stop',false,34);
+  else tBtn(TW-260,548,220,70,'Run','#f2c230','#0c2440','run',false,34);
+}
+function terminalAction(key){
+  const m=MISSIONS[state.mission];
+  if(key.startsWith('replay:'))return startMission(+key.split(':')[1]);
+  if(key.startsWith('q:'))return answerQuiz(+key.split(':')[1]);
+  if(state.phase==='running'){if(key==='stop'){state.abort=true;blip(300,.1)}return}
+  if(state.phase!=='program')return;
+  blip(720,.04,'square',.03);
+  if(key.startsWith('add:')){if(state.program.length<25)state.program.push(key.slice(4))}
+  else if(key.startsWith('rm:'))state.program.splice(+key.slice(3),1);
+  else if(key==='undo')state.program.pop();
+  else if(key==='clear')state.program=[];
+  else if(key.startsWith('rule:')){const[,k,v]=key.split(':');state.rules[k]=v}
+  else if(key==='run'){m.mode==='rules'?runRules():runSequence();return}
+  drawTerminal();
+}
+function terminalHit(uv){const x=uv.x*TW,y=(1-uv.y)*TH;return termRegions.find(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h)}
+
+/* ---------------- building ---------------- */
+async function onPartClick(id){
+  const P=PARTS[id],mi=missionOfPart(id);
+  if(state.phase==='running'||state.phase==='quiz')return;
+  if(state.attached.has(id))return say(`The ${P.name.toLowerCase()} is already on the robot.`);
+  if(mi>state.mission)return say(`The ${P.name.toLowerCase()} is for mission ${mi+1}. Finish this mission first and it will unlock.`);
+  if(state.phase!=='build')return;
+  const missing=P.req.filter(r=>!state.attached.has(r));
+  if(missing.length){blip(220,.15,'sawtooth',.03);return say(P.why)}
+  state.phase='attaching';
+  await attachAnimated(id);
+  state.attached.add(id);
+  const done=MISSIONS[state.mission].parts.every(p=>state.attached.has(p));
+  const m=MISSIONS[state.mission];
+  if(done){state.phase='program';updateHUD();say([...P.lesson,...m.built],()=>autoFly('console'))}
+  else{state.phase='build';updateHUD();say(P.lesson)}
+}
+async function attachAnimated(id){
+  const ped=pedestals[id];ped.holder.visible=false;ped.ring.visible=false;
+  const part=BUILD[id]();shadowize(part);robot.add(part);robotParts[id]=part;
+  const from=ped.holder.getWorldPosition(new THREE.Vector3());robot.worldToLocal(from);
+  part.position.copy(from);part.scale.setScalar(.6);blip(440,.08);
+  await tween(reduceMotion?200:850,k=>{const e=ease(k);part.position.set(from.x*(1-e),from.y*(1-e)+Math.sin(e*Math.PI)*.6,from.z*(1-e));part.scale.setScalar(.6+.4*e)});
+  part.position.set(0,0,0);part.scale.setScalar(1);
+  sparks(robot.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.3,0)),24,0x3fc1c9);
+  blip(880,.09,'triangle');
+  // keep part order consistent
+}
+
+/* ---------------- arena runtime ---------------- */
+const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
+let sim=null;
+function blocked(x,y){const A=MISSIONS[state.mission].arena;if(x<0||y<0||x>=N||y>=N)return 'edge';return A.walls.some(([c,r])=>c===x&&r===y)?'crate':false}
+function robotPose(x,y,d){robot.position.copy(cellPos(x,y));robot.rotation.set(0,-d*Math.PI/2,0)}
+async function toArena(){
+  if(state.inArena)return;
+  const A=MISSIONS[state.mission].arena;scene.attach(robot);
+  const p0=robot.position.clone(),q0=robot.quaternion.clone(),s0=robot.scale.x;
+  const p1=cellPos(A.start[0],A.start[1]),q1=new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-A.start[2]*Math.PI/2,0));
+  blip(500,.2,'triangle',.04);
+  await tween(reduceMotion?200:1300,k=>{const e=ease(k);robot.position.lerpVectors(p0,p1,e);robot.position.y+=Math.sin(e*Math.PI)*1.2;robot.quaternion.copy(q0).slerp(q1,e);robot.scale.setScalar(s0+(.8-s0)*e)});
+  state.inArena=true;
+}
+async function toBench(instant){
+  if(!state.inArena&&robot.parent===turntable)return;
+  turntable.attach(robot);
+  const p0=robot.position.clone(),q0=robot.quaternion.clone(),s0=robot.scale.x;const p1=new THREE.Vector3(0,.04,0),q1=new THREE.Quaternion();
+  if(instant){robot.position.copy(p1);robot.quaternion.copy(q1);robot.scale.setScalar(1)}
+  else await tween(reduceMotion?200:1100,k=>{const e=ease(k);robot.position.lerpVectors(p0,p1,e);robot.position.y+=Math.sin(e*Math.PI)*1.2;robot.quaternion.copy(q0).slerp(q1,e);robot.scale.setScalar(s0+(1-s0)*e)});
+  state.inArena=false;
+}
+function resetSim(){const A=MISSIONS[state.mission].arena;sim={x:A.start[0],y:A.start[1],d:A.start[2],holding:false,delivered:false,cubeAt:A.cube?[...A.cube]:null};
+  robotPose(sim.x,sim.y,sim.d);if(cube)placeCube();if(robotParts.gripper)setClaw(0)}
+function spinWheels(a){const w=robotParts.wheels;if(w)w.userData.spin.forEach((g,i)=>g.rotation.x-=a)}
+async function moveF(ms){const nx=sim.x+DIRS[sim.d][0],ny=sim.y+DIRS[sim.d][1];const p0=cellPos(sim.x,sim.y),p1=cellPos(nx,ny);let last=0;
+  await tween(ms,k=>{const e=ease(k);robot.position.lerpVectors(p0,p1,e);spinWheels((e-last)*6.4);last=e});sim.x=nx;sim.y=ny;blip(300,.03,'square',.015)}
+async function turn(dir,ms){const r0=-sim.d*Math.PI/2;sim.d=(sim.d+(dir==='L'?3:1))%4;const r1=r0+(dir==='L'?1:-1)*Math.PI/2;let last=0;
+  await tween(ms,k=>{const e=ease(k);robot.rotation.y=r0+(r1-r0)*e;const w=robotParts.wheels;if(w){w.userData.spin[0].rotation.x-=(dir==='L'?-1:1)*(e-last)*3;w.userData.spin[1].rotation.x+=(dir==='L'?-1:1)*(e-last)*3}last=e})}
+async function bump(){const v=new THREE.Vector3(DIRS[sim.d][0],0,DIRS[sim.d][1]);const p0=robot.position.clone();blip(140,.25,'sawtooth',.06);
+  await tween(380,k=>{robot.position.copy(p0).addScaledVector(v,Math.sin(k*Math.PI)*.18);robot.rotation.z=Math.sin(k*Math.PI*4)*.06});robot.rotation.z=0}
+function setClaw(k){const g=robotParts.gripper;if(!g)return;g.userData.fingers.forEach((f,i)=>f.position.x=(i?1:-1)*(.06-.02*k))}
+async function grab(){const g=robotParts.gripper;await tween(260,k=>setClaw(k));g.userData.hold.attach(cube);
+  await tween(250,k=>{cube.position.lerp(new THREE.Vector3(0,.0,0),k);cube.scale.setScalar(1)});cube.position.set(0,0,0);cube.rotation.set(0,0,0);blip(600,.08,'triangle')}
+async function drop(){arenaDyn.attach(cube);const p1=cellPos(sim.x,sim.y,ARENA_TOP+.11);const p0=cube.position.clone();cube.rotation.set(0,0,0);
+  await tween(250,k=>cube.position.lerpVectors(p0,p1,k));await tween(220,k=>setClaw(1-k));blip(400,.08,'triangle')}
+function setBeam(on,hit){const s=robotParts.sensor;if(!s)return;const b=s.userData.beam;b.visible=on;if(on)b.material.color.set(hit?0xef6f5e:0x3fc1c9)}
+
+async function beginRun(){state.phase='running';state.abort=false;state.pc=-1;state.ruleActive=null;updateHUD();
+  autoFly('arena');await toArena();resetSim();await wait(250)}
+async function fail(lines){state.phase='program';state.pc=-1;state.ruleActive=null;setBeam(false);updateHUD();say(lines);
+  await wait(1400);if(state.phase==='program'&&state.inArena){resetSim();autoFly('console')}}
+async function stopped(){state.phase='program';state.pc=-1;state.ruleActive=null;setBeam(false);resetSim();updateHUD();say('Stopped. Change the program and press Run when you’re ready.')}
+
+async function runSequence(){
+  const m=MISSIONS[state.mission],A=m.arena,prog=state.program.slice();
+  if(!prog.length)return say('Your program is empty. Click the blocks at the bottom of the console to add steps.');
+  await beginRun();
+  for(let i=0;i<prog.length;i++){
+    if(state.abort)return stopped();
+    state.pc=i;drawTerminal();const b=prog[i];
+    if(b==='F'){const nx=sim.x+DIRS[sim.d][0],ny=sim.y+DIRS[sim.d][1];const bl=blocked(nx,ny);
+      if(bl){await bump();return fail([`Step ${i+1}: the robot bumped into ${bl==='edge'?'the edge of the arena':'a crate'}.`,'Check the steps just before it. Maybe it needs to turn sooner, or turn the other way.'])}
+      await moveF(420)}
+    else if(b==='L'||b==='R')await turn(b,340);
+    else if(b==='G'){
+      if(sim.holding)return fail(`Step ${i+1}: the claw is already holding the cube.`);
+      if(!sim.cubeAt||sim.cubeAt[0]!==sim.x||sim.cubeAt[1]!==sim.y){await tween(240,k=>setClaw(Math.sin(k*Math.PI)));
+        return fail([`Step ${i+1}: the claw closed on thin air.`,'The robot has to be standing on the cube’s square before it grabs.'])}
+      await grab();sim.holding=true;sim.cubeAt=null}
+    else if(b==='D'){
+      if(!sim.holding)return fail(`Step ${i+1}: there’s nothing in the claw to drop.`);
+      await drop();sim.holding=false;sim.cubeAt=[sim.x,sim.y];if(A.zone&&sim.x===A.zone[0]&&sim.y===A.zone[1])sim.delivered=true}
+    await wait(70);
+  }
+  if(state.abort)return stopped();
+  state.pc=-1;
+  if(A.goal){
+    if(sim.x===A.goal[0]&&sim.y===A.goal[1])return succeed();
+    const dist=Math.abs(sim.x-A.goal[0])+Math.abs(sim.y-A.goal[1]);
+    return fail([`The program finished, but the robot stopped ${dist} square${dist>1?'s':''} away from the flag.`,'Count the squares from the start to the flag, then add or change some steps.'])}
+  if(A.cube){
+    if(sim.delivered)return succeed();
+    if(sim.holding)return fail('So close! The cube is still in the claw. End your program with a Drop block on the yellow square.');
+    if(sim.cubeAt&&!(sim.cubeAt[0]===A.cube[0]&&sim.cubeAt[1]===A.cube[1]))return fail('The cube was dropped on the wrong square. It needs to land on the yellow zone.');
+    return fail(['The cube hasn’t moved yet. First drive onto its square, then use Grab.','Hint: it’s three squares straight ahead of the start.'])}
+}
+async function runRules(){
+  const A=MISSIONS[state.mission].arena;await beginRun();
+  const seen=new Set();
+  for(let t=0;t<90;t++){
+    if(state.abort)return stopped();
+    if(sim.x===A.goal[0]&&sim.y===A.goal[1]){setBeam(false);return succeed()}
+    const k=`${sim.x},${sim.y},${sim.d}`;
+    if(seen.has(k)){setBeam(false);
+      if(state.rules.clear!=='F')return fail(['The robot is spinning on the spot. It never moves!','When the path is clear, it should move forward.']);
+      return fail(['The robot is driving in circles, so it will never reach the flag.','Try the other turn for when the sensor sees a crate.'])}
+    seen.add(k);
+    const nx=sim.x+DIRS[sim.d][0],ny=sim.y+DIRS[sim.d][1];const bl=blocked(nx,ny);
+    setBeam(true,!!bl);state.ruleActive=bl?'wall':'clear';drawTerminal();await wait(140);
+    const act=bl?state.rules.wall:state.rules.clear;
+    if(act==='F')await moveF(300);else await turn(act,240);
+  }
+  setBeam(false);return fail('The robot ran out of time. Try the other turn.');
+}
+async function succeed(){
+  state.pc=-1;state.ruleActive=null;state.phase='celebrate';updateHUD();
+  chord();sparks(robot.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.5,0)),90,null);
+  if(flag)await tween(600,k=>flag.userData.cloth.rotation.y=Math.sin(k*Math.PI*4)*.5);
+  const m=MISSIONS[state.mission];
+  say(m.success,()=>{state.phase='quiz';state.quizWrong=false;updateHUD();autoFly('console');say(m.quiz.q)});
+}
+function answerQuiz(i){
+  const m=MISSIONS[state.mission],q=m.quiz;
+  if(i!==q.answer){blip(220,.15,'sawtooth',.03);state.quizWrong=true;return say(q.hint)}
+  chord();
+  if(!progress.completed.includes(state.mission)){progress.completed.push(state.mission);store.set('robotWorkshop.v1',progress)}
+  updateHUD();
+  const last=state.mission===MISSIONS.length-1;
+  say(q.explain,()=>{if(last)showDone();else startMission(state.mission+1)});
+}
+function showDone(){state.phase='done';updateHUD();autoFly('console');say(FINALE)}
+
+/* ---------------- missions ---------------- */
+async function startMission(i){
+  state.abort=true;
+  state.mission=i;state.program=[];state.pc=-1;state.ruleActive=null;state.rules={wall:'R',clear:'F'};
+  state.attached=new Set();for(let k=0;k<i;k++)MISSIONS[k].parts.forEach(p=>state.attached.add(p));
+  await toBench(true);robot.scale.setScalar(1);
+  rebuildRobot();buildArena();
+  state.phase='build';updateHUD();
+  autoFly('shelf');
+  say(MISSIONS[i].intro);
+}
+
+/* ---------------- particles ---------------- */
+const parts=[];
+function sparks(pos,n,color){const cols=[0xf2c230,0x3fc1c9,0xef6f5e,0xeef2f5];
+  for(let i=0;i<(reduceMotion?Math.min(n,12):n);i++){const m=new THREE.Mesh(new THREE.PlaneGeometry(.05,.03),new THREE.MeshBasicMaterial({color:color||cols[i%4],side:THREE.DoubleSide}));
+    m.position.copy(pos);const v=new THREE.Vector3((Math.random()-.5)*2.4,1.5+Math.random()*2.2,(Math.random()-.5)*2.4);scene.add(m);parts.push({m,v,life:1.6+Math.random()*.8,spin:Math.random()*8})}}
+
+/* ---------------- input ---------------- */
+const keys={};
+addEventListener('keydown',e=>{if(e.target.tagName==='BUTTON'&&(e.key==='Enter'||e.key===' '))return;keys[e.key.toLowerCase()]=true;if(e.key==='Enter'){guideNext()}});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+const ray=new THREE.Raycaster();ray.camera=camera;const ndc=new THREE.Vector2();
+function clickables(){return [screen,panel,volt,robot,floor,...Object.values(pedestals).map(p=>p.g)]}
+function firstHit(){const hits=ray.intersectObjects(clickables(),true);
+  for(const h of hits){let o=h.object;if(o===panel&&!panel.visible)continue;if(o.userData.kind==='floor')return{kind:'floor',h};while(o&&!o.userData.kind)o=o.parent;if(o)return{kind:o.userData.kind,o,h}}return null}
+function activate(hit){if(!hit)return;
+  switch(hit.kind){
+    case 'part':onPartClick(hit.o.userData.id);break;
+    case 'terminal':{const r=terminalHit(hit.h.uv);if(r)terminalAction(r.key);break}
+    case 'panel':case 'volt':guideNext();break;
+    case 'robot':if(state.phase==='build'||state.phase==='program'){const list=[...state.attached].map(id=>PARTS[id].name.toLowerCase());say(list.length?`So far the robot has: ${list.join(', ')}.`:'The workbench is empty. Start with the chassis from the shelf.')}break;
+    case 'floor':teleport(hit.h.point);break;
+  }}
+let tele=null;
+function clampRoom(p){p.x=Math.min(ROOM.x1-.6,Math.max(ROOM.x0+.6,p.x));p.z=Math.min(ROOM.z1-.6,Math.max(ROOM.z0+.6,p.z));return p}
+function teleport(pt){cancelFlight();const target=clampRoom(new THREE.Vector3(pt.x,0,pt.z));const from=rig.position.clone();
+  // stop a little short so you look at things rather than stand inside them
+  const dir=target.clone().sub(from);const d=dir.length();if(d>1.2)target.copy(from).addScaledVector(dir.normalize(),d-.6);
+  tele={from,to:target,t:0}}
+
+let down=null;
+const el=renderer.domElement;
+el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);down={x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,t:performance.now(),moved:false,id:e.pointerId}});
+el.addEventListener('pointermove',e=>{
+  if(down&&e.pointerId===down.id){const dx=e.clientX-down.lx,dy=e.clientY-down.ly;
+    if(Math.abs(e.clientX-down.x)+Math.abs(e.clientY-down.y)>7)down.moved=true;
+    if(down.moved&&!renderer.xr.isPresenting){cancelFlight();const s=e.pointerType==='touch'?.006:.004;yaw+=dx*s;pitch=Math.max(-1.25,Math.min(1.25,pitch+dy*s))}
+    down.lx=e.clientX;down.ly=e.clientY;return}
+  if(e.pointerType==='mouse')hoverAt(e.clientX,e.clientY);
+});
+el.addEventListener('pointerup',e=>{if(down&&!down.moved&&performance.now()-down.t<600){setNdc(e.clientX,e.clientY);ray.setFromCamera(ndc,camera);activate(firstHit())}down=null});
+el.addEventListener('pointercancel',()=>down=null);
+function setNdc(x,y){ndc.set(x/innerWidth*2-1,-(y/innerHeight)*2+1)}
+let hoverT=0;
+function hoverAt(x,y){const t=performance.now();if(t-hoverT<50)return;hoverT=t;setNdc(x,y);ray.setFromCamera(ndc,camera);const h=firstHit();
+  let key=null,cur='grab';
+  if(h){if(h.kind==='terminal'){const r=terminalHit(h.h.uv);key=r?r.key:null;cur=r?'pointer':'grab'}else if(h.kind!=='floor')cur='pointer';else cur='crosshair'}
+  el.style.cursor=cur;if(key!==termHover){termHover=key;drawTerminal()}}
+
+// joystick
+const joy={x:0,y:0,id:null};
+(function(){const j=$('joy'),k=$('knob');
+  const set=(e)=>{const r=j.getBoundingClientRect();let x=(e.clientX-r.left-r.width/2)/(r.width/2),y=(e.clientY-r.top-r.height/2)/(r.height/2);const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}
+    joy.x=x;joy.y=y;k.style.transform=`translate(${x*33}px,${y*33}px)`};
+  j.addEventListener('pointerdown',e=>{e.stopPropagation();j.setPointerCapture(e.pointerId);joy.id=e.pointerId;set(e)});
+  j.addEventListener('pointermove',e=>{if(e.pointerId===joy.id)set(e)});
+  const end=e=>{if(e.pointerId===joy.id){joy.id=null;joy.x=joy.y=0;k.style.transform=''}};
+  j.addEventListener('pointerup',end);j.addEventListener('pointercancel',end);})();
+
+// HUD buttons
+$('nextBtn').onclick=guideNext;
+function setVoice(v){voiceOn=v;store.set('robotWorkshop.voice',v);$('voiceBtn').textContent=v?'Voice on':'Voice off';$('voiceBtn').setAttribute('aria-pressed',v);
+  if(!v&&'speechSynthesis' in window)speechSynthesis.cancel();else speak($('gLine').textContent)}
+$('voiceBtn').onclick=()=>setVoice(!voiceOn);
+let resetArm=false,resetTimer=null;
+$('resetBtn').onclick=()=>{if(!resetArm){resetArm=true;$('resetBtn').textContent='Click again to reset';clearTimeout(resetTimer);resetTimer=setTimeout(()=>{resetArm=false;$('resetBtn').textContent='Start over'},3000);return}
+  resetArm=false;$('resetBtn').textContent='Start over';progress.completed=[];store.set('robotWorkshop.v1',progress);startMission(0)};
+$('collapse').onclick=()=>{const c=$('mission').classList.toggle('collapsed');$('collapse').textContent=c?'Show':'Hide';$('collapse').setAttribute('aria-expanded',!c)};
+if(innerWidth<640){$('mission').classList.add('collapsed');$('collapse').textContent='Show'}
+
+/* ---------------- WebXR ---------------- */
+const controllers=[];
+(function(){
+  if(!navigator.xr||!navigator.xr.isSessionSupported)return;
+  navigator.xr.isSessionSupported('immersive-vr').then(ok=>{if(!ok)return;const b=$('vrBtn');b.style.display='inline-block';
+    let session=null;
+    b.onclick=async()=>{
+      if(session){session.end();return}
+      try{session=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});
+        renderer.xr.setReferenceSpaceType('local-floor');await renderer.xr.setSession(session);
+        camera.position.y=0;camera.rotation.set(0,0,0);b.textContent='Exit VR';
+        session.addEventListener('end',()=>{session=null;camera.position.y=EYE;b.textContent='Enter VR'});
+      }catch(e){say('Your headset didn’t allow VR here. Open this page directly in the headset’s browser and try again.')}
+    };
+  }).catch(()=>{});
+  for(let i=0;i<2;i++){const c=renderer.xr.getController(i);rig.add(c);
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),new THREE.Vector3(0,0,-1)]),new THREE.LineBasicMaterial({color:0xf2c230}));line.scale.z=6;c.add(line);
+    c.addEventListener('select',()=>{const m=new THREE.Matrix4().extractRotation(c.matrixWorld);ray.ray.origin.setFromMatrixPosition(c.matrixWorld);ray.ray.direction.set(0,0,-1).applyMatrix4(m);ray.camera=renderer.xr.getCamera(camera);activate(firstHit());ray.camera=camera});
+    controllers.push(c)}
+})();
+
+/* ---------------- guided navigation & tour ---------------- */
+let touring=false,tourIdx=0,tourDone=null;
+const STATIONS={
+  overview:{center:new THREE.Vector3(1.8,.6,-2.6)},
+  shelf:{center:new THREE.Vector3(-3.3,.9,-1.9)},
+  bench:{center:new THREE.Vector3(0,.95,-3)},
+  console:{center:new THREE.Vector3(2.85,1.4,-1.55)},
+  arena:{center:new THREE.Vector3(7.2,.12,-3.4)}
+};
+function viewpoint(name){
+  switch(name){
+    case 'overview':return{pos:new THREE.Vector3(1.6,1.7,5.2),look:new THREE.Vector3(1.8,.5,-3)};
+    case 'shelf':return{pos:new THREE.Vector3(.9,0,.9),look:new THREE.Vector3(-2.4,.95,-2.0)};
+    case 'bench':return{pos:new THREE.Vector3(.35,0,-.85),look:new THREE.Vector3(0,1,-3)};
+    case 'arena':return{pos:new THREE.Vector3(7.2,1.1,2.3),look:new THREE.Vector3(7.2,.1,-3.6)};
+    case 'console':{const r=terminal.rotation.y;const hf=2*Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect);
+      const d=Math.min(3,Math.max(1.45,1.0/Math.tan(hf/2)));
+      return{pos:new THREE.Vector3(terminal.position.x+Math.sin(r)*d,0,terminal.position.z+Math.cos(r)*d),look:new THREE.Vector3(terminal.position.x,1.35,terminal.position.z)}}
+  }
+  return null;
+}
+let flying=false,flightTok=0;
+function cancelFlight(){if(flying){flightTok++;flying=false}}
+function flyTo(name,ms=1600){
+  const v=viewpoint(name);if(!v)return Promise.resolve();
+  if(renderer.xr.isPresenting){rig.position.set(v.pos.x,0,v.pos.z);return Promise.resolve()}
+  tele=null;const tok=++flightTok;flying=true;
+  const p0=rig.position.clone(),y0=yaw,pi0=pitch;
+  const eyeY=v.pos.y+EYE,dx=v.look.x-v.pos.x,dz=v.look.z-v.pos.z;
+  const ty=Math.atan2(-dx,-dz),tp=Math.atan2(v.look.y-eyeY,Math.hypot(dx,dz));
+  const dy=((ty-y0+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+  const lift=Math.min(1.1,p0.distanceTo(v.pos)*.12);
+  if(reduceMotion)ms=Math.min(ms,450);
+  return tween(ms,k=>{if(tok!==flightTok)return;const e=ease(k);rig.position.lerpVectors(p0,v.pos,e);rig.position.y+=Math.sin(e*Math.PI)*lift;yaw=y0+dy*e;pitch=pi0+(tp-pi0)*e})
+    .then(()=>{if(tok===flightTok)flying=false});
+}
+let autoFlyOn=store.get('robotWorkshop.autofly',true);
+function autoFly(name){if(autoFlyOn&&!touring)return flyTo(name);return Promise.resolve()}
+
+// hanging station signs
+const signs=[];
+function makeSign(name,pos,col){const c=document.createElement('canvas');c.width=640;c.height=150;const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true}));s.scale.set(1.45,.34,1);s.position.copy(pos);scene.add(s);signs.push({c,t,name,col})}
+function drawSigns(){signs.forEach(({c,t,name,col})=>{const x=c.getContext('2d');x.clearRect(0,0,640,150);
+  x.fillStyle='#eef2f5';rrPath(x,6,6,628,138,24);x.fill();x.fillStyle=col;rrPath(x,6,6,44,138,22);x.fill();x.fillRect(28,6,22,138);
+  x.fillStyle='#0c2440';x.font=`800 64px ${FONT_H}`;x.textBaseline='middle';x.fillText(name,78,80);t.needsUpdate=true})}
+makeSign('Parts shelf',new THREE.Vector3(-3.7,2.6,-2.1),'#f2c230');
+makeSign('Workbench',new THREE.Vector3(0,2.75,-3.4),'#c89b6a');
+makeSign('Console',new THREE.Vector3(2.85,2.5,-1.6),'#3fc1c9');
+makeSign('Test arena',new THREE.Vector3(7.2,2.3,-6.75),'#ef6f5e');
+drawSigns();
+
+// beacon arrow, floor pulse, and the glowing path
+const beacon=new THREE.Group();beacon.visible=false;scene.add(beacon);
+const arrow=new THREE.Mesh(new THREE.ConeGeometry(.11,.26,20),M(0xf2c230,{emissive:0xf2c230,emissiveIntensity:.7}));arrow.rotation.x=Math.PI;beacon.add(arrow);
+const floorRing=new THREE.Mesh(new THREE.RingGeometry(.34,.42,48),new THREE.MeshBasicMaterial({color:0xf2c230,transparent:true,opacity:.6,depthWrite:false,side:THREE.DoubleSide}));
+floorRing.rotation.x=-Math.PI/2;floorRing.visible=false;scene.add(floorRing);
+const chev=canvasTex(128,64,(c,w,h)=>{c.clearRect(0,0,w,h);c.strokeStyle='#f2c230';c.lineWidth=12;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(44,12);c.lineTo(84,32);c.lineTo(44,52);c.stroke()});
+chev.wrapS=THREE.RepeatWrapping;
+const pathGeo=new THREE.PlaneGeometry(1,.32);pathGeo.rotateX(-Math.PI/2);pathGeo.translate(.5,0,0);
+const pathMesh=new THREE.Mesh(pathGeo,new THREE.MeshBasicMaterial({map:chev,transparent:true,opacity:.9,depthWrite:false}));pathMesh.visible=false;scene.add(pathMesh);
+
+// tour spotlight
+const spot=new THREE.SpotLight(0xfff1d6,0,14,.5,.6,1.2);scene.add(spot);scene.add(spot.target);
+function setSpot(name){const st=STATIONS[name];const i0=spot.intensity;
+  if(!st){tween(500,k=>spot.intensity=i0*(1-k));return}
+  spot.position.set(st.center.x+.6,4.8,st.center.z+1.2);spot.target.position.copy(st.center);tween(600,k=>spot.intensity=i0+(2.4-i0)*k)}
+function dimRoom(on){const h0=hemi.intensity,s0=sun.intensity,h1=on?.28:.55,s1=on?.4:.85;tween(700,k=>{hemi.intensity=h0+(h1-h0)*k;sun.intensity=s0+(s1-s0)*k})}
+
+function guideTarget(){
+  if(touring)return null;
+  if(state.phase==='build'){const np=nextPart();if(!np)return null;const p=pedestals[np].g.position;return{pt:new THREE.Vector3(p.x,1.92,p.z),station:'shelf'}}
+  if(['program','quiz','done'].includes(state.phase))return{pt:new THREE.Vector3(terminal.position.x,1.98,terminal.position.z),station:'console'};
+  return null;
+}
+let lastNeeded;const _cam=new THREE.Vector3(),_B=new THREE.Vector3(),_T=new THREE.Vector3(),_dir=new THREE.Vector3();
+function updateGuidance(dt,ts){
+  const g=guideTarget();
+  if(g){beacon.visible=true;beacon.position.copy(g.pt);arrow.position.y=reduceMotion?0:Math.abs(Math.sin(ts*3))*.12;arrow.rotation.y=ts*2;
+    const ph=(ts*1.1)%1;floorRing.visible=true;floorRing.position.set(g.pt.x,.015,g.pt.z);floorRing.scale.setScalar(1+ph*.9);floorRing.material.opacity=.7*(1-ph)}
+  else{beacon.visible=false;floorRing.visible=false}
+  pathMesh.visible=false;
+  if(g&&!flying){const vp=viewpoint(g.station);_cam.set(rig.position.x,0,rig.position.z);_B.set(vp.pos.x,0,vp.pos.z);_T.set(g.pt.x,0,g.pt.z);
+    const d=_B.distanceTo(_cam);
+    if(d>1.6&&_T.distanceTo(_cam)>2.4){_dir.copy(_B).sub(_cam).normalize();const ax=_cam.x+_dir.x*.7,az=_cam.z+_dir.z*.7;const L=Math.max(.2,d-.7);
+      pathMesh.visible=true;pathMesh.position.set(ax,.02,az);pathMesh.rotation.y=Math.atan2(-_dir.z,_dir.x);pathMesh.scale.x=L;chev.repeat.x=L/.42;if(!reduceMotion)chev.offset.x-=dt*1.4}}
+  const need=g?g.station:null;
+  if(need!==lastNeeded){lastNeeded=need;document.querySelectorAll('#stations button').forEach(b=>b.classList.toggle('needed',b.dataset.st===need))}
+}
+
+const TOUR=[
+  {view:'overview',target:'overview',label:'Welcome',volt:[.6,2.5,1.6],line:'This is your robot workshop. Let me fly you around so you always know where to go.'},
+  {view:'shelf',target:'shelf',label:'Parts shelf',volt:[-1.7,1.75,-1.2],line:'This is the parts shelf. Every robot part waits here. A yellow arrow and a pulsing ring always mark the part you need next.'},
+  {view:'bench',target:'bench',label:'Workbench',volt:[-.9,1.8,-2.2],line:'When you click a part, it flies onto the robot on this workbench. The turntable spins so you can see your robot from every side.'},
+  {view:'console',target:'console',label:'Console',volt:[1.75,1.95,-.85],line:'This is the robot console. Click blocks to write a program, then press Run.'},
+  {view:'arena',target:'arena',label:'Test arena',volt:[5.2,2.3,-.2],line:'Your robot jumps into this arena to test its program. Crates block the way, and the flag marks the goal.'},
+  {view:'shelf',target:null,label:'Getting around',volt:[-1.7,1.75,-1.2],line:'To travel, use the station buttons at the bottom of the screen, or follow the glowing path on the floor. The highlighted button is where I need you next. Let’s build!'}
+];
+function renderTourBar(){$('tourDots').innerHTML=TOUR.map((_,i)=>`<i class="${i===tourIdx?'on':i<tourIdx?'past':''}"></i>`).join('');
+  $('tourLabel').textContent=`${TOUR[tourIdx].label} (${tourIdx+1} of ${TOUR.length})`}
+function startTour(after){
+  if(touring||state.phase==='running')return;
+  touring=true;tourDone=after||null;state.prevPhase=state.phase;state.phase='tour';
+  document.body.classList.add('touring');$('tourBar').classList.add('on');dimRoom(true);updateHUD();tourStep(0);
+}
+function tourStep(i){
+  if(!touring)return;if(i>=TOUR.length)return endTour();
+  tourIdx=i;const s=TOUR[i];renderTourBar();setSpot(s.target);flyTo(s.view,i===0?2400:1800);
+  $('stations').classList.toggle('flash',i===TOUR.length-1);
+  say(s.line,()=>tourStep(i+1));
+}
+function endTour(){
+  if(!touring)return;touring=false;store.set('robotWorkshop.toured',true);
+  $('tourBar').classList.remove('on');document.body.classList.remove('touring');$('stations').classList.remove('flash');
+  setSpot(null);dimRoom(false);
+  state.phase=state.prevPhase&&state.prevPhase!=='tour'?state.prevPhase:'build';updateHUD();
+  const d=tourDone;tourDone=null;
+  if(d)d();
+  else{const g=guideTarget();autoFly(g?g.station:'bench');say('That’s the tour. Follow the glowing path or the highlighted station button whenever you’re unsure where to go.')}
+}
+function setAuto(v){autoFlyOn=v;store.set('robotWorkshop.autofly',v);$('autoBtn').textContent=v?'Auto camera on':'Auto camera off';$('autoBtn').setAttribute('aria-pressed',v)}
+setAuto(autoFlyOn);
+$('autoBtn').onclick=()=>setAuto(!autoFlyOn);
+$('tourBtn').onclick=()=>{if(['build','program','quiz','done'].includes(state.phase))startTour()};
+$('skipTour').onclick=()=>{dlg.done=null;endTour()};
+document.querySelectorAll('#stations button').forEach(b=>b.onclick=()=>{if(!touring)flyTo(b.dataset.st)});
+if('ResizeObserver' in window)new ResizeObserver(()=>document.documentElement.style.setProperty('--guide-h',$('guide').offsetHeight+'px')).observe($('guide'));
+
+/* ---------------- loop ---------------- */
+const tmp=new THREE.Vector3();let last=performance.now();
+renderer.setAnimationLoop((t)=>{
+  now=performance.now();const dt=Math.min(.05,(now-last)/1000);last=now;
+  for(let i=tweens.length-1;i>=0;i--){const tw=tweens[i];const k=Math.min(1,(now-tw.t0)/tw.ms);tw.fn(k);if(k>=1){tweens.splice(i,1);tw.res()}}
+  // walking
+  if(!renderer.xr.isPresenting){
+    let f=0,s=0;if(keys.w||keys.arrowup)f+=1;if(keys.s||keys.arrowdown)f-=1;if(keys.a||keys.arrowleft)s-=1;if(keys.d||keys.arrowright)s+=1;f-=joy.y;s+=joy.x;
+    if(f||s){tele=null;cancelFlight();rig.position.y+=(0-rig.position.y)*Math.min(1,dt*4);const sp=2.6*dt;rig.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*sp;rig.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*sp;clampRoom(rig.position)}
+    camera.rotation.set(pitch,yaw,0);
+  }
+  if(tele){tele.t=Math.min(1,tele.t+dt*(reduceMotion?6:2.6));rig.position.lerpVectors(tele.from,tele.to,ease(tele.t));if(tele.t>=1)tele=null}
+  // turntable
+  if(!state.inArena&&robot.parent===turntable)turntable.rotation.y+=dt*(reduceMotion?.1:.35);
+  // shelf
+  const ts=now/1000;
+  Object.values(pedestals).forEach((p,i)=>{p.holder.rotation.y=ts*.6+i;p.holder.position.y=1.05+(reduceMotion?0:Math.sin(ts*1.6+i)*.025);
+    if(p.ring.visible){const s=1+Math.sin(ts*5)*.08;p.ring.scale.set(s,s,s)}});
+  // brain LED
+  if(robotParts.brain)robotParts.brain.userData.led.material.emissiveIntensity=Math.sin(ts*6)>0?2:.2;
+  if(flag&&flag.userData.cloth&&state.phase!=='celebrate')flag.userData.cloth.rotation.y=Math.sin(ts*2)*.25;
+  // volt
+  const post=state.phase==='tour'?TOUR[tourIdx].volt:(POSTS[state.phase]||POSTS.build);voltTarget.set(post[0],post[1],post[2]);
+  volt.position.lerp(voltTarget,1-Math.pow(.02,dt));
+  const bob=reduceMotion?0:Math.sin(ts*2.2)*.05;volt.position.y+=(voltTarget.y+bob-volt.position.y)*.1;
+  const camPos=camera.getWorldPosition(tmp);volt.lookAt(camPos.x,volt.position.y,camPos.z);halo.rotation.z=ts*1.5;
+  panel.position.set(volt.position.x,volt.position.y+.48,volt.position.z);panel.lookAt(camPos);
+  // particles
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.life-=dt;p.v.y-=4.5*dt;p.m.position.addScaledVector(p.v,dt);p.m.rotation.x+=p.spin*dt;p.m.rotation.y+=p.spin*dt*.7;
+    if(p.life<=0||p.m.position.y<0){scene.remove(p.m);p.m.geometry.dispose();p.m.material.dispose();parts.splice(i,1)}}
+  updateGuidance(dt,ts);
+  renderer.render(scene,camera);
+});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+/* ---------------- boot ---------------- */
+const firstMission=Math.min(progress.completed.length,MISSIONS.length-1);
+state.mission=firstMission;
+for(let k=0;k<firstMission;k++)MISSIONS[k].parts.forEach(p=>state.attached.add(p));
+rebuildRobot();buildArena();
+$('voiceBtn').textContent=voiceOn?'Voice on':'Voice off';$('voiceBtn').setAttribute('aria-pressed',voiceOn);
+state.phase='intro';updateHUD();dlg={lines:['Press Enter the workshop to begin.'],i:0,done:null,finished:true};$('gLine').textContent=dlg.lines[0];$('nextBtn').hidden=true;drawPanel();
+const redraw=()=>{updateHUD();drawPanel();posterMesh.material.map.needsUpdate=true};
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{
+  // redraw canvas textures once the web fonts are in
+  redraw();drawSigns();
+  // repaint poster with loaded fonts
+  posterMesh.material.map=makePoster();posterMesh.material.needsUpdate=true;
+});
+function makePoster(){return canvasTex(768,1024,(c,w,h)=>{
+  c.fillStyle='#eef2f5';c.fillRect(0,0,w,h);
+  c.fillStyle='#0c2440';c.font='800 74px "Bricolage Grotesque", sans-serif';c.fillText('How a robot',52,120);c.fillText('works',52,196);
+  [['Sense','sensors measure the world','#3fc1c9',300],['Think','the brain decides','#f2c230',500],['Act','motors make it move','#ef6f5e',700]].forEach(([t,s,col,y],i)=>{
+    c.fillStyle=col;rrPath(c,52,y,w-104,140,22);c.fill();c.fillStyle='#0c2440';c.font='800 56px "Bricolage Grotesque", sans-serif';c.fillText(t,86,y+68);
+    c.font='400 32px "Atkinson Hyperlegible", sans-serif';c.fillText(s,86,y+112);
+    if(i<2){c.strokeStyle='#0c2440';c.lineWidth=6;c.beginPath();c.moveTo(w/2,y+150);c.lineTo(w/2,y+190);c.stroke();c.beginPath();c.moveTo(w/2-14,y+178);c.lineTo(w/2,y+194);c.lineTo(w/2+14,y+178);c.stroke()}});
+  c.fillStyle='#4a6382';c.font='400 30px "Atkinson Hyperlegible", sans-serif';c.fillText('Then it does it all again.',52,920);c.fillText('Power keeps every step running.',52,962)})}
+
+$('enter').onclick=()=>{
+  $('intro').classList.add('hide');setTimeout(()=>$('intro').style.display='none',550);
+  blip(523,.12,'triangle');
+  if(!store.get('robotWorkshop.toured',false))startTour(beginSession);else beginSession();
+};
+function beginSession(){
+  if(progress.completed.length>=MISSIONS.length){state.mission=MISSIONS.length-1;state.attached=new Set(PART_ORDER);rebuildRobot();buildArena();state.phase='done';updateHUD();
+    say(['Welcome back! You’ve finished every mission.','Replay any of them from the console or the tabs at the top left.'])}
+  else if(progress.completed.length>0){state.phase='build';updateHUD();say([`Welcome back! Let’s pick up at mission ${state.mission+1}: ${MISSIONS[state.mission].title}.`,...MISSIONS[state.mission].intro])}
+  else{state.phase='build';updateHUD();say(MISSIONS[0].intro)}
+  autoFly(state.phase==='done'?'console':'shelf');
+}
+})();
+</script>
+</body>
+</html>

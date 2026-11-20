@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inner Voyage: a journey through the human body</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --scene:#0A0F1A; --on-scene:#EDE6D6; --on-scene-dim:rgba(237,230,214,.64);
+  --panel:rgba(251,248,241,.95); --ink:#1F1B14; --muted:#6A6152; --gold:#8E6A26; --on-gold:#FBF8F1;
+  --gold-soft:rgba(142,106,38,.12); --line:rgba(31,27,20,.14); --ok:#2F7A4F; --bad:#A3343F;
+  --serif:'Cormorant Garamond','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --sans:'Work Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --rail-h:64px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --panel:rgba(13,18,29,.9); --ink:#EDE6D6; --muted:#A39B88; --gold:#D4AF6A; --on-gold:#1A140A;
+    --gold-soft:rgba(212,175,106,.13); --line:rgba(212,175,106,.22); --ok:#86CFA1; --bad:#EE8D96;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --panel:rgba(13,18,29,.9); --ink:#EDE6D6; --muted:#A39B88; --gold:#D4AF6A; --on-gold:#1A140A;
+  --gold-soft:rgba(212,175,106,.13); --line:rgba(212,175,106,.22); --ok:#86CFA1; --bad:#EE8D96;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--scene);}
+body{font-family:var(--sans);color:var(--on-scene);-webkit-font-smoothing:antialiased;}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid #D4AF6A;outline-offset:2px}
+
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+
+.brand{position:fixed;top:0;left:0;padding:calc(18px + env(safe-area-inset-top,0px)) 22px 0;pointer-events:none;max-width:60vw}
+.brand h1{font-family:var(--serif);font-weight:600;font-size:clamp(32px,5vw,56px);line-height:.95;margin:0;letter-spacing:-.01em}
+.brand p{margin:8px 0 0;font-size:14px;color:var(--on-scene-dim);max-width:30ch;line-height:1.4}
+
+.score{position:fixed;top:0;right:0;padding:calc(22px + env(safe-area-inset-top,0px)) 22px 0;text-align:right;font-size:13px;line-height:1.5;color:var(--on-scene-dim);pointer-events:none}
+.score b{color:#D4AF6A;font-weight:600}
+
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.tag{position:absolute;left:0;top:0;pointer-events:auto;display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:999px;border:1px solid rgba(212,175,106,.35);background:rgba(10,15,26,.62);color:var(--on-scene);font-size:12.5px;font-weight:500;white-space:nowrap;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s,border-color .2s}
+.tag i{width:8px;height:8px;border-radius:50%;background:#D4AF6A;box-shadow:0 0 10px 2px rgba(212,175,106,.7)}
+.tag:hover,.tag.hot,.tag.sel{background:rgba(212,175,106,.22);border-color:#D4AF6A}
+
+#rail{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;justify-content:center;overflow-x:auto;scrollbar-width:none;background:linear-gradient(to top,rgba(10,15,26,.92),rgba(10,15,26,0))}
+#rail::-webkit-scrollbar{display:none}
+#rail button{flex:0 0 auto;display:flex;align-items:center;gap:8px;min-height:42px;padding:6px 14px 6px 7px;border-radius:999px;border:1px solid rgba(212,175,106,.28);background:rgba(10,15,26,.55);color:var(--on-scene);font-size:14px;font-weight:500}
+#rail button .n{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1px solid rgba(212,175,106,.6);font-family:var(--serif);font-size:15px;font-weight:600;color:#D4AF6A}
+#rail button.done .n{background:#D4AF6A;color:#1A140A}
+#rail button[aria-current="true"]{border-color:#D4AF6A;background:rgba(212,175,106,.18)}
+#rail .home{padding:6px 14px}
+
+#hint{position:fixed;left:50%;bottom:calc(var(--rail-h) + 14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:8px 8px 8px 18px;border-radius:999px;background:rgba(10,15,26,.6);border:1px solid rgba(212,175,106,.25);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:14px;color:var(--on-scene-dim);white-space:nowrap;transition:opacity .3s}
+#hint button{border:0;border-radius:999px;padding:9px 16px;background:#D4AF6A;color:#1A140A;font-weight:600}
+#hint.off{opacity:0;pointer-events:none}
+
+.panel{position:fixed;right:16px;top:calc(96px + env(safe-area-inset-top,0px));width:min(380px,calc(100vw - 32px));max-height:calc(100% - 96px - var(--rail-h) - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:20px 22px 20px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.panel[hidden]{display:none}
+.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.tools{display:flex;gap:4px;margin:-6px -10px 0 0}
+.tools button{width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:20px;line-height:1}
+.tools button:hover{background:var(--gold-soft);color:var(--ink)}
+.step{font-family:var(--serif);font-style:italic;font-size:17px;color:var(--gold);margin:0}
+.panel h2{font-family:var(--serif);font-weight:600;font-size:40px;line-height:1;margin:4px 0 0;letter-spacing:-.01em}
+.latin{font-family:var(--serif);font-style:italic;color:var(--muted);margin:4px 0 0;font-size:18px}
+.lede{font-size:16px;line-height:1.5;margin:14px 0 0}
+.facts{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:10px}
+.facts li{padding-left:14px;border-left:2px solid var(--gold);font-size:14.5px;line-height:1.5;color:var(--ink)}
+.primary{display:block;width:100%;margin-top:18px;border:0;border-radius:14px;padding:14px 16px;background:var(--gold);color:var(--on-gold);font-weight:600;font-size:15.5px;text-align:left}
+.primary.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.quiz{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.quiz .q{font-family:var(--serif);font-size:21px;line-height:1.25;margin:0 0 12px;font-weight:600}
+.opts{display:grid;gap:8px}
+.opts button{text-align:left;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14.5px}
+.opts button:not([disabled]):hover{background:var(--gold-soft)}
+.opts button.right{border-color:var(--ok);color:var(--ok);font-weight:600}
+.opts button.wrong{border-color:var(--bad);color:var(--bad)}
+.opts button[disabled]{cursor:default}
+.explain{font-size:14px;line-height:1.5;margin:12px 0 0}
+.explain.ok b{color:var(--ok)} .explain.no b{color:var(--bad)}
+.link{display:block;margin:18px 0 0;padding:0;border:0;background:none;color:var(--gold);font-weight:600;font-size:15px;text-align:left}
+.end{margin:18px 0 0;font-size:14.5px;line-height:1.5;color:var(--muted)}
+.seg{display:flex;gap:6px;margin-top:16px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:14px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.readout{margin:14px 0 0;font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.2}
+.readout small{display:block;font-family:var(--sans);font-size:13px;font-weight:400;color:var(--muted);margin-top:3px}
+.legend{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:7px;font-size:14px}
+.legend li{display:flex;align-items:center;gap:10px}
+.legend i{width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);flex:none}
+.tip{font-size:13.5px;color:var(--muted);margin:14px 0 0;line-height:1.45}
+.panel.min{padding-bottom:14px}
+.panel.min > :not(.head){display:none}
+
+#toast{position:fixed;left:50%;top:calc(96px + env(safe-area-inset-top,0px));transform:translate(-50%,-8px);width:min(420px,calc(100vw - 32px));padding:14px 16px;border-radius:16px;background:var(--panel);color:var(--ink);border:1px solid var(--line);font-size:14.5px;line-height:1.5;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+#toast b{font-family:var(--serif);font-size:19px;display:block;margin-bottom:2px}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+
+#fade{position:fixed;inset:0;background:var(--scene);opacity:0;pointer-events:none;transition:opacity .38s}
+#fade.on{opacity:1}
+#loader{position:fixed;inset:0;display:grid;place-items:center;background:var(--scene);color:var(--on-scene-dim);font-family:var(--serif);font-style:italic;font-size:22px;padding:24px;text-align:center;transition:opacity .6s}
+#loader.gone{opacity:0;pointer-events:none}
+
+@media (min-width:721px){ #toast{left:calc(50% - 200px)} }
+@media (max-width:720px){
+  .brand p{display:none}
+  .score{font-size:12px;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  .panel{left:10px;right:10px;width:auto;top:auto;bottom:calc(var(--rail-h) + 6px + env(safe-area-inset-bottom,0px));max-height:46%;border-radius:20px;padding:16px 18px 18px}
+  .panel h2{font-size:32px}
+  #rail{justify-content:flex-start}
+  #hint{font-size:13px;bottom:calc(var(--rail-h) + 12px + env(safe-area-inset-bottom,0px))}
+  #hint span{display:none}
+  #toast{top:calc(78px + env(safe-area-inset-top,0px))}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="3D view of the human body"></canvas>
+<div id="labels"></div>
+<header class="brand"><h1>Inner Voyage</h1><p>Five stops through the human body, from a beating heart to a strand of DNA.</p></header>
+<div class="score" id="score" aria-live="polite"></div>
+<aside id="panel" class="panel" hidden aria-live="polite"></aside>
+<div id="hint"><span>Drag to turn the body, then tap a glowing label.</span><button type="button" id="start">Start at the heart</button></div>
+<nav id="rail" aria-label="Journey stops"></nav>
+<div id="toast" role="status"></div>
+<div id="fade"></div>
+<div id="loader">Preparing the body…</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const loader = $('#loader');
+if (!window.THREE || !THREE.OrbitControls) { loader.textContent = 'The 3D engine didn’t load. Check your connection, then reload.'; return; }
+
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const narrow = () => innerWidth <= 720;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+/* ---------------- Content ---------------- */
+const STOPS = [
+  { id:'heart', name:'Heart', latin:'Cor', lede:'A fist-sized pump that never takes a day off.',
+    facts:['Beats around 100,000 times a day.','Moves about 5 litres of blood a minute at rest, roughly your whole supply.','Laid end to end, your blood vessels would wrap around Earth more than twice.'],
+    dive:'Ride the bloodstream', diveIntro:'You’ve shrunk to the size of a cell and you’re riding inside an artery. Every heartbeat surges you forward.',
+    quiz:{q:'Which cells carry oxygen around your body?', o:['White blood cells','Red blood cells','Platelets'], a:1, e:'Red blood cells are packed with haemoglobin, an iron-rich protein that grabs oxygen in the lungs and lets it go in your tissues.'} },
+  { id:'lungs', name:'Lungs', latin:'Pulmones', lede:'Where the air you breathe meets your blood.',
+    facts:['Hold roughly 300 to 500 million tiny air sacs called alveoli.','Spread flat, those sacs would cover about 70 square metres, the floor of a small flat.','You take around 20,000 breaths a day without thinking about it.'],
+    dive:'Breathe with the alveoli', diveIntro:'You’re at the very end of the airways, among clusters of air sacs wrapped in tiny blood vessels. Watch gases trade places.',
+    quiz:{q:'Which gas do your lungs remove from your blood?', o:['Oxygen','Carbon dioxide','Nitrogen'], a:1, e:'Your cells make carbon dioxide as waste. It moves from the blood into the alveoli and leaves when you breathe out.'} },
+  { id:'brain', name:'Brain', latin:'Encephalon', lede:'About 86 billion neurons, and one of you.',
+    facts:['Holds around 86 billion neurons, each linked to thousands of others.','Weighs about 1.4 kg but uses roughly a fifth of your body’s energy.','The fastest nerve signals travel about 120 metres per second, over 400 km/h.'],
+    dive:'Fire a thought', diveIntro:'You’re inside a tiny patch of neural network. Each glowing point is a neuron; each thread is a connection.',
+    quiz:{q:'What is the tiny gap between two neurons called?', o:['A synapse','An axon','A ventricle'], a:0, e:'At a synapse, the first neuron releases chemical messengers that cross the gap and switch the next neuron on or off.'} },
+  { id:'gut', name:'Gut', latin:'Intestinum', lede:'A folded tube that turns meals into you.',
+    facts:['Your small intestine is about 6 to 7 metres long, coiled into your belly.','Its walls are carpeted with villi, each covered in even tinier microvilli.','Trillions of bacteria live in your gut, roughly as many as your own cells.'],
+    dive:'Float through the villi', diveIntro:'You’re drifting along the small intestine. The finger-like villi grab nutrients and pass them into the blood.',
+    quiz:{q:'What job do the finger-like villi do?', o:['Make bile','Absorb nutrients','Squeeze food along'], a:1, e:'Villi hugely multiply the gut’s surface, so sugars, amino acids and fats can pass into the bloodstream quickly.'} },
+  { id:'cell', name:'Cell', latin:'Cellula', lede:'The smallest living unit of you.',
+    facts:['You’re built from roughly 30 trillion human cells.','Stretched out, the DNA in a single cell would be about 2 metres long.','You shed tens of thousands of skin cells every minute and make new ones constantly.'],
+    dive:'Enter a cell', diveIntro:'You’re inside a single cell. Tap its parts to meet them, then head into the nucleus to see DNA up close.',
+    quiz:{q:'Which part of the cell turns food into usable energy?', o:['Nucleus','Mitochondria','Cell membrane'], a:1, e:'Mitochondria combine nutrients and oxygen to make ATP, the energy currency every cell runs on.'} }
+];
+const INFO = {
+  rbc:'<b>Red blood cell</b>No nucleus, which leaves room for about 270 million haemoglobin molecules. Each one lives roughly 120 days.',
+  wbc:'<b>White blood cell</b>A patrolling immune cell. It hunts bacteria and viruses and can squeeze out through vessel walls to chase them.',
+  platelet:'<b>Platelet</b>A tiny cell fragment. At a wound, platelets stick together and plug the gap, starting a clot.',
+  alveolus:'<b>Alveolus</b>An air sac with a wall just one cell thick. Oxygen crosses into the blood in well under a second.',
+  capillary:'<b>Capillary</b>The narrowest blood vessel, so thin that red blood cells pass through in single file.',
+  bronchiole:'<b>Bronchiole</b>One of the smallest airways. It branches again and again until it ends in clusters of alveoli.',
+  neuron:'<b>Neuron fired</b>The signal races along the connection and jumps the synapse to the next neuron. Some pass it on, some don’t.',
+  villus:'<b>Villus</b>A finger-like fold about a millimetre tall. Inside it, tiny blood vessels carry absorbed nutrients away.',
+  microbe:'<b>Gut bacterium</b>One of trillions of microbes here. They help digest fibre, make some vitamins and train your immune system.',
+  membrane:'<b>Cell membrane</b>A thin, oily double layer that decides what gets in and what stays out.',
+  nucleus:'<b>Nucleus</b>The control room. It stores your DNA and decides which genes are switched on.',
+  nucleolus:'<b>Nucleolus</b>A dense spot inside the nucleus that assembles ribosomes, the cell’s protein builders.',
+  mito:'<b>Mitochondrion</b>The cell’s power station. It turns food and oxygen into ATP, the energy currency of life.',
+  er:'<b>Endoplasmic reticulum</b>A folded network of membranes where proteins and fats are built and sent on their way.',
+  dna:'<b>DNA</b>Two strands twisted into a helix. A always pairs with T, and C with G. The order of these letters spells out your genes.'
+};
+
+/* ---------------- Renderer ---------------- */
+const canvas = $('#c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.setClearColor(0x0A0F1A, 1);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.01, 300);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
+controls.autoRotateSpeed = 0.6;
+
+/* ---------------- Helpers ---------------- */
+const D = new THREE.Object3D();
+const UP = new THREE.Vector3(0,1,0);
+function glowTex(){ const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d');
+  const gr=g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.25,'rgba(255,255,255,.75)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); }
+const GLOW = glowTex();
+function pointsMat(size,color,vc){ return new THREE.PointsMaterial({ size, map:GLOW, color:color===undefined?0xffffff:color, vertexColors:!!vc, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, sizeAttenuation:true }); }
+function fresnel(color,power,intensity,opacity){
+  return new THREE.ShaderMaterial({
+    uniforms:{ c:{value:new THREE.Color(color)}, p:{value:power}, k:{value:intensity}, o:{value:opacity} },
+    vertexShader:'varying vec3 vN;varying vec3 vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
+    fragmentShader:'uniform vec3 c;uniform float p;uniform float k;uniform float o;varying vec3 vN;varying vec3 vV;void main(){float f=pow(1.0-abs(dot(normalize(vN),normalize(vV))),p);gl_FragColor=vec4(c*f*k,f*o);}',
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide
+  });
+}
+function wallTex(cols){
+  const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S; const g=cv.getContext('2d');
+  g.fillStyle=cols[1]; g.fillRect(0,0,S,S);
+  for(let i=0;i<80;i++){
+    const pts=[]; let x=Math.random()*S, y=Math.random()*S; pts.push([x,y]);
+    for(let k=0;k<6;k++){ x+=rnd(-30,30); y+=rnd(-12,12); pts.push([x,y]); }
+    g.strokeStyle = i%3 ? cols[0] : cols[2]; g.globalAlpha=rnd(.15,.45); g.lineWidth=rnd(1,4);
+    for(const ox of [-S,0,S]) for(const oy of [-S,0,S]){ g.beginPath(); pts.forEach((p,j)=> j?g.lineTo(p[0]+ox,p[1]+oy):g.moveTo(p[0]+ox,p[1]+oy)); g.stroke(); }
+  }
+  g.globalAlpha=1;
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.encoding=THREE.sRGBEncoding; return t;
+}
+function lathe(pairs,seg){ return new THREE.LatheGeometry(pairs.map(p=>new THREE.Vector2(p[0],p[1])), seg||24); }
+function beat(t,bpm){ const ph=(t*bpm/60)%1; return Math.exp(-Math.pow(ph*12,2)) + 0.6*Math.exp(-Math.pow((ph-0.22)*12,2)); }
+function makeRail(curve,SEG){
+  const fr=curve.computeFrenetFrames(SEG,true);
+  return { at(u,r,a,out){ u=((u%1)+1)%1; curve.getPointAt(u,out); const k=Math.min(SEG,Math.round(u*SEG));
+    const N=fr.normals[k], B=fr.binormals[k], c=Math.cos(a)*r, s=Math.sin(a)*r;
+    out.x+=N.x*c+B.x*s; out.y+=N.y*c+B.y*s; out.z+=N.z*c+B.z*s; return out; } };
+}
+const tweens=[];
+const ease = x => x<.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2;
+function tween(dur,fn,done){ if(reduce||dur<=0){ fn(1); if(done) done(); return; } tweens.push({t:0,dur,fn,done}); }
+function updateTweens(dt){ for(let k=tweens.length-1;k>=0;k--){ const w=tweens[k]; w.t+=dt; const x=Math.min(1,w.t/w.dur); w.fn(ease(x)); if(x>=1){ tweens.splice(k,1); if(w.done) w.done(); } } }
+function flyCam(pos,target,dur){ tweens.length=0; const p0=camera.position.clone(), t0=controls.target.clone();
+  tween(dur===undefined?1.3:dur, e=>{ camera.position.lerpVectors(p0,pos,e); controls.target.lerpVectors(t0,target,e); }); }
+
+const ray=new THREE.Raycaster(); ray.params.Line.threshold=0.02; ray.params.Points.threshold=0.05;
+const ndc=new THREE.Vector2();
+function dataOf(o){ while(o){ if(o.userData && (o.userData.info||o.userData.station||o.userData.kind)) return o.userData; o=o.parent; } return {}; }
+function pickAt(x,y,list){
+  if(!list||!list.length) return null;
+  const r=canvas.getBoundingClientRect();
+  ndc.set((x-r.left)/r.width*2-1, -(y-r.top)/r.height*2+1); ray.setFromCamera(ndc,camera);
+  const hits=ray.intersectObjects(list,true).filter(h=>h.object.isMesh);
+  if(!hits.length) return null;
+  hits.sort((a,b)=>((dataOf(b.object).prio||0)-(dataOf(a.object).prio||0)) || (a.distance-b.distance));
+  return hits[0];
+}
+let toastTimer;
+function toast(html){ const el=$('#toast'); el.innerHTML=html; el.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('on'),6500); }
+$('#toast').addEventListener('click',()=>$('#toast').classList.remove('on'));
+const look={yaw:0,pitch:0,ty:0,tp:0};
+function applyLook(){ camera.rotateY(look.yaw); camera.rotateX(look.pitch); }
+function setReadout(html){ const el=document.getElementById('readout'); if(el && el.innerHTML!==html) el.innerHTML=html; }
+
+/* ================= World: Body ================= */
+function buildBody(){
+  const scene=new THREE.Scene();
+  scene.add(new THREE.AmbientLight(0xffffff,0.5));
+  const key=new THREE.DirectionalLight(0xfff1dc,1.0); key.position.set(2,3,4); scene.add(key);
+  const rim=new THREE.DirectionalLight(0x8fb0ff,0.5); rim.position.set(-3,1,-3); scene.add(rim);
+
+  const floor=new THREE.Mesh(new THREE.RingGeometry(0.95,0.965,120), new THREE.MeshBasicMaterial({color:0xD4AF6A,transparent:true,opacity:.4,side:THREE.DoubleSide}));
+  floor.rotation.x=-Math.PI/2; floor.position.y=-1.98; scene.add(floor);
+  const floor2=floor.clone(); floor2.scale.setScalar(1.6); floor2.material=floor.material.clone(); floor2.material.opacity=.15; scene.add(floor2);
+
+  const dn=700, dp=new Float32Array(dn*3);
+  for(let i=0;i<dn;i++){ const r=rnd(1.4,7), a=rnd(0,Math.PI*2); dp[i*3]=Math.cos(a)*r; dp[i*3+1]=rnd(-2,3.5); dp[i*3+2]=Math.sin(a)*r; }
+  const dg=new THREE.BufferGeometry(); dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
+  const dust=new THREE.Points(dg,pointsMat(0.04,0x8a7448)); scene.add(dust);
+
+  const root=new THREE.Group(); root.position.y=-0.2; scene.add(root);
+  const shell=fresnel(0xD4AF6A,2.4,1.15,0.9);
+  const add=(geo,mat,x,y,z)=>{ const m=new THREE.Mesh(geo,mat); m.position.set(x||0,y||0,z||0); root.add(m); return m; };
+
+  const torso=add(lathe([[0,-0.08],[0.3,-0.06],[0.4,0.08],[0.4,0.3],[0.34,0.6],[0.33,0.8],[0.38,1.05],[0.45,1.3],[0.47,1.42],[0.36,1.52],[0.14,1.58],[0,1.6]],64),shell);
+  torso.scale.z=0.58;
+  add(new THREE.CylinderGeometry(0.09,0.11,0.22,28,1,true),shell,0,1.66,0);
+  const head=add(new THREE.SphereGeometry(0.27,48,32),shell,0,1.98,0.02); head.scale.set(0.82,1.02,0.95);
+  const limb=(rt,rb,len,x,y,rz)=>{ const m=add(new THREE.CylinderGeometry(rt,rb,len,28,1,true),shell,x,y,0); m.rotation.z=rz; return m; };
+  limb(0.17,0.08,1.75,-0.19,-0.86,0.03); limb(0.17,0.08,1.75,0.19,-0.86,-0.03);
+  limb(0.085,0.055,1.3,-0.6,0.8,-0.14); limb(0.085,0.055,1.3,0.6,0.8,0.14);
+  for(const s of [-1,1]){
+    const h=add(new THREE.SphereGeometry(0.1,24,16),shell,s*0.7,0.06,0); h.scale.set(0.6,1.1,0.4);
+    const f=add(new THREE.SphereGeometry(0.1,24,16),shell,s*0.22,-1.76,0.07); f.scale.set(0.85,0.45,1.8);
+  }
+  // skeleton hints
+  const bone=fresnel(0xEDE6D6,1.6,0.55,0.55);
+  for(let i=0;i<22;i++) add(new THREE.BoxGeometry(0.06,0.045,0.05),bone,0,0.02+i*0.072,-0.13);
+  for(let i=0;i<7;i++){
+    const r=0.29+Math.sin((i+1)/8*Math.PI)*0.07;
+    const g=new THREE.TorusGeometry(r,0.008,6,48,Math.PI*1.55); g.rotateX(Math.PI/2); g.rotateY(-0.725*Math.PI);
+    const m=add(g,bone,0,0.92+i*0.07,-0.02); m.scale.z=0.62;
+  }
+  const pel=new THREE.TorusGeometry(0.27,0.015,8,48); pel.rotateX(Math.PI/2); add(pel,bone,0,0.05,0).scale.z=0.6;
+
+  const picks=[], anchors={};
+  function organ(id,obj,hitR,off){
+    root.add(obj);
+    const hit=new THREE.Mesh(new THREE.SphereGeometry(hitR,16,12), new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));
+    hit.position.copy(obj.position); hit.userData.station=id; root.add(hit); picks.push(hit);
+    anchors[id]={obj,off:new THREE.Vector3().fromArray(off)};
+  }
+  // brain
+  const bg=new THREE.SphereGeometry(0.19,72,54), pa=bg.attributes.position, v=new THREE.Vector3();
+  for(let i=0;i<pa.count;i++){ v.fromBufferAttribute(pa,i); const n=v.clone().normalize();
+    let d=0.010*Math.sin(v.x*70+v.y*20)*Math.sin(v.y*60+v.z*50)+0.006*Math.sin(v.z*90+v.x*30);
+    if(Math.abs(v.x)<0.025 && v.y>-0.05) d-=0.025*(1-Math.abs(v.x)/0.025);
+    v.addScaledVector(n,d); pa.setXYZ(i,v.x,v.y,v.z); }
+  bg.computeVertexNormals();
+  const brainMat=new THREE.MeshStandardMaterial({color:0xE8A9B8,emissive:0x5a1e33,roughness:.55});
+  const brain=new THREE.Mesh(bg,brainMat); brain.position.set(0,2.02,0.02); brain.scale.set(0.95,0.82,1.12);
+  organ('brain',brain,0.24,[0,0.12,1.15]);
+  // heart
+  const hg=new THREE.SphereGeometry(0.1,40,30), hp=hg.attributes.position;
+  for(let i=0;i<hp.count;i++){ v.fromBufferAttribute(hp,i); if(v.y<0){ const f=1+(v.y/0.1)*0.6; v.x*=f; v.z*=f; v.y*=1.25; }
+    if(v.y>0.06 && Math.abs(v.x)<0.03) v.y-=0.02*(1-Math.abs(v.x)/0.03); hp.setXYZ(i,v.x,v.y,v.z); }
+  hg.computeVertexNormals();
+  const heartMat=new THREE.MeshStandardMaterial({color:0xC8303C,emissive:0x5a0810,roughness:.4});
+  const heart=new THREE.Mesh(hg,heartMat); heart.position.set(0.06,1.12,0.09); heart.rotation.z=0.45;
+  const aorta=new THREE.Mesh(new THREE.TorusGeometry(0.05,0.017,10,24,Math.PI),heartMat); aorta.position.set(-0.02,0.09,0); heart.add(aorta);
+  organ('heart',heart,0.17,[0.05,0.05,1.25]);
+  // lungs
+  const lungs=new THREE.Group(); lungs.position.set(0,1.13,-0.01);
+  const lungMat=new THREE.MeshStandardMaterial({color:0xD98A93,emissive:0x3a0f16,roughness:.6,transparent:true,opacity:.72});
+  for(const s of [-1,1]){ const l=new THREE.Mesh(new THREE.SphereGeometry(0.1,32,24),lungMat); l.position.x=s*0.2; l.scale.set(1.5,2.8,1.2); lungs.add(l); }
+  const trachea=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.3,12),new THREE.MeshStandardMaterial({color:0xE9C9C2,roughness:.6})); trachea.position.y=0.35; lungs.add(trachea);
+  organ('lungs',lungs,0.32,[-0.05,0.05,1.7]);
+  // gut
+  const gut=new THREE.Group(); gut.position.set(0,0.55,0.04);
+  const gutMat=new THREE.MeshStandardMaterial({color:0xE08C78,emissive:0x3a140c,roughness:.6});
+  const stomach=new THREE.Mesh(new THREE.SphereGeometry(0.1,28,20),gutMat); stomach.position.set(0.12,0.25,0); stomach.scale.set(1.4,1,0.8); stomach.rotation.z=-0.5; gut.add(stomach);
+  const liver=new THREE.Mesh(new THREE.SphereGeometry(0.1,28,20),new THREE.MeshStandardMaterial({color:0x8a3b2c,emissive:0x2a0c06,roughness:.5})); liver.position.set(-0.11,0.31,-0.01); liver.scale.set(2,1,1); gut.add(liver);
+  const ip=[]; for(let r=0;r<6;r++){ const y=0.12-r*0.07; for(let k=0;k<=4;k++){ const x=(r%2?1:-1)*(-0.2+k*0.1); ip.push(new THREE.Vector3(x,y+Math.sin(k*1.6)*0.012,0.02*Math.sin(k+r))); } }
+  gut.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ip),260,0.027,8),gutMat));
+  organ('gut',gut,0.3,[0,0.05,1.55]);
+  // cell marker on the hand
+  const cellG=new THREE.Group(); cellG.position.set(0.72,0.04,0.05);
+  const cellCore=new THREE.Mesh(new THREE.SphereGeometry(0.035,20,16),new THREE.MeshBasicMaterial({color:0xF2D08A})); cellG.add(cellCore);
+  const cellRing=new THREE.Mesh(new THREE.TorusGeometry(0.075,0.005,8,48),new THREE.MeshBasicMaterial({color:0xD4AF6A,transparent:true,opacity:.8})); cellG.add(cellRing);
+  const cellGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xD4AF6A,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false})); cellGlow.scale.setScalar(0.3); cellG.add(cellGlow);
+  organ('cell',cellG,0.14,[0.25,0.1,0.95]);
+
+  // circulation
+  const C=[
+    [[0.05,1.12,0.06],[0.01,1.3,0],[-0.02,1.0,-0.04],[-0.01,0.5,-0.03],[0,0.1,0],[-0.18,-0.1,0.01],[-0.2,-0.9,0.03],[-0.21,-1.65,0.06]],
+    [[0.05,1.12,0.06],[0.01,1.3,0],[-0.02,1.0,-0.04],[-0.01,0.5,-0.03],[0,0.1,0],[0.18,-0.1,0.01],[0.2,-0.9,0.03],[0.21,-1.65,0.06]],
+    [[0.05,1.12,0.06],[0.03,1.35,0.02],[0.05,1.62,0.02],[0.06,1.85,0.03],[0,2.05,0.05]],
+    [[0.05,1.12,0.06],[-0.15,1.36,0.02],[-0.48,1.38,0],[-0.57,0.9,0.02],[-0.64,0.45,0.02],[-0.69,0.08,0.03]],
+    [[0.05,1.12,0.06],[0.25,1.36,0.02],[0.48,1.38,0],[0.57,0.9,0.02],[0.64,0.45,0.02],[0.69,0.08,0.03]],
+    [[0.05,1.12,0.06],[-0.2,1.2,0.05],[-0.22,1.0,0.05],[0,1.05,0.06],[0.22,1.0,0.05],[0.2,1.22,0.05],[0.06,1.14,0.07]],
+    [[0.03,1.05,0],[0,0.8,0.02],[0.1,0.55,0.08],[-0.1,0.4,0.08],[0.05,0.25,0.06]]
+  ].map(a=>new THREE.CatmullRomCurve3(a.map(p=>new THREE.Vector3(p[0],p[1],p[2]))));
+  const vesMat=new THREE.LineBasicMaterial({color:0xC23A48,transparent:true,opacity:.35});
+  C.forEach(c=>root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(c.getPoints(70)),vesMat)));
+  const NP=440, ppos=new Float32Array(NP*3), pcol=new Float32Array(NP*3), ps=[];
+  for(let i=0;i<NP;i++){ const art=i<NP*0.62; ps.push({c:i%C.length,u:Math.random(),s:rnd(.7,1.3),art});
+    pcol.set(art?[1,.28,.33]:[.35,.55,1],i*3); }
+  const pgeo=new THREE.BufferGeometry(); pgeo.setAttribute('position',new THREE.BufferAttribute(ppos,3)); pgeo.setAttribute('color',new THREE.BufferAttribute(pcol,3));
+  const parts=new THREE.Points(pgeo,pointsMat(0.055,0xffffff,true)); parts.frustumCulled=false; root.add(parts);
+  const tmp=new THREE.Vector3();
+
+  function home(){ const d=camera.aspect<0.75?7.8:5.6; return {pos:new THREE.Vector3(0,0.35,d), target:new THREE.Vector3(0,0.15,0)}; }
+  function stopView(id){
+    const a=anchors[id], w=new THREE.Vector3(); a.obj.getWorldPosition(w);
+    const target=w.clone(), pos=w.clone().add(a.off), d=a.off.length();
+    const half=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*d;
+    if(narrow()){ const sh=0.46*half; target.y-=sh; pos.y-=sh; }
+    else { const px=200/(innerHeight/2)*half; target.x+=px; pos.x+=px; }
+    return {pos,target};
+  }
+  return {
+    scene, picks, anchors, home, stopView,
+    enter(){ controls.enabled=true; controls.minDistance=0.5; controls.maxDistance=12; camera.up.set(0,1,0); },
+    update(t,dt){
+      const b=beat(t,70);
+      heart.scale.setScalar(1+0.1*b); heartMat.emissiveIntensity=1+b*1.2;
+      const br=Math.sin(t*Math.PI*2/4.5); lungs.scale.set(1+0.04*br,1+0.03*br,1+0.05*br);
+      brainMat.emissiveIntensity=0.8+0.5*Math.sin(t*3.1)*Math.sin(t*1.7);
+      cellRing.rotation.x+=dt*1.2; cellRing.rotation.y+=dt*0.8; cellGlow.material.opacity=0.5+0.4*Math.sin(t*3);
+      const k=dt*0.11*(0.4+1.4*b);
+      for(let i=0;i<NP;i++){ const p=ps[i]; p.u+=(p.art?1:-1)*k*p.s; if(p.u>1)p.u-=1; if(p.u<0)p.u+=1;
+        C[p.c].getPointAt(p.u,tmp); if(!p.art){ tmp.z-=0.03; tmp.x+=0.012; } ppos[i*3]=tmp.x; ppos[i*3+1]=tmp.y; ppos[i*3+2]=tmp.z; }
+      pgeo.attributes.position.needsUpdate=true;
+      dust.rotation.y+=dt*0.02;
+    }
+  };
+}
+
+/* ================= World: Artery ================= */
+function buildArtery(){
+  const scene=new THREE.Scene(); const bgc=0x14030a; scene.background=new THREE.Color(bgc); scene.fog=new THREE.FogExp2(bgc,0.12);
+  scene.add(new THREE.AmbientLight(0xffb0b0,0.4));
+  const lamp=new THREE.PointLight(0xffe0d0,1.8,10,1.5); scene.add(lamp);
+  const pts=[]; for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, R=15+Math.sin(a*3)*3.5; pts.push(new THREE.Vector3(Math.cos(a)*R,Math.sin(a*2)*2.2+Math.sin(a*5)*0.8,Math.sin(a)*R)); }
+  const curve=new THREE.CatmullRomCurve3(pts,true); const SEG=700, RAD=1.1; const rail=makeRail(curve,SEG);
+  const tex=wallTex(['#5e0c18','#8e1a28','#c0414f']); tex.repeat.set(70,3);
+  const wallMat=new THREE.MeshStandardMaterial({map:tex,side:THREE.BackSide,roughness:.55,emissive:0x22030a});
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,SEG,RAD,40,true),wallMat));
+
+  const rbc=new THREE.InstancedMesh(lathe([[0,-0.05],[0.12,-0.07],[0.26,-0.1],[0.36,-0.07],[0.4,0],[0.36,0.07],[0.26,0.1],[0.12,0.07],[0,0.05]],28),
+    new THREE.MeshStandardMaterial({color:0xc81c2c,roughness:.35,emissive:0x3a0208,side:THREE.DoubleSide}),650);
+  const plt=new THREE.InstancedMesh(new THREE.SphereGeometry(0.07,12,8),new THREE.MeshStandardMaterial({color:0xE8C27A,emissive:0x3a2a08,roughness:.5}),160);
+  rbc.frustumCulled=plt.frustumCulled=false;
+  rbc.userData={info:INFO.rbc}; plt.userData={info:INFO.platelet,prio:1};
+  scene.add(rbc,plt);
+  const mk=(n,sp)=>Array.from({length:n},()=>({u:Math.random(),r:Math.sqrt(Math.random())*0.85,a:rnd(0,6.28),sp:rnd(sp[0],sp[1]),rx:rnd(0,6),ry:rnd(0,6),rz:rnd(0,6),vx:rnd(-1.5,1.5),vy:rnd(-1.5,1.5),vz:rnd(-1.5,1.5)}));
+  const R1=mk(650,[0.8,1.3]), P1=mk(160,[0.8,1.3]);
+  const wbcGeo=new THREE.IcosahedronGeometry(0.3,3); { const p=wbcGeo.attributes.position, v=new THREE.Vector3();
+    for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i); v.multiplyScalar(1+0.12*Math.sin(v.x*20)*Math.sin(v.y*22)*Math.sin(v.z*18)); p.setXYZ(i,v.x,v.y,v.z); } wbcGeo.computeVertexNormals(); }
+  const wbcMat=new THREE.MeshStandardMaterial({color:0xEFE8E2,emissive:0x2a2020,roughness:.8});
+  const W1=mk(14,[0.35,0.6]).map(s=>{ const m=new THREE.Mesh(wbcGeo,wbcMat); m.userData={info:INFO.wbc,prio:2}; scene.add(m); s.m=m; return s; });
+  const picks=[rbc,plt,...W1.map(w=>w.m)];
+  const lookAt=new THREE.Vector3(), tmp=new THREE.Vector3();
+  let bpm=70, camU=0, tRead=0;
+  function place(arr,flow,dt,im){ for(let i=0;i<arr.length;i++){ const c=arr[i]; c.u+=dt*flow*c.sp; c.rx+=c.vx*dt; c.ry+=c.vy*dt; c.rz+=c.vz*dt;
+      rail.at(c.u,c.r,c.a,tmp); if(im){ D.position.copy(tmp); D.rotation.set(c.rx,c.ry,c.rz); D.scale.setScalar(im.s); D.updateMatrix(); im.m.setMatrixAt(i,D.matrix); }
+      else { c.m.position.copy(tmp); c.m.rotation.set(c.rx,c.ry,c.rz); } } if(im) im.m.instanceMatrix.needsUpdate=true; }
+  return {
+    scene, picks, rail:true,
+    enter(){ controls.enabled=false; camU=0; look.yaw=look.pitch=look.ty=look.tp=0; },
+    act(a,btn){ if(a==='rest'||a==='sprint'){ bpm=a==='rest'?70:160; btn.parentNode.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===btn))); } },
+    update(t,dt){
+      const b=beat(t,bpm), flow=0.0055*(bpm/70)*(0.45+1.1*b);
+      camU+=dt*flow*0.6;
+      camera.up.set(0,1,0); rail.at(camU,0,0,camera.position); rail.at(camU+0.012,0,0,lookAt); camera.lookAt(lookAt); applyLook();
+      lamp.position.copy(camera.position);
+      wallMat.emissiveIntensity=1+b*1.4;
+      place(R1,flow,dt,{m:rbc,s:0.45}); place(P1,flow,dt,{m:plt,s:1}); place(W1,flow,dt,null);
+      tRead-=dt; if(tRead<=0){ tRead=0.3; setReadout(`${bpm} beats a minute<small>${bpm>100?'Your heart is racing to feed working muscles, so blood surges faster.':'A calm, resting rhythm. Feel each surge as the heart squeezes.'}</small>`); }
+    }
+  };
+}
+
+/* ================= World: Lungs ================= */
+function buildLungs(){
+  const scene=new THREE.Scene(); const bgc=0x08121c; scene.background=new THREE.Color(bgc); scene.fog=new THREE.Fog(bgc,12,30);
+  scene.add(new THREE.AmbientLight(0xffffff,0.55));
+  const dl=new THREE.DirectionalLight(0xfff0e6,0.9); dl.position.set(3,5,6); scene.add(dl);
+  const dl2=new THREE.DirectionalLight(0x6fb6ff,0.4); dl2.position.set(-4,-2,-3); scene.add(dl2);
+  const airMat=new THREE.MeshStandardMaterial({color:0xE9C9C2,roughness:.6,emissive:0x2a1a18});
+  const sacMat=new THREE.MeshStandardMaterial({color:0xF2A9B4,roughness:.35,transparent:true,opacity:.62,emissive:0x3d1420});
+  const capMat=new THREE.MeshStandardMaterial({color:0xC2283A,emissive:0x40060e,roughness:.5});
+  const picks=[], clusters=[];
+  function cyl(a,b,r1,r2){ const d=new THREE.Vector3().subVectors(b,a), len=d.length(); const m=new THREE.Mesh(new THREE.CylinderGeometry(r2,r1,len,14),airMat);
+    m.position.copy(a).addScaledVector(d,0.5); m.quaternion.setFromUnitVectors(UP,d.normalize()); return m; }
+  function cluster(c,dir){
+    const g=new THREE.Group(); g.position.copy(c).addScaledVector(dir,0.32); scene.add(g);
+    for(let i=0;i<10;i++){ const s=new THREE.Mesh(new THREE.SphereGeometry(rnd(0.2,0.32),20,16),sacMat);
+      s.position.set(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize().multiplyScalar(rnd(0.15,0.4)).addScaledVector(dir,0.12); s.userData={info:INFO.alveolus,prio:1}; g.add(s); picks.push(s); }
+    for(let k=0;k<3;k++){ const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rnd(0,6),rnd(0,6),rnd(0,6))); const pts=[];
+      for(let j=0;j<12;j++){ const a=j/12*Math.PI*2, r=rnd(0.5,0.62); pts.push(new THREE.Vector3(Math.cos(a)*r,rnd(-0.06,0.06),Math.sin(a)*r).applyQuaternion(q)); }
+      const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts,true),60,0.024,6,true),capMat); m.userData={info:INFO.capillary,prio:2}; g.add(m); picks.push(m); }
+    clusters.push(g);
+  }
+  function branch(a,dir,len,r,depth){
+    const b=a.clone().addScaledVector(dir,len); const m=cyl(a,b,r,r*0.75); m.userData={info:INFO.bronchiole}; scene.add(m); picks.push(m);
+    const j=new THREE.Mesh(new THREE.SphereGeometry(r*0.76,14,10),airMat); j.position.copy(b); scene.add(j);
+    if(depth===0){ cluster(b,dir); return; }
+    const axis=new THREE.Vector3().crossVectors(dir,new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1))).normalize();
+    for(const s of [-1,1]) branch(b,dir.clone().applyAxisAngle(axis,s*rnd(0.45,0.75)).normalize(),len*0.74,r*0.72,depth-1);
+  }
+  branch(new THREE.Vector3(0,6.2,0),new THREE.Vector3(0,-1,0),2.4,0.32,4);
+  const NP=720, pos=new Float32Array(NP*3), col=new Float32Array(NP*3), ps=[];
+  for(let i=0;i<NP;i++){ const o2=i%2===0; ps.push({c:i%clusters.length,o2,d:new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize(),p:Math.random(),sp:rnd(.25,.45)});
+    col.set(o2?[.43,.83,.88]:[.66,.55,1],i*3); }
+  const pg=new THREE.BufferGeometry(); pg.setAttribute('position',new THREE.BufferAttribute(pos,3)); pg.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const pts=new THREE.Points(pg,pointsMat(0.11,0xffffff,true)); pts.frustumCulled=false; scene.add(pts);
+  let amp=1, ampT=1, deep=0, breaths=0, lastSign=0, tRead=0;
+  return {
+    scene, picks,
+    enter(){ controls.enabled=true; controls.minDistance=2; controls.maxDistance=22; camera.up.set(0,1,0);
+      camera.position.set(0,2.5,11.5); controls.target.set(0,1.6,0); controls.autoRotate=!reduce; },
+    act(a){ if(a==='breathe'){ deep=5; toast('<b>Deep breath</b>Your diaphragm drops, your chest expands, and the alveoli balloon open. More oxygen floods in.'); } },
+    update(t,dt){
+      deep=Math.max(0,deep-dt); ampT=deep>0?2.6:1; amp+=(ampT-amp)*Math.min(1,dt*2);
+      const ph=Math.sin(t*Math.PI*2/4), sc=1+0.08*amp*ph;
+      clusters.forEach(g=>g.scale.setScalar(sc));
+      const sg=Math.sign(ph); if(sg>0&&lastSign<0) breaths++; lastSign=sg;
+      const speed=0.5+0.5*amp;
+      for(let i=0;i<NP;i++){ const p=ps[i]; p.p+=dt*p.sp*speed; if(p.p>1){ p.p=0; p.d.set(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize(); }
+        const g=clusters[p.c], r=(p.o2?0.15+p.p*0.5:0.65-p.p*0.5)*sc;
+        pos[i*3]=g.position.x+p.d.x*r; pos[i*3+1]=g.position.y+p.d.y*r; pos[i*3+2]=g.position.z+p.d.z*r; }
+      pg.attributes.position.needsUpdate=true;
+      tRead-=dt; if(tRead<=0){ tRead=0.3; setReadout(`${deep>0?'Deep breath':'Calm breathing'}<small>${breaths} breaths so far. ${ph>0?'Breathing in…':'Breathing out…'}</small>`); }
+    }
+  };
+}
+
+/* ================= World: Brain ================= */
+function buildBrain(){
+  const scene=new THREE.Scene(); const bgc=0x0c0a1d; scene.background=new THREE.Color(bgc); scene.fog=new THREE.Fog(bgc,14,36);
+  const N=95, P=[];
+  for(let i=0;i<N;i++){ let v; do{ v=new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)); }while(v.lengthSq()>1); P.push(v.multiply(new THREE.Vector3(7,4.5,5.5))); }
+  const adj=P.map(()=>[]), edges=[], seen=new Set();
+  P.forEach((p,i)=>{ P.map((q,j)=>[j,p.distanceToSquared(q)]).filter(x=>x[0]!==i).sort((a,b)=>a[1]-b[1]).slice(0,3).forEach(([j])=>{
+    const key=i<j?i+'-'+j:j+'-'+i; if(seen.has(key)) return; seen.add(key);
+    const mid=p.clone().add(P[j]).multiplyScalar(0.5).add(new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)));
+    const e={a:i,b:j,c:new THREE.QuadraticBezierCurve3(p.clone(),mid,P[j].clone())}; edges.push(e); adj[i].push(e); adj[j].push(e); }); });
+  const lp=[]; edges.forEach(e=>{ const s=e.c.getPoints(16); for(let k=0;k<s.length-1;k++) lp.push(s[k].x,s[k].y,s[k].z,s[k+1].x,s[k+1].y,s[k+1].z); });
+  const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(lp,3));
+  scene.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7a66e0,transparent:true,opacity:.4,blending:THREE.AdditiveBlending,depthWrite:false})));
+  const dp=[]; P.forEach(p=>{ for(let k=0;k<8;k++){ const d=new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize().multiplyScalar(rnd(0.3,0.75)); dp.push(p.x,p.y,p.z,p.x+d.x,p.y+d.y,p.z+d.z); } });
+  const dg=new THREE.BufferGeometry(); dg.setAttribute('position',new THREE.Float32BufferAttribute(dp,3));
+  scene.add(new THREE.LineSegments(dg,new THREE.LineBasicMaterial({color:0x9a88ff,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false})));
+  const somas=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.18,1),new THREE.MeshBasicMaterial({color:0xffffff}),N); somas.frustumCulled=false;
+  const base=new THREE.Color(0x8f7bff), hot=new THREE.Color(0xffe2a0), tc=new THREE.Color();
+  P.forEach((p,i)=>{ D.position.copy(p); D.rotation.set(0,0,0); D.scale.setScalar(1); D.updateMatrix(); somas.setMatrixAt(i,D.matrix); somas.setColorAt(i,base); });
+  somas.instanceColor.needsUpdate=true; somas.userData={kind:'neuron',prio:1}; scene.add(somas);
+  const halo=new THREE.Points(new THREE.BufferGeometry().setFromPoints(P),pointsMat(0.9,0x6a58d8)); scene.add(halo);
+  const sn=900, sp0=new Float32Array(sn*3); for(let i=0;i<sn;i++){ sp0[i*3]=rnd(-16,16); sp0[i*3+1]=rnd(-10,10); sp0[i*3+2]=rnd(-16,16); }
+  const sg0=new THREE.BufferGeometry(); sg0.setAttribute('position',new THREE.BufferAttribute(sp0,3)); scene.add(new THREE.Points(sg0,pointsMat(0.08,0x4a3f8a)));
+  const MAXS=420, spos=new Float32Array(MAXS*3).fill(9999); const sgeo=new THREE.BufferGeometry(); sgeo.setAttribute('position',new THREE.BufferAttribute(spos,3));
+  const sp=new THREE.Points(sgeo,pointsMat(0.5,0xffe0a0)); sp.frustumCulled=false; scene.add(sp);
+  const flash=new Float32Array(N), sigs=[], v=new THREE.Vector3();
+  let fired=0, auto=1, told=false, tRead=0;
+  function fire(i,gen,from){ flash[i]=1; fired++; if(gen>=5) return;
+    for(const e of adj[i]){ if(e===from) continue; if(sigs.length>=MAXS) break; if(gen>0 && Math.random()>0.55) continue;
+      sigs.push({e,fwd:e.a===i,t:0,to:e.a===i?e.b:e.a,gen:gen+1,sp:rnd(0.9,1.6)}); } }
+  return {
+    scene, picks:[somas],
+    enter(){ controls.enabled=true; controls.minDistance=3; controls.maxDistance=30; camera.up.set(0,1,0);
+      camera.position.set(0,1,15); controls.target.set(0,0,0); controls.autoRotate=!reduce; },
+    onPick(h){ if(h.instanceId!==undefined){ fire(h.instanceId,0,null); if(!told){ told=true; toast(INFO.neuron); } } },
+    act(a){ if(a==='think') fire(Math.floor(Math.random()*N),0,null); },
+    update(t,dt){
+      auto-=dt; if(auto<=0){ fire(Math.floor(Math.random()*N),2,null); auto=rnd(1,2.2); }
+      for(let k=sigs.length-1;k>=0;k--){ const s=sigs[k]; s.t+=dt*s.sp; if(s.t>=1){ sigs.splice(k,1); fire(s.to,s.gen,s.e); } }
+      for(let k=0;k<MAXS;k++){ if(k<sigs.length){ const s=sigs[k]; s.e.c.getPoint(s.fwd?s.t:1-s.t,v); spos[k*3]=v.x; spos[k*3+1]=v.y; spos[k*3+2]=v.z; } else { spos[k*3]=9999; spos[k*3+1]=9999; spos[k*3+2]=9999; } }
+      sgeo.attributes.position.needsUpdate=true;
+      for(let i=0;i<N;i++){ flash[i]=Math.max(0,flash[i]-dt*1.6); tc.copy(base).lerp(hot,flash[i]); somas.setColorAt(i,tc);
+        D.position.copy(P[i]); D.scale.setScalar(1+flash[i]*0.9); D.updateMatrix(); somas.setMatrixAt(i,D.matrix); }
+      somas.instanceColor.needsUpdate=true; somas.instanceMatrix.needsUpdate=true;
+      tRead-=dt; if(tRead<=0){ tRead=0.25; setReadout(`${fired.toLocaleString('en')} neurons fired<small>${sigs.length} signals travelling right now</small>`); }
+    }
+  };
+}
+
+/* ================= World: Gut ================= */
+function buildGut(){
+  const scene=new THREE.Scene(); const bgc=0x1a0a0a; scene.background=new THREE.Color(bgc); scene.fog=new THREE.FogExp2(bgc,0.09);
+  scene.add(new THREE.AmbientLight(0xffc8b8,0.45));
+  const lamp=new THREE.PointLight(0xfff0e0,1.7,12,1.4); scene.add(lamp);
+  const pts=[]; for(let i=0;i<18;i++){ const a=i/18*Math.PI*2, R=18+Math.sin(a*4)*4; pts.push(new THREE.Vector3(Math.cos(a)*R,Math.sin(a*3)*3,Math.sin(a)*R)); }
+  const curve=new THREE.CatmullRomCurve3(pts,true); const SEG=800, RAD=1.5; const rail=makeRail(curve,SEG);
+  const tex=wallTex(['#6e2a2a','#a8504a','#d98a7a']); tex.repeat.set(80,4);
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,SEG,RAD,40,true),new THREE.MeshStandardMaterial({map:tex,side:THREE.BackSide,roughness:.6,emissive:0x1e0806})));
+  const NV=2600; const villi=new THREE.InstancedMesh(lathe([[0.075,0],[0.07,0.6],[0.06,0.85],[0.035,0.97],[0,1]],8),new THREE.MeshStandardMaterial({color:0xE88E80,emissive:0x3a1410,roughness:.6}),NV);
+  villi.frustumCulled=false; villi.userData={info:INFO.villus};
+  const b=new THREE.Vector3(), c=new THREE.Vector3(), dir=new THREE.Vector3();
+  for(let i=0;i<NV;i++){ const u=Math.random(), a=rnd(0,Math.PI*2); rail.at(u,RAD*0.97,a,b); rail.at(u,0,0,c); dir.subVectors(c,b).normalize();
+    D.position.copy(b); D.rotation.set(0,0,0); D.quaternion.setFromUnitVectors(UP,dir); const s=rnd(0.8,1.25); D.scale.set(s,rnd(0.35,0.65),s); D.updateMatrix(); villi.setMatrixAt(i,D.matrix); }
+  scene.add(villi);
+  const NM=130; const mic=new THREE.InstancedMesh(new THREE.SphereGeometry(0.13,14,10),new THREE.MeshStandardMaterial({color:0x9ccf7e,emissive:0x1c3010,roughness:.5}),NM);
+  mic.frustumCulled=false; mic.userData={info:INFO.microbe,prio:1}; scene.add(mic);
+  const M=Array.from({length:NM},()=>({u:Math.random(),r:rnd(0.1,1.05),a:rnd(0,6.28),sp:rnd(0.5,1.5),rx:rnd(0,6),ry:rnd(0,6)}));
+  const NN=500, npos=new Float32Array(NN*3); const ng=new THREE.BufferGeometry(); ng.setAttribute('position',new THREE.BufferAttribute(npos,3));
+  const np=new THREE.Points(ng,pointsMat(0.12,0xF2C86A)); np.frustumCulled=false; scene.add(np);
+  let camU=0, absorbed=0, tRead=0;
+  const nu=Array.from({length:NN},()=>({u:Math.random(),r:rnd(0,1.2),a:rnd(0,6.28),v:rnd(0.05,0.15)}));
+  const lookAt=new THREE.Vector3(), tmp=new THREE.Vector3();
+  return {
+    scene, picks:[villi,mic], rail:true,
+    enter(){ controls.enabled=false; camU=0; look.yaw=look.pitch=look.ty=look.tp=0; },
+    act(a){ if(a==='feed'){ nu.forEach(n=>{ n.u=camU+rnd(0.004,0.03); n.r=rnd(0,0.3); n.a=rnd(0,6.28); n.v=rnd(0.6,1.4); }); toast('<b>Meal incoming</b>Broken-down sugars, amino acids and fats drift to the walls, where the villi take them up into the blood.'); } },
+    update(t,dt){
+      camU+=dt*0.0022;
+      camera.up.set(0,1,0); rail.at(camU,0,0,camera.position); rail.at(camU+0.01,0,0,lookAt); camera.lookAt(lookAt); applyLook();
+      lamp.position.copy(camera.position);
+      for(let i=0;i<NM;i++){ const m=M[i]; m.u+=dt*0.0011*m.sp; m.a+=dt*0.3*m.sp; m.rx+=dt; m.ry+=dt*0.7; rail.at(m.u,m.r,m.a,tmp);
+        D.position.copy(tmp); D.rotation.set(m.rx,m.ry,0); D.scale.set(1,0.42,0.42); D.updateMatrix(); mic.setMatrixAt(i,D.matrix); }
+      mic.instanceMatrix.needsUpdate=true;
+      for(let i=0;i<NN;i++){ const n=nu[i]; n.r+=dt*n.v*0.35; n.u+=dt*0.0008;
+        if(n.r>RAD*0.85){ if(n.v>0.4) absorbed++; n.u=camU+rnd(0.005,0.06); n.r=rnd(0,0.4); n.a=rnd(0,6.28); n.v=rnd(0.05,0.15); }
+        rail.at(n.u,n.r,n.a,tmp); npos[i*3]=tmp.x; npos[i*3+1]=tmp.y; npos[i*3+2]=tmp.z; }
+      ng.attributes.position.needsUpdate=true;
+      tRead-=dt; if(tRead<=0){ tRead=0.3; setReadout(`${absorbed.toLocaleString('en')} nutrients absorbed<small>Send in a meal to watch the villi go to work.</small>`); }
+    }
+  };
+}
+
+/* ================= World: Cell ================= */
+function buildCell(){
+  const scene=new THREE.Scene(); const bgc=0x07131a; scene.background=new THREE.Color(bgc);
+  scene.add(new THREE.AmbientLight(0xffffff,0.55));
+  const dl=new THREE.DirectionalLight(0xfff2e0,0.9); dl.position.set(4,6,5); scene.add(dl);
+  const pl=new THREE.PointLight(0x9fe8ff,0.8,10); scene.add(pl);
+  const picks=[];
+  const mg=new THREE.SphereGeometry(3.2,80,60); { const p=mg.attributes.position, v=new THREE.Vector3();
+    for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i); v.multiplyScalar(1+0.035*Math.sin(v.x*1.7+v.y)*Math.cos(v.z*1.3)); p.setXYZ(i,v.x,v.y,v.z); } mg.computeVertexNormals(); }
+  const mem=new THREE.Mesh(mg,fresnel(0x7fd6c9,2.2,1.25,0.95)); mem.userData={info:INFO.membrane,prio:0}; scene.add(mem); picks.push(mem);
+  const nuc=new THREE.Mesh(new THREE.SphereGeometry(1.1,48,36),fresnel(0xb59cff,1.8,1.3,0.9)); nuc.userData={info:INFO.nucleus,prio:1}; scene.add(nuc); picks.push(nuc);
+  const nucl=new THREE.Mesh(new THREE.SphereGeometry(0.22,24,18),new THREE.MeshStandardMaterial({color:0x6c4fc9,emissive:0x2a1a66,transparent:true,opacity:.75}));
+  nucl.position.set(-0.55,-0.5,0.35); nucl.userData={info:INFO.nucleolus,prio:2}; scene.add(nucl); picks.push(nucl);
+  const mitoMat=new THREE.MeshStandardMaterial({color:0xE8894A,emissive:0x40180a,roughness:.45});
+  const mitos=[];
+  for(let i=0;i<8;i++){ const m=new THREE.Mesh(new THREE.SphereGeometry(0.5,28,18),mitoMat); m.scale.set(1,0.42,0.42);
+    const d=new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize().multiplyScalar(rnd(1.7,2.5)); m.position.copy(d); m.rotation.set(rnd(0,6),rnd(0,6),rnd(0,6));
+    const cr=new THREE.Mesh(new THREE.TorusGeometry(0.28,0.02,6,24),new THREE.MeshStandardMaterial({color:0xffc08a,emissive:0x5a2a0a})); cr.rotation.y=Math.PI/2; cr.scale.set(1,1.6,1); m.add(cr);
+    m.userData={info:INFO.mito,prio:2}; scene.add(m); picks.push(m); mitos.push({m,ph:rnd(0,6)}); }
+  const erMat=new THREE.MeshStandardMaterial({color:0x5fc3b0,emissive:0x0f3a33,roughness:.5});
+  for(let i=0;i<6;i++){ const e=new THREE.Mesh(new THREE.TorusGeometry(1.35+i*0.11,0.028,8,80,Math.PI*rnd(0.7,1.3)),erMat); e.rotation.set(rnd(0,6),rnd(0,6),rnd(0,6)); e.userData={info:INFO.er,prio:2}; scene.add(e); picks.push(e); }
+  const rn=1600, rp=new Float32Array(rn*3), rc=new Float32Array(rn*3);
+  for(let i=0;i<rn;i++){ const d=new THREE.Vector3(rnd(-1,1),rnd(-1,1),rnd(-1,1)).normalize().multiplyScalar(rnd(1.25,3)); rp.set([d.x,d.y,d.z],i*3); rc.set(i%4?[.35,.7,.66]:[.9,.75,.45],i*3); }
+  const rg=new THREE.BufferGeometry(); rg.setAttribute('position',new THREE.BufferAttribute(rp,3)); rg.setAttribute('color',new THREE.BufferAttribute(rc,3));
+  const cyto=new THREE.Points(rg,pointsMat(0.05,0xffffff,true)); scene.add(cyto);
+
+  // DNA
+  const dna=new THREE.Group(); dna.userData={info:INFO.dna,prio:3}; scene.add(dna); picks.push(dna);
+  const PAIRS=34, R=0.24, H=1.55, BC={A:0xE0B25A,T:0x5FC3D0,C:0xD0506E,G:0x8EC07C}, comp={A:'T',T:'A',C:'G',G:'C'}, mats={};
+  const matFor=b=>mats[b]||(mats[b]=new THREE.MeshStandardMaterial({color:BC[b],emissive:new THREE.Color(BC[b]).multiplyScalar(0.35),roughness:.4}));
+  const sphG=new THREE.SphereGeometry(0.036,12,10), bbMat=new THREE.MeshStandardMaterial({color:0xEDE6D6,emissive:0x333333});
+  const rungG=new THREE.CylinderGeometry(0.02,0.02,R,8); rungG.rotateZ(Math.PI/2);
+  const pairs=[];
+  for(let k=0;k<PAIRS;k++){ const y=-H/2+k*H/(PAIRS-1), ang=k*0.52, piv=new THREE.Group(); piv.position.y=y; piv.rotation.y=ang; dna.add(piv);
+    const bse='ATCG'[Math.floor(Math.random()*4)];
+    const sA=new THREE.Group(), sB=new THREE.Group(); sA.position.x=R; sB.position.x=-R;
+    sA.add(new THREE.Mesh(sphG,bbMat)); const ra=new THREE.Mesh(rungG,matFor(bse)); ra.position.x=-R/2; sA.add(ra);
+    sB.add(new THREE.Mesh(sphG,bbMat)); const rb=new THREE.Mesh(rungG,matFor(comp[bse])); rb.position.x=R/2; sB.add(rb);
+    piv.add(sA,sB); pairs.push({sA,sB,y,ang}); }
+  const lineA=new THREE.BufferGeometry(), lineB=new THREE.BufferGeometry();
+  lineA.setAttribute('position',new THREE.BufferAttribute(new Float32Array(PAIRS*3),3)); lineB.setAttribute('position',new THREE.BufferAttribute(new Float32Array(PAIRS*3),3));
+  const lm=new THREE.LineBasicMaterial({color:0xEDE6D6,transparent:true,opacity:.8}); dna.add(new THREE.Line(lineA,lm), new THREE.Line(lineB,lm));
+  let zipT=0, zp=0, inside=false;
+  const outView={pos:new THREE.Vector3(0,1.4,9),target:new THREE.Vector3(0,0,0)}, inView={pos:new THREE.Vector3(0.4,0.3,2.15),target:new THREE.Vector3(0,0,0)};
+  return {
+    scene, picks,
+    enter(){ controls.enabled=true; controls.minDistance=1.2; controls.maxDistance=16; camera.up.set(0,1,0); inside=false;
+      camera.position.copy(outView.pos); controls.target.copy(outView.target); controls.autoRotate=!reduce; },
+    act(a,btn){
+      if(a==='zoom'){ inside=!inside; const v=inside?inView:outView; flyCam(v.pos,v.target,1.4); btn.textContent=inside?'Back out to the whole cell':'Look at the DNA'; controls.autoRotate=!reduce && !inside; }
+      if(a==='unzip'){ zipT=zipT?0:1; btn.textContent=zipT?'Zip the DNA back up':'Unzip the DNA';
+        if(zipT) toast('<b>Unzipping</b>Before a cell divides, an enzyme unzips the helix. Each strand then becomes a template for a new matching partner.'); }
+    },
+    update(t,dt){
+      dna.rotation.y+=dt*0.35; zp+=(zipT-zp)*Math.min(1,dt*0.9);
+      const A=lineA.attributes.position.array, B=lineB.attributes.position.array;
+      pairs.forEach((p,k)=>{ const f=1-k/(PAIRS-1), s=clamp(zp*1.5-f*0.5,0,1), off=s*0.32;
+        p.sA.position.x=R+off; p.sB.position.x=-R-off; const rr=R+off, c=Math.cos(p.ang), sn=Math.sin(p.ang);
+        A[k*3]=c*rr; A[k*3+1]=p.y; A[k*3+2]=-sn*rr; B[k*3]=-c*rr; B[k*3+1]=p.y; B[k*3+2]=sn*rr; });
+      lineA.attributes.position.needsUpdate=lineB.attributes.position.needsUpdate=true;
+      mitos.forEach(o=>{ o.m.rotation.y+=dt*0.15; o.m.position.y+=Math.sin(t*0.8+o.ph)*dt*0.05; });
+      cyto.rotation.y+=dt*0.03; nuc.scale.setScalar(1+0.015*Math.sin(t*1.5));
+    }
+  };
+}
+
+/* ---------------- App state & UI ---------------- */
+const body=buildBody();
+let current=body; body.enter();
+const builders={heart:buildArtery,lungs:buildLungs,brain:buildBrain,gut:buildGut,cell:buildCell};
+const worlds={};
+const getWorld=id=>worlds[id]||(worlds[id]=builders[id]());
+const state={stop:null,mode:'body',visited:new Set(),answers:{}};
+const panel=$('#panel'), rail=$('#rail'), labelsEl=$('#labels'), hint=$('#hint'), fadeEl=$('#fade');
+const stopById=id=>STOPS.find(s=>s.id===id);
+
+const DIVE_UI={
+  heart:`<div class="seg" role="group" aria-label="Heart rate"><button type="button" data-act="rest" aria-pressed="true">Resting</button><button type="button" data-act="sprint" aria-pressed="false">Sprinting</button></div>
+    <p class="readout" id="readout"></p>
+    <ul class="legend"><li><i style="--c:#d0202e"></i>Red blood cells carry oxygen</li><li><i style="--c:#EFE8E2"></i>White blood cells fight germs</li><li><i style="--c:#E8C27A"></i>Platelets plug wounds</li></ul>
+    <p class="tip">Drag to look around. Tap any cell to find out what it is.</p>`,
+  lungs:`<button type="button" class="primary" data-act="breathe">Take a deep breath</button><p class="readout" id="readout"></p>
+    <ul class="legend"><li><i style="--c:#6FD3E0"></i>Oxygen moving into the blood</li><li><i style="--c:#A88BFF"></i>Carbon dioxide leaving it</li></ul>
+    <p class="tip">Drag to orbit, pinch to zoom. Tap an air sac, vessel or airway.</p>`,
+  brain:`<button type="button" class="primary" data-act="think">Fire a random thought</button><p class="readout" id="readout"></p>
+    <p class="tip">Tap any neuron to fire it and watch the signal cascade to its neighbours.</p>`,
+  gut:`<button type="button" class="primary" data-act="feed">Send in a meal</button><p class="readout" id="readout"></p>
+    <ul class="legend"><li><i style="--c:#F2C86A"></i>Nutrients from digested food</li><li><i style="--c:#9ccf7e"></i>Gut bacteria</li><li><i style="--c:#E88E80"></i>Villi lining the wall</li></ul>
+    <p class="tip">Drag to look around. Tap a villus or a bacterium.</p>`,
+  cell:`<div class="seg"><button type="button" data-act="zoom">Look at the DNA</button><button type="button" data-act="unzip">Unzip the DNA</button></div>
+    <ul class="legend"><li><i style="--c:#E0B25A"></i>A pairs with <i style="--c:#5FC3D0"></i>T</li><li><i style="--c:#D0506E"></i>C pairs with <i style="--c:#8EC07C"></i>G</li><li><i style="--c:#E8894A"></i>Mitochondria</li><li><i style="--c:#5fc3b0"></i>Endoplasmic reticulum</li></ul>
+    <p class="tip">Drag to orbit, pinch to zoom. Tap any part of the cell.</p>`
+};
+
+function renderRail(){
+  rail.innerHTML=`<button type="button" class="home" data-home ${state.stop?'':'aria-current="true"'}>Whole body</button>`+
+    STOPS.map((s,i)=>`<button type="button" data-stop="${s.id}" class="${state.visited.has(s.id)?'done':''}" ${state.stop===s.id?'aria-current="true"':''}><span class="n">${i+1}</span>${s.name}</button>`).join('');
+  document.documentElement.style.setProperty('--rail-h',rail.offsetHeight-parseFloat(getComputedStyle(rail).paddingBottom)+12+'px');
+  const right=Object.values(state.answers).filter(a=>a.ok).length;
+  $('#score').innerHTML=`<b>${state.visited.size}</b> of 5 stops visited<br><b>${right}</b> quiz answers right`;
+}
+function headHTML(step,title){ return `<div class="head"><div><p class="step">${step}</p><h2>${title}</h2></div><div class="tools"><button type="button" data-act="min" aria-label="Collapse panel">–</button><button type="button" data-act="close" aria-label="Close">×</button></div></div>`; }
+function quizHTML(s){
+  const a=state.answers[s.id];
+  return `<div class="quiz"><p class="q">${s.quiz.q}</p><div class="opts">${s.quiz.o.map((o,k)=>`<button type="button" data-act="answer" data-k="${k}" class="${a?(k===s.quiz.a?'right':(k===a.k?'wrong':'')):''}" ${a?'disabled':''}>${o}</button>`).join('')}</div>${a?`<p class="explain ${a.ok?'ok':'no'}"><b>${a.ok?'Correct.':'Not quite.'}</b> ${s.quiz.e}</p>`:''}</div>`;
+}
+function renderStopPanel(id,keepScroll){
+  const s=stopById(id), i=STOPS.indexOf(s), next=STOPS[i+1], top=panel.scrollTop;
+  const right=Object.values(state.answers).filter(a=>a.ok).length;
+  panel.className='panel';
+  panel.innerHTML=headHTML(`Stop ${i+1} of ${STOPS.length}`,s.name)+`<p class="latin">${s.latin}</p><p class="lede">${s.lede}</p>
+    <ul class="facts">${s.facts.map(f=>`<li>${f}</li>`).join('')}</ul>
+    <button type="button" class="primary" data-act="dive">${s.dive}</button>${quizHTML(s)}
+    ${next?`<button type="button" class="link" data-act="goto" data-id="${next.id}">Next stop: ${next.name}</button>`:`<p class="end">That’s the end of the voyage. You got ${right} of ${STOPS.length} quiz questions right.</p>`}`;
+  panel.hidden=false; panel.scrollTop=keepScroll?top:0;
+}
+function renderDivePanel(id){
+  const s=stopById(id);
+  panel.className='panel';
+  panel.innerHTML=headHTML(`Inside the ${s.name.toLowerCase()}`,s.dive)+`<p class="lede">${s.diveIntro}</p>${DIVE_UI[id]}<button type="button" class="primary ghost" data-act="back">Back to the body</button>`;
+  panel.hidden=false; panel.scrollTop=0;
+}
+function hideHint(){ hint.classList.add('off'); }
+
+function selectStop(id){
+  if(state.mode!=='body'){ exitDive(()=>selectStop(id)); return; }
+  state.stop=id; state.visited.add(id); controls.autoRotate=false;
+  const v=body.stopView(id); flyCam(v.pos,v.target);
+  renderStopPanel(id); renderRail(); hideHint();
+}
+function overview(){
+  if(state.mode!=='body'){ exitDive(()=>overview()); return; }
+  state.stop=null; panel.hidden=true; controls.autoRotate=!reduce;
+  const h=body.home(); flyCam(h.pos,h.target); renderRail();
+}
+function fade(mid){ fadeEl.classList.add('on'); setTimeout(()=>{ mid(); requestAnimationFrame(()=>requestAnimationFrame(()=>fadeEl.classList.remove('on'))); }, reduce?0:400); }
+function enterDive(id){
+  fade(()=>{ tweens.length=0; state.mode='dive'; current=getWorld(id); controls.autoRotate=false; current.enter(); controls.update(); labelsEl.hidden=true; renderDivePanel(id); });
+}
+function exitDive(after){
+  fade(()=>{ tweens.length=0; state.mode='body'; current=body; body.enter(); labelsEl.hidden=false; look.ty=look.tp=look.yaw=look.pitch=0;
+    if(state.stop){ const v=body.stopView(state.stop); camera.position.copy(v.pos); controls.target.copy(v.target); renderStopPanel(state.stop); }
+    else { const h=body.home(); camera.position.copy(h.pos); controls.target.copy(h.target); }
+    controls.autoRotate=!state.stop&&!reduce; controls.update(); if(after) after(); });
+}
+
+panel.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act;
+  if(a==='close'){ state.mode==='dive'?exitDive():overview(); }
+  else if(a==='min'){ panel.classList.toggle('min'); b.textContent=panel.classList.contains('min')?'+':'–'; b.setAttribute('aria-label',panel.classList.contains('min')?'Expand panel':'Collapse panel'); }
+  else if(a==='dive') enterDive(state.stop);
+  else if(a==='back') exitDive();
+  else if(a==='goto') selectStop(b.dataset.id);
+  else if(a==='answer'){ const s=stopById(state.stop), k=+b.dataset.k; state.answers[s.id]={k,ok:k===s.quiz.a}; renderStopPanel(s.id,true); renderRail(); }
+  else if(current.act) current.act(a,b);
+});
+rail.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; if(b.hasAttribute('data-home')) overview(); else selectStop(b.dataset.stop); });
+$('#start').addEventListener('click',()=>selectStop('heart'));
+addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(state.mode==='dive') exitDive(); else if(state.stop) overview(); } });
+
+// labels
+const tags={};
+STOPS.forEach(s=>{ const b=document.createElement('button'); b.type='button'; b.className='tag'; b.innerHTML=`<i></i>${s.name}`; b.addEventListener('click',()=>selectStop(s.id)); labelsEl.appendChild(b); tags[s.id]=b; });
+const lv=new THREE.Vector3();
+function updateLabels(){
+  if(state.mode!=='body') return;
+  const w=innerWidth, h=innerHeight;
+  STOPS.forEach(s=>{ const el=tags[s.id]; body.anchors[s.id].obj.getWorldPosition(lv); lv.project(camera);
+    if(lv.z>1||lv.x<-1.2||lv.x>1.2||lv.y<-1.2||lv.y>1.2){ el.style.visibility='hidden'; return; }
+    el.style.visibility='visible'; const side=s.id==='cell'?1:(s.id==='lungs'?-1:1);
+    const x=(lv.x*0.5+0.5)*w, y=(-lv.y*0.5+0.5)*h;
+    el.style.transform=`translate(${side>0?x+14:x-14}px,${y}px) translate(${side>0?'0':'-100%'},-50%)`;
+    el.classList.toggle('sel',state.stop===s.id); });
+}
+
+// pointer
+let down=null;
+canvas.addEventListener('pointerdown',e=>{ down={id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,moved:0}; if(current.rail) canvas.setPointerCapture(e.pointerId); if(controls.autoRotate&&state.mode==='body') hideHint(); });
+canvas.addEventListener('pointermove',e=>{
+  if(down&&e.pointerId===down.id){ const dx=e.clientX-down.lx, dy=e.clientY-down.ly; down.lx=e.clientX; down.ly=e.clientY; down.moved+=Math.abs(dx)+Math.abs(dy);
+    if(current.rail){ look.ty=clamp(look.ty-dx*0.005,-1.2,1.2); look.tp=clamp(look.tp-dy*0.005,-0.7,0.7); } return; }
+  if(e.pointerType==='mouse'&&!down){ const h=pickAt(e.clientX,e.clientY,current.picks); canvas.style.cursor=h?'pointer':'grab';
+    if(state.mode==='body'){ const id=h?dataOf(h.object).station:null; STOPS.forEach(s=>tags[s.id].classList.toggle('hot',s.id===id)); } }
+});
+function endPointer(e){ if(!down||e.pointerId!==down.id) return; const tap=down.moved<8; down=null; if(current.rail){ look.ty=0; look.tp=0; } if(tap&&e.type==='pointerup') onTap(e.clientX,e.clientY); }
+canvas.addEventListener('pointerup',endPointer); canvas.addEventListener('pointercancel',endPointer);
+function onTap(x,y){ const h=pickAt(x,y,current.picks); if(!h) return; const d=dataOf(h.object);
+  if(d.station) selectStop(d.station); else if(current.onPick&&d.kind) current.onPick(h,d); else if(d.info) toast(d.info); }
+
+// resize & loop
+function resize(){ const w=innerWidth, h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); renderRail(); }
+addEventListener('resize',resize); resize();
+const h0=body.home(); camera.position.copy(h0.pos).add(new THREE.Vector3(0,1.5,3)); controls.target.copy(h0.target);
+controls.autoRotate=!reduce; flyCam(h0.pos,h0.target,2.4);
+const clock=new THREE.Clock(); let T=0, first=true;
+function loop(){
+  requestAnimationFrame(loop);
+  const dt=Math.min(clock.getDelta(),0.05); T+=dt;
+  updateTweens(dt);
+  const k=Math.min(1,dt*6); look.yaw+=(look.ty-look.yaw)*k; look.pitch+=(look.tp-look.pitch)*k;
+  current.update(T,dt);
+  if(controls.enabled) controls.update();
+  updateLabels();
+  renderer.render(current.scene,camera);
+  if(first){ first=false; loader.classList.add('gone'); setTimeout(()=>loader.remove(),700); }
+}
+loop();
+})();
+</script>
+</body>
+</html>

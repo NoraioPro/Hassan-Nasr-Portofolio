@@ -204,7 +204,7 @@
     if (extra < 1) continue;
     ul.classList.add('is-clamp');
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'tl-more mono'; b.setAttribute('aria-expanded', 'false');
+    b.type = 'button'; b.className = 'tl-fold mono'; b.setAttribute('aria-expanded', 'false');
     b.textContent = `+${extra} more`;
     b.addEventListener('click', () => { const open = ul.classList.toggle('is-open'); b.setAttribute('aria-expanded', String(open)); b.textContent = open ? 'Show less' : `+${extra} more`; });
     ul.after(b);

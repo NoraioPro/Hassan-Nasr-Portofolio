@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Miracles in the Quran, explained simply</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Commissioner:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF0F4; --surface:#F8F9FB; --ink:#161D2B; --muted:#596379;
+  --lapis:#1D3461; --gold:#9C6F1C; --goldsoft:#E8D6AE; --sage:#2E6B66; --sagesoft:#D5E6E3;
+  --line:#CDD3DE; --bar:#B9C2D2;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10172A; --surface:#172038; --ink:#E7EAF1; --muted:#A3ACC2;
+    --lapis:#9DB6E8; --gold:#E0B866; --goldsoft:#3A3220; --sage:#7FC2BA; --sagesoft:#1C3433;
+    --line:#2A3553; --bar:#3A4768;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10172A; --surface:#172038; --ink:#E7EAF1; --muted:#A3ACC2;
+  --lapis:#9DB6E8; --gold:#E0B866; --goldsoft:#3A3220; --sage:#7FC2BA; --sagesoft:#1C3433;
+  --line:#2A3553; --bar:#3A4768;
+  color-scheme: dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 Commissioner,"Segoe UI",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+h1,h2,h3{font-family:Amiri,"Times New Roman",serif;font-weight:700;line-height:1.15;margin:0}
+h1{font-size:clamp(2.3rem,7vw,3.4rem);color:var(--lapis)}
+h2{font-size:1.9rem;color:var(--lapis);margin-top:3.5rem}
+h3{font-size:1.3rem}
+p{margin:.8rem 0}
+.lede{font-size:1.1rem;color:var(--muted);max-width:36em}
+.ar{font-family:Amiri,serif;font-size:1.35rem;direction:rtl;text-align:right;color:var(--gold);margin:.4rem 0}
+button{font:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* Counting strip */
+.strip{margin-top:2rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.25rem}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:560px;height:auto}
+.counter{display:flex;align-items:baseline;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+.big{font-family:Amiri,serif;font-size:3rem;font-weight:700;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums}
+.status{color:var(--muted)}
+.primary{background:var(--lapis);color:var(--paper);border:0;border-radius:999px;padding:.65rem 1.3rem;font-weight:600;margin-top:1rem}
+
+/* Earth */
+.earth{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:1.5rem;align-items:center;margin-top:1.5rem}
+@media (max-width:560px){.earth{grid-template-columns:1fr}.earth svg{max-width:220px;margin:0 auto}}
+.earth svg{width:100%;height:auto;display:block}
+.seg{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0 1rem}
+.seg button{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:.4rem .9rem;font-size:.92rem}
+.seg button[aria-pressed="true"]{background:var(--lapis);color:var(--paper);border-color:var(--lapis)}
+.ctl-label{font-size:.9rem;color:var(--muted);margin-top:.5rem}
+.result{border-left:4px solid var(--gold);padding:.5rem 0 .5rem 1rem;font-size:1.05rem}
+.result.miss{border-color:var(--sage)}
+
+/* Verdict */
+.scale{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+@media (max-width:560px){.scale{grid-template-columns:1fr}}
+.pan{padding:1rem 1.1rem;border-radius:12px}
+.pan.hold{background:var(--goldsoft)}
+.pan.weak{background:var(--sagesoft)}
+.pan ul{margin:.4rem 0 0;padding-left:1.1rem}
+.pan li{margin:.3rem 0}
+
+/* Claims */
+details{border-top:1px solid var(--line);padding:.9rem 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:1rem;align-items:baseline}
+summary::-webkit-details-marker{display:none}
+summary .t{font-family:Amiri,serif;font-size:1.3rem;font-weight:700}
+summary .ref{color:var(--muted);font-size:.9rem;white-space:nowrap}
+summary::after{content:"+";font-size:1.4rem;color:var(--gold);line-height:1}
+details[open] summary::after{content:"−"}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.6rem}
+@media (max-width:560px){.two{grid-template-columns:1fr}}
+.two div{padding:.8rem 1rem;border-radius:10px;font-size:.96rem}
+.claim{background:var(--goldsoft)}
+.other{background:var(--sagesoft)}
+.two b{display:block;font-size:.85rem;margin-bottom:.2rem}
+.group-intro{color:var(--muted)}
+.closing{margin-top:3rem;padding:1.4rem;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+footer{margin-top:2.5rem;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<meta name="description" content="Checks the claim that verse numbers encode Earth's core depth. Shows what holds up, what does not, and how other well-known 'miracles' are read."><link rel="canonical" href="https://hnasr.com/labs/quran-miracles/"><meta property="og:title" content="Miracles in the Quran · Hassan Nasr"><meta property="og:description" content="Checks the claim that verse numbers encode Earth's core depth. Shows what holds up, what does not, and how other well-known 'miracles' are read."><meta property="og:url" content="https://hnasr.com/labs/quran-miracles/"><meta property="og:image" content="https://hnasr.com/assets/labs/quran-miracles.webp"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="robots" content="index,follow"><style id="hn-back">.hn-back{position:fixed;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:2147483000;display:inline-flex;align-items:center;gap:0;height:40px;min-width:40px;padding:0 12px;box-sizing:border-box;border-radius:999px;background:rgba(9,11,14,.78);color:#ece6d8;border:1px solid rgba(255,255,255,.18);font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:border-color .25s}.hn-back:hover{border-color:rgba(255,255,255,.45)}.hn-back:focus-visible{outline:2px solid #ff5b26;outline-offset:2px}.hn-back-t{display:inline-block;max-width:0;overflow:hidden;opacity:0;margin-left:0;transition:max-width .35s,opacity .25s,margin-left .35s}.hn-back:hover .hn-back-t,.hn-back:focus-visible .hn-back-t{max-width:90px;opacity:1;margin-left:8px}@media (max-width:760px){.hn-back-t{max-width:90px;opacity:1;margin-left:8px}}@media (prefers-reduced-motion:reduce){.hn-back,.hn-back-t{transition:none}}.hn-back[data-corner="bl"]{right:auto;left:calc(12px + env(safe-area-inset-left,0px))}.hn-back[data-corner="tr"]{bottom:auto;top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="tl"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:calc(12px + env(safe-area-inset-top,0px))}.hn-back[data-corner="mr"]{bottom:auto;top:50%;transform:translateY(-50%)}.hn-back[data-corner="ml"]{right:auto;bottom:auto;left:calc(12px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-50%)}.hn-back.is-compact{width:40px;padding:0;justify-content:center}.hn-back.is-compact .hn-back-t{max-width:0!important;opacity:0!important;margin-left:0!important}</style></head>
+<body><a class="hn-back" href="/labs/" aria-label="All labs"><span aria-hidden="true">←</span><span class="hn-back-t">All labs</span></a><script id="hn-back-js">(()=>{const b=document.querySelector('.hn-back');if(!b||!document.elementsFromPoint||!window.MutationObserver)return;
+const CTRL='button,a[href],input,select,textarea,[role="button"],[role="tab"],[role="slider"],[role="link"]';
+const hits=()=>{const r=b.getBoundingClientRect();let n=0;for(const[x,y]of[[r.left+r.width/2,r.top+r.height/2],[r.left+3,r.top+3],[r.right-3,r.top+3],[r.left+3,r.bottom-3],[r.right-3,r.bottom-3]]){if(document.elementsFromPoint(x,y).some(e=>e!==b&&!b.contains(e)&&e.matches(CTRL)))n++}return n};
+const P=['br','bl','tr','tl','mr','ml'];
+const place=()=>{b.dataset.corner=b.dataset.corner||'br';if(!hits())return;
+for(const compact of[b.classList.contains('is-compact'),true]){b.classList.toggle('is-compact',compact);for(const c of P){b.dataset.corner=c;if(!hits())return}}
+let best=['br',1e9];for(const c of P){b.dataset.corner=c;const n=hits();if(n<best[1])best=[c,n]}b.dataset.corner=best[0]};
+let last=0,q=0;const soon=()=>{if(q)return;q=setTimeout(()=>{q=0;last=Date.now();place()},Math.max(150,1000-(Date.now()-last)))};
+addEventListener('load',()=>{setTimeout(place,1200);new MutationObserver(soon).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','open','aria-expanded']})});
+addEventListener('resize',soon);addEventListener('orientationchange',soon);})();</script>
+<main>
+  <h1>Counting to iron</h1>
+  <p class="lede">A popular video says the Quran hides the depth of Earth’s iron core in its verse numbers. Here’s how the claim works, what holds up, and the other “miracles” people point to.</p>
+
+  <section class="strip" aria-labelledby="count-h">
+    <h3 id="count-h">The Quran’s 114 surahs, by number of verses</h3>
+    <p class="ar">وَأَنزَلْنَا الْحَدِيدَ فِيهِ بَأْسٌ شَدِيدٌ</p>
+    <p style="margin-top:0">“And We sent down iron, in which is great strength” (57:25). Surah 57 is called al-Hadid, “Iron.”</p>
+    <div class="chart"><svg id="bars" viewBox="0 0 1140 210" role="img" aria-label="Bar chart of verse counts for all 114 surahs, with surah 57 highlighted"></svg></div>
+    <div class="counter" aria-live="polite">
+      <span class="big" id="count">0</span>
+      <span class="status" id="status">verses counted</span>
+    </div>
+    <button class="primary" id="go">Count the verses up to 57:25</button>
+  </section>
+
+  <h2>Does 5,100 match the core?</h2>
+  <p>The video says Earth’s core starts about 5,100 km down. Pick a layer and a unit to see when the number lines up.</p>
+  <div class="earth">
+    <svg viewBox="0 0 320 320" aria-hidden="true">
+      <circle cx="160" cy="160" r="150" style="fill:var(--bar)"/>
+      <circle cx="160" cy="160" r="81.9" style="fill:var(--goldsoft);stroke:var(--gold)" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="28.8" style="fill:var(--gold)"/>
+      <circle id="marker" cx="160" cy="160" r="28.8" fill="none" stroke-width="4" stroke-dasharray="6 5" style="stroke:var(--lapis);transition:r .5s ease"/>
+      <text x="160" y="40" text-anchor="middle" font-size="13" style="fill:var(--ink)" font-family="Commissioner,sans-serif">Mantle</text>
+      <text x="160" y="104" text-anchor="middle" font-size="12" style="fill:var(--ink)" font-family="Commissioner,sans-serif">Outer core</text>
+      <text x="160" y="164" text-anchor="middle" font-size="10" style="fill:var(--paper)" font-family="Commissioner,sans-serif">Inner</text>
+    </svg>
+    <div>
+      <div class="ctl-label" id="layer-l">Layer</div>
+      <div class="seg" role="group" aria-labelledby="layer-l" id="layers">
+        <button data-km="2890" aria-pressed="false">Where the core begins</button>
+        <button data-km="5150" aria-pressed="true">Where the inner core begins</button>
+        <button data-km="6371" aria-pressed="false">The centre</button>
+      </div>
+      <div class="ctl-label" id="unit-l">Unit</div>
+      <div class="seg" role="group" aria-labelledby="unit-l" id="units">
+        <button data-u="km" aria-pressed="true">Kilometres</button>
+        <button data-u="mi" aria-pressed="false">Miles</button>
+      </div>
+      <p class="result" id="result" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <h2>The verdict</h2>
+  <div class="scale">
+    <div class="pan hold">
+      <h3>What holds up</h3>
+      <ul>
+        <li>The maths: 5,075 verses come before surah 57, so 57:25 is verse 5,100.</li>
+        <li>The inner core does begin around 5,100–5,150 km.</li>
+        <li>Surah 57 is the middle surah by number.</li>
+      </ul>
+    </div>
+    <div class="pan weak">
+      <h3>What weakens it</h3>
+      <ul>
+        <li>It only works in kilometres, a unit invented in the 1790s.</li>
+        <li>It only works with one verse-counting tradition. Others give totals from 6,204 to 6,236.</li>
+        <li>With many numbers and many layers to choose from, some match is likely by chance.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Other claimed miracles</h2>
+  <p class="group-intro">Muslims have pointed to these for centuries. Tap one to see the claim and how others read it.</p>
+
+  <details>
+    <summary><span class="t">Its language can’t be imitated</span><span class="ref">2:23</span></summary>
+    <p class="ar">فَأْتُوا بِسُورَةٍ مِّن مِّثْلِهِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Quran challenges anyone to produce one surah like it. Its rhythm, eloquence and depth are seen as beyond human authorship. This is the oldest and most central miracle in Islamic thought.</div>
+      <div class="other"><b>Other readings</b>Literary excellence is real but hard to measure, so it convinces people differently. Critics note that every great text is unique in its own way.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The text has been preserved</span><span class="ref">15:9</span></summary>
+    <p class="ar">إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The text has stayed intact since revelation, kept by mass memorisation and very early manuscripts like the Birmingham fragments, carbon-dated close to the Prophet’s lifetime.</div>
+      <div class="other"><b>Other readings</b>Academic historians largely agree the text is very old and stable, but debate details of early standardisation and the different canonical readings (qira’at).</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Rome’s comeback was foretold</span><span class="ref">30:2–4</span></summary>
+    <p class="ar">غُلِبَتِ الرُّومُ ... وَهُم مِّن بَعْدِ غَلَبِهِمْ سَيَغْلِبُونَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>After the Byzantines lost to Persia, the Quran said they would win again within a few years. They did, in campaigns around 622–627 CE.</div>
+      <div class="other"><b>Other readings</b>The verbs can be voweled in a way that reverses who wins. A comeback was also plausible at the time, so sceptics see it as less decisive.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Pharaoh’s body kept as a sign</span><span class="ref">10:92</span></summary>
+    <p class="ar">فَالْيَوْمَ نُنَجِّيكَ بِبَدَنِكَ لِتَكُونَ لِمَنْ خَلْفَكَ آيَةً</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God says Pharaoh’s body would be saved as a sign for later generations, which many link to the royal mummies found in Egypt.</div>
+      <div class="other"><b>Other readings</b>Historians haven’t identified which pharaoh is meant, and ancient Egyptians mummified many rulers, so the link is uncertain.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Abu Lahab’s fate</span><span class="ref">111:1–5</span></summary>
+    <p class="ar">تَبَّتْ يَدَا أَبِي لَهَبٍ وَتَبَّ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The surah says this uncle and enemy of the Prophet would end in ruin. He lived about ten more years and could have disproved it by simply declaring faith, but never did.</div>
+      <div class="other"><b>Other readings</b>Sceptics say a committed opponent had no reason to convert just to make a point, so the outcome wasn’t surprising.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Haman at Pharaoh’s court</span><span class="ref">28:38</span></summary>
+    <p class="ar">فَأَوْقِدْ لِي يَا هَامَانُ عَلَى الطِّينِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Pharaoh asks Haman to bake bricks and build a tower. Some writers argue an Egyptian official with a similar name appears in old inscriptions.</div>
+      <div class="other"><b>Other readings</b>Most Egyptologists don’t accept that reading. Haman is better known from the Book of Esther, set centuries later in Persia.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">“King” for Joseph, “Pharaoh” for Moses</span><span class="ref">12:43</span></summary>
+    <p class="ar">وَقَالَ الْمَلِكُ إِنِّي أَرَىٰ سَبْعَ بَقَرَاتٍ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Joseph’s ruler is called <i>malik</i> (king), Moses’s is <i>Fir‘awn</i>. Egyptians only began calling their kings “pharaoh” later, so the Quran’s wording fits history.</div>
+      <div class="other"><b>Other readings</b>Neither Joseph’s nor Moses’s era can be dated with confidence, so it’s hard to test whether the titles fit.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The splitting of the moon</span><span class="ref">54:1</span></summary>
+    <p class="ar">اقْتَرَبَتِ السَّاعَةُ وَانشَقَّ الْقَمَرُ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Traditional reports describe the moon splitting as a sign in Mecca. Online posts say NASA photos show a crack across it.</div>
+      <div class="other"><b>Other readings</b>The feature in those photos is an ordinary lunar groove, and NASA scientists have said there’s no evidence of a split. Some commentators read the verse as about the end of time.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Returning safely to Mecca</span><span class="ref">48:27</span></summary>
+    <p class="ar">لَتَدْخُلُنَّ الْمَسْجِدَ الْحَرَامَ إِن شَاءَ اللَّهُ آمِنِينَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>After Muslims were turned away at Hudaybiyyah in 628, this verse promised they would enter the Sacred Mosque in safety. They did the following year.</div>
+      <div class="other"><b>Other readings</b>The treaty signed at Hudaybiyyah already allowed a pilgrimage the next year, so the outcome was expected.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Iram of the pillars</span><span class="ref">89:6–8</span></summary>
+    <p class="ar">أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِعَادٍ إِرَمَ ذَاتِ الْعِمَادِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Quran names Iram, a city of lofty pillars destroyed with the people of ‘Ad. A site found in Oman’s desert in the 1990s, with towers and a sinkhole collapse, is said to be it.</div>
+      <div class="other"><b>Other readings</b>Scholars don’t generally accept that the site is Iram. It’s small for a famous city, and Iram may have been a tribe or region.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Thamud’s rock-carved homes</span><span class="ref">89:9</span></summary>
+    <p class="ar">وَثَمُودَ الَّذِينَ جَابُوا الصَّخْرَ بِالْوَادِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Thamud carved dwellings from rock, and archaeology has confirmed the people and the carved sites in northwest Arabia.</div>
+      <div class="other"><b>Other readings</b>Thamud appear in Assyrian and Greek records, and the famous tombs at Hegra are Nabataean. Arabs of the time already knew these places.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The flood of Sheba’s dam</span><span class="ref">34:15–16</span></summary>
+    <p class="ar">فَأَرْسَلْنَا عَلَيْهِمْ سَيْلَ الْعَرِمِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Sheba’s gardens were ruined by a great flood, matching the collapse of the Marib dam in Yemen.</div>
+      <div class="other"><b>Other readings</b>The dam’s final collapse happened around 570 CE, so it was recent and well-known news in Arabia.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Noah’s ark on Judi</span><span class="ref">11:44</span></summary>
+    <p class="ar">وَاسْتَوَتْ عَلَى الْجُودِيِّ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Unlike the Bible’s Ararat, the Quran names Mount Judi, and some argue this location fits better.</div>
+      <div class="other"><b>Other readings</b>Syriac Christian and Jewish traditions already placed the ark in the same Qardu mountains before Islam.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Bakka, the old name of Mecca</span><span class="ref">3:96</span></summary>
+    <p class="ar">إِنَّ أَوَّلَ بَيْتٍ وُضِعَ لِلنَّاسِ لَلَّذِي بِبَكَّةَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Quran calls Mecca “Bakka,” and some link it to the “valley of Baca” in Psalm 84, suggesting the Bible mentions Mecca.</div>
+      <div class="other"><b>Other readings</b>Most biblical scholars read Baca as a “valley of weeping” or of balsam trees on the road to Jerusalem.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The crow that teaches burial</span><span class="ref">5:31</span></summary>
+    <p class="ar">فَبَعَثَ اللَّهُ غُرَابًا يَبْحَثُ فِي الْأَرْضِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>A crow shows Adam’s son how to bury his brother, and modern research shows crows are among the most intelligent birds.</div>
+      <div class="other"><b>Other readings</b>A similar story, with a bird showing Adam and Eve how to bury Abel, appears in earlier Jewish tradition.</div>
+    </div>
+  </details>
+
+  <h2>Modern “scientific” claims</h2>
+  <p class="group-intro">These became popular in the 20th century. Most turn on how a single Arabic word is translated.</p>
+
+  <details>
+    <summary><span class="t">Stages of the embryo</span><span class="ref">23:12–14</span></summary>
+    <p class="ar">فَكَسَوْنَا الْعِظَامَ لَحْمًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The verses describe stages, from a drop to a clinging thing to a chewed-like lump, then bones clothed with flesh, before anyone could see an embryo.</div>
+      <div class="other"><b>Other readings</b>Critics say this matches the Greek physician Galen’s model from the 2nd century, including the bones-then-flesh order, which biology doesn’t support.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">An expanding universe</span><span class="ref">51:47</span></summary>
+    <p class="ar">وَالسَّمَاءَ بَنَيْنَاهَا بِأَيْدٍ وَإِنَّا لَمُوسِعُونَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>“We are expanding it” is read as describing the expansion of the universe, discovered in the 1920s.</div>
+      <div class="other"><b>Other readings</b>The word mūsi‘ūn can also mean “We have ample power.” Many older commentators read it that way.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">A barrier between two seas</span><span class="ref">55:19–20</span></summary>
+    <p class="ar">مَرَجَ الْبَحْرَيْنِ يَلْتَقِيَانِ بَيْنَهُمَا بَرْزَخٌ لَّا يَبْغِيَانِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>This describes the zones where seas of different saltiness meet without fully mixing, as oceanographers have observed.</div>
+      <div class="other"><b>Other readings</b>Classical commentators read it as fresh and salt water meeting, something people could already see at river mouths.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Mountains as pegs</span><span class="ref">78:7</span></summary>
+    <p class="ar">وَالْجِبَالَ أَوْتَادًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Mountains have deep roots below them, like tent pegs, which geology confirmed much later.</div>
+      <div class="other"><b>Other readings</b>Mountains do have crustal roots, but they don’t hold the Earth steady the way the claim often implies.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Fingertips</span><span class="ref">75:4</span></summary>
+    <p class="ar">بَلَىٰ قَادِرِينَ عَلَىٰ أَن نُّسَوِّيَ بَنَانَهُ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God can restore even a person’s fingertips, read as a hint at unique fingerprints.</div>
+      <div class="other"><b>Other readings</b>The verse is about resurrection down to the finest detail and doesn’t mention uniqueness.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The female bee</span><span class="ref">16:68–69</span></summary>
+    <p class="ar">أَنِ اتَّخِذِي مِنَ الْجِبَالِ بُيُوتًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The verbs telling the bee to build and eat are feminine, and worker bees are female.</div>
+      <div class="other"><b>Other readings</b>Arabic often uses feminine forms for collective nouns like “bees,” so the grammar may not point to biology.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Iron sent down</span><span class="ref">57:25</span></summary>
+    <p class="ar">وَأَنزَلْنَا الْحَدِيدَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Iron is made in stars and arrives in meteorites, so “sent down” fits its cosmic origin.</div>
+      <div class="other"><b>Other readings</b>The same verb is used for livestock (39:6) and clothing (7:26), so it often means “bestowed.”</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">The Big Bang</span><span class="ref">21:30</span></summary>
+    <p class="ar">أَنَّ السَّمَاوَاتِ وَالْأَرْضَ كَانَتَا رَتْقًا فَفَتَقْنَاهُمَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The heavens and earth were “joined, then We split them apart,” read as everything starting from one point.</div>
+      <div class="other"><b>Other readings</b>Classical commentators also read it as the sky opening with rain and the earth opening with plants. Ancient creation stories often describe sky and earth being separated.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The universe began as smoke</span><span class="ref">41:11</span></summary>
+    <p class="ar">ثُمَّ اسْتَوَىٰ إِلَى السَّمَاءِ وَهِيَ دُخَانٌ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sky was once “smoke,” matching the gas and dust clouds that stars and planets formed from.</div>
+      <div class="other"><b>Other readings</b>The verse comes after the earth is created (41:9–10), while in cosmology the earth formed much later than the first gas clouds.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Every living thing from water</span><span class="ref">21:30</span></summary>
+    <p class="ar">وَجَعَلْنَا مِنَ الْمَاءِ كُلَّ شَيْءٍ حَيٍّ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>All life depends on water and cells are mostly water, long before microscopes.</div>
+      <div class="other"><b>Other readings</b>True for life on Earth, but water as the source of life was already a common ancient idea, for example in Greek philosophy.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Sun and moon in orbits</span><span class="ref">21:33</span></summary>
+    <p class="ar">كُلٌّ فِي فَلَكٍ يَسْبَحُونَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Each “swims in an orbit,” including the sun, which we now know moves around the galaxy.</div>
+      <div class="other"><b>Other readings</b>The verse can also describe their daily path across the sky, which everyone could already see.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Mountains passing like clouds</span><span class="ref">27:88</span></summary>
+    <p class="ar">وَتَرَى الْجِبَالَ تَحْسَبُهَا جَامِدَةً وَهِيَ تَمُرُّ مَرَّ السَّحَابِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Mountains look still but are moving, read as plate tectonics or Earth’s rotation.</div>
+      <div class="other"><b>Other readings</b>The surrounding verses are about the Day of Judgment, so many commentators read it as describing the end of the world.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Darkness and waves in the deep sea</span><span class="ref">24:40</span></summary>
+    <p class="ar">أَوْ كَظُلُمَاتٍ فِي بَحْرٍ لُّجِّيٍّ يَغْشَاهُ مَوْجٌ مِّن فَوْقِهِ مَوْجٌ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Layers of darkness and “waves above waves” match deep-sea darkness and internal waves under the surface.</div>
+      <div class="other"><b>Other readings</b>The verse is a parable about disbelief. Critics see vivid imagery of a stormy night at sea rather than oceanography.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Rain clouds and hail</span><span class="ref">24:43</span></summary>
+    <p class="ar">وَيُنَزِّلُ مِنَ السَّمَاءِ مِن جِبَالٍ فِيهَا مِن بَرَدٍ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Clouds are gathered, stacked into “mountains,” and send down hail, just like towering storm clouds.</div>
+      <div class="other"><b>Other readings</b>Tall storm clouds and hail are visible from the ground, so careful observers could describe them.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The lowest land</span><span class="ref">30:3</span></summary>
+    <p class="ar">فِي أَدْنَى الْأَرْضِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Romans were defeated in <i>adna al-ard</i>, read as “the lowest land,” and the Dead Sea area is the lowest land on Earth.</div>
+      <div class="other"><b>Other readings</b>Classical scholars and most translations read <i>adna</i> as “nearest.” Historians also don’t place the key battles at the Dead Sea.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Pain felt through the skin</span><span class="ref">4:56</span></summary>
+    <p class="ar">كُلَّمَا نَضِجَتْ جُلُودُهُم بَدَّلْنَاهُمْ جُلُودًا غَيْرَهَا لِيَذُوقُوا الْعَذَابَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Burnt skins are replaced so pain is felt again, matching how deep burns destroy pain nerves.</div>
+      <div class="other"><b>Other readings</b>People already knew burns hurt through the skin. The verse describes punishment, not anatomy.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The lying forelock</span><span class="ref">96:15–16</span></summary>
+    <p class="ar">نَاصِيَةٍ كَاذِبَةٍ خَاطِئَةٍ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The front of the head is called lying and sinful, matching the frontal lobe’s role in decisions.</div>
+      <div class="other"><b>Other readings</b>In Arabic, holding someone by the forelock means having full control of them, and <i>nasiyah</i> often stands for the whole person.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Tight chest at altitude</span><span class="ref">6:125</span></summary>
+    <p class="ar">كَأَنَّمَا يَصَّعَّدُ فِي السَّمَاءِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>A chest feels tight “as if climbing into the sky,” matching thinner air at height.</div>
+      <div class="other"><b>Other readings</b>The image works as a metaphor for a closed heart, and people who climbed mountains already knew the feeling.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Sex decided by the sperm</span><span class="ref">53:45–46</span></summary>
+    <p class="ar">وَأَنَّهُ خَلَقَ الزَّوْجَيْنِ الذَّكَرَ وَالْأُنثَىٰ مِن نُّطْفَةٍ إِذَا تُمْنَىٰ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Male and female come from an emitted drop, and sperm does determine a baby’s sex.</div>
+      <div class="other"><b>Other readings</b>The verse doesn’t contrast the father with the mother, so it may just describe conception in general.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The female spider and ant</span><span class="ref">29:41, 27:18</span></summary>
+    <p class="ar">كَمَثَلِ الْعَنكَبُوتِ اتَّخَذَتْ بَيْتًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The spider that builds a house is grammatically female, as are web-building spiders. The speaking ant is female too, like worker ants.</div>
+      <div class="other"><b>Other readings</b>As with the bee, Arabic often treats these words as feminine anyway, so the grammar may not point to biology.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Hearing before sight</span><span class="ref">16:78</span></summary>
+    <p class="ar">وَجَعَلَ لَكُمُ السَّمْعَ وَالْأَبْصَارَ وَالْأَفْئِدَةَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Quran nearly always lists hearing before sight, and a baby in the womb can hear before its eyes respond to light.</div>
+      <div class="other"><b>Other readings</b>“Hearing and sight” is a natural word order in Arabic, like “ears and eyes.” The order may be style rather than biology.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Milk from between gut and blood</span><span class="ref">16:66</span></summary>
+    <p class="ar">مِن بَيْنِ فَرْثٍ وَدَمٍ لَّبَنًا خَالِصًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Pure milk comes “from between digested food and blood,” matching how nutrients pass from the gut to the blood to the udder.</div>
+      <div class="other"><b>Other readings</b>Greek thinkers like Aristotle already taught that milk is made from blood, so the idea wasn’t new.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">What the fly takes</span><span class="ref">22:73</span></summary>
+    <p class="ar">وَإِن يَسْلُبْهُمُ الذُّبَابُ شَيْئًا لَّا يَسْتَنقِذُوهُ مِنْهُ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>If a fly snatches something, it can’t be taken back, because flies start digesting food outside their bodies.</div>
+      <div class="other"><b>Other readings</b>Many creatures, like spiders, digest food externally. The verse’s point is that idols are too weak to stop even a fly.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">An egg-shaped Earth</span><span class="ref">79:30</span></summary>
+    <p class="ar">وَالْأَرْضَ بَعْدَ ذَٰلِكَ دَحَاهَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b><i>Dahaha</i> is linked to <i>udhiyya</i>, an ostrich’s nest or egg, so the verse describes Earth’s slightly squashed shape.</div>
+      <div class="other"><b>Other readings</b>Classical dictionaries and translations give “spread it out.” Earth is also flattened at the poles, not egg-shaped.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">A round Earth</span><span class="ref">39:5</span></summary>
+    <p class="ar">يُكَوِّرُ اللَّيْلَ عَلَى النَّهَارِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Night is “wrapped” over day like a turban is wound, which only works on a round Earth.</div>
+      <div class="other"><b>Other readings</b>Greek scholars knew Earth was round and even measured its size about 800 years earlier.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The moon’s borrowed light</span><span class="ref">71:16</span></summary>
+    <p class="ar">وَجَعَلَ الْقَمَرَ فِيهِنَّ نُورًا وَجَعَلَ الشَّمْسَ سِرَاجًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sun is called a lamp and the moon a light, a distinction that fits the moon reflecting sunlight.</div>
+      <div class="other"><b>Other readings</b>Greek astronomers knew the moon reflects sunlight centuries earlier, and <i>nur</i> doesn’t specifically mean reflected light.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The sun’s resting place</span><span class="ref">36:38</span></summary>
+    <p class="ar">وَالشَّمْسُ تَجْرِي لِمُسْتَقَرٍّ لَّهَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sun runs toward a fixed point or end, matching its motion through space and its limited lifespan.</div>
+      <div class="other"><b>Other readings</b>A well-known hadith links this to the sun prostrating beneath God’s throne each night, suggesting its daily path across the sky.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">A protected roof</span><span class="ref">21:32</span></summary>
+    <p class="ar">وَجَعَلْنَا السَّمَاءَ سَقْفًا مَّحْفُوظًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sky is a “protected roof,” read as the atmosphere and magnetic field shielding us from radiation and meteors.</div>
+      <div class="other"><b>Other readings</b>The sky as a canopy over the earth is a common ancient image, and other verses say it is protected from devils.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The sky that returns</span><span class="ref">86:11</span></summary>
+    <p class="ar">وَالسَّمَاءِ ذَاتِ الرَّجْعِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sky “returns” things: rain to the earth, and radio waves and heat back down from the atmosphere.</div>
+      <div class="other"><b>Other readings</b>Classical commentators read it simply as rain returning again and again, which everyone could see.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Fertilising winds</span><span class="ref">15:22</span></summary>
+    <p class="ar">وَأَرْسَلْنَا الرِّيَاحَ لَوَاقِحَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Winds are sent “fertilising,” matching how they carry pollen and help clouds form rain.</div>
+      <div class="other"><b>Other readings</b>Arabs hand-pollinated date palms and knew plants needed pollen. The verse goes on to rain, a visible effect of wind.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Pairs in everything</span><span class="ref">51:49</span></summary>
+    <p class="ar">وَمِن كُلِّ شَيْءٍ خَلَقْنَا زَوْجَيْنِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Everything is created in pairs, matching male and female plants, positive and negative charges, and matter and antimatter.</div>
+      <div class="other"><b>Other readings</b>The statement is broad enough to fit almost any pairing, from day and night to heaven and earth.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Smaller than an atom</span><span class="ref">10:61</span></summary>
+    <p class="ar">مِن مِّثْقَالِ ذَرَّةٍ ... وَلَا أَصْغَرَ مِن ذَٰلِكَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God knows the weight of a <i>dharrah</i> “or smaller,” hinting that atoms can be split.</div>
+      <div class="other"><b>Other readings</b><i>Dharrah</i> originally meant a tiny ant or a speck of dust. Modern Arabic borrowed it for “atom.”</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Seven earths</span><span class="ref">65:12</span></summary>
+    <p class="ar">خَلَقَ سَبْعَ سَمَاوَاتٍ وَمِنَ الْأَرْضِ مِثْلَهُنَّ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God made seven heavens “and of the earth, the like of them,” read as Earth’s layers.</div>
+      <div class="other"><b>Other readings</b>Geologists divide Earth into different numbers of layers depending on the model, and many commentators read it as seven separate earths.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Healing in honey</span><span class="ref">16:69</span></summary>
+    <p class="ar">فِيهِ شِفَاءٌ لِّلنَّاسِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Honey has healing in it, and modern research confirms it fights bacteria and helps wounds heal.</div>
+      <div class="other"><b>Other readings</b>Ancient Egyptians and Greeks already used honey as medicine, so its value was well known.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Black holes</span><span class="ref">81:15–16</span></summary>
+    <p class="ar">فَلَا أُقْسِمُ بِالْخُنَّسِ الْجَوَارِ الْكُنَّسِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>An oath by hidden, moving things that “sweep” is read as black holes, which are invisible and pull in everything nearby.</div>
+      <div class="other"><b>Other readings</b>Classical commentators read it as planets that seem to move backward and vanish, or stars hidden by daylight.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The knocking star</span><span class="ref">86:1–3</span></summary>
+    <p class="ar">وَالسَّمَاءِ وَالطَّارِقِ ... النَّجْمُ الثَّاقِبُ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b><i>Tariq</i> comes from a root meaning to knock, matching pulsars, stars that send out regular pulses.</div>
+      <div class="other"><b>Other readings</b><i>Tariq</i> usually means a night visitor, and the verse itself explains it as a star of piercing brightness.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The falling places of stars</span><span class="ref">56:75</span></summary>
+    <p class="ar">فَلَا أُقْسِمُ بِمَوَاقِعِ النُّجُومِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God swears by the “positions” of stars, which fits the fact that we see stars where they were long ago, since their light takes years to reach us.</div>
+      <div class="other"><b>Other readings</b><i>Mawaqi‘</i> commonly means where stars set. Some classical scholars read it as the stages of revelation.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Time and the speed of light</span><span class="ref">32:5</span></summary>
+    <p class="ar">فِي يَوْمٍ كَانَ مِقْدَارُهُ أَلْفَ سَنَةٍ مِّمَّا تَعُدُّونَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>A day “like a thousand years” shows time is relative. Some go further and calculate the speed of light from the moon’s orbit.</div>
+      <div class="other"><b>Other readings</b>The calculation needs several chosen adjustments, and the ratio drifts as Earth’s day and the moon’s orbit change. Another verse (70:4) says 50,000 years.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Fire beneath the sea</span><span class="ref">52:6</span></summary>
+    <p class="ar">وَالْبَحْرِ الْمَسْجُورِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>An oath by the “blazing sea” fits volcanoes and hot vents on the ocean floor.</div>
+      <div class="other"><b>Other readings</b><i>Masjur</i> can also mean “filled” or “held back,” and a related verse (81:6) describes seas burning at the end of time.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The earth that splits</span><span class="ref">86:12</span></summary>
+    <p class="ar">وَالْأَرْضِ ذَاتِ الصَّدْعِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The earth “which cracks open” is read as the cracks between tectonic plates.</div>
+      <div class="other"><b>Other readings</b>It sits next to “the sky that returns,” and commentators read it as soil splitting open as plants sprout after rain.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Travel beyond the sky</span><span class="ref">55:33</span></summary>
+    <p class="ar">إِنِ اسْتَطَعْتُمْ أَن تَنفُذُوا مِنْ أَقْطَارِ السَّمَاوَاتِ وَالْأَرْضِ فَانفُذُوا ۚ لَا تَنفُذُونَ إِلَّا بِسُلْطَانٍ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Humans and jinn can pass beyond the heavens only with <i>sultan</i>, read as power or technology, foretelling space travel.</div>
+      <div class="other"><b>Other readings</b>The next verses describe flames sent against anyone trying to escape, so most commentators read it as a challenge on Judgment Day.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">Three darknesses in the womb</span><span class="ref">39:6</span></summary>
+    <p class="ar">يَخْلُقُكُمْ فِي بُطُونِ أُمَّهَاتِكُمْ خَلْقًا مِّن بَعْدِ خَلْقٍ فِي ظُلُمَاتٍ ثَلَاثٍ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The baby grows in “three darknesses,” matching the three layers around it: the belly wall, the womb and the membranes.</div>
+      <div class="other"><b>Other readings</b>Early commentators already explained it as belly, womb and placenta, which people knew from childbirth and animals.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Seven layered heavens</span><span class="ref">67:3</span></summary>
+    <p class="ar">الَّذِي خَلَقَ سَبْعَ سَمَاوَاتٍ طِبَاقًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Seven heavens in layers match the layers of Earth’s atmosphere.</div>
+      <div class="other"><b>Other readings</b>Scientists usually list five main layers, and another verse (67:5) puts the stars in the lowest heaven, which doesn’t fit the atmosphere.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Pillars you cannot see</span><span class="ref">13:2</span></summary>
+    <p class="ar">اللَّهُ الَّذِي رَفَعَ السَّمَاوَاتِ بِغَيْرِ عَمَدٍ تَرَوْنَهَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The heavens are raised “without pillars that you see,” hinting at invisible pillars like gravity.</div>
+      <div class="other"><b>Other readings</b>The Arabic can also mean “without pillars, as you can see,” and classical scholars were split between the two readings.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The mosquito and what’s on it</span><span class="ref">2:26</span></summary>
+    <p class="ar">أَن يَضْرِبَ مَثَلًا مَّا بَعُوضَةً فَمَا فَوْقَهَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>God gives the example of a mosquito “and what is above it,” read as tiny mites that ride on mosquitoes.</div>
+      <div class="other"><b>Other readings</b>Classical commentators read “above it” as anything bigger, or anything even smaller. The point is that no example is too humble.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Rain that feeds springs</span><span class="ref">39:21</span></summary>
+    <p class="ar">أَلَمْ تَرَ أَنَّ اللَّهَ أَنزَلَ مِنَ السَّمَاءِ مَاءً فَسَلَكَهُ يَنَابِيعَ فِي الْأَرْضِ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Rain sinks into the ground and comes out as springs, describing the water cycle when many thinkers believed springs came from the sea.</div>
+      <div class="other"><b>Other readings</b>The Roman writer Vitruvius had already explained that springs are fed by rain, centuries earlier.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Heavy clouds and lightning</span><span class="ref">13:12</span></summary>
+    <p class="ar">هُوَ الَّذِي يُرِيكُمُ الْبَرْقَ خَوْفًا وَطَمَعًا وَيُنشِئُ السَّحَابَ الثِّقَالَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Clouds are called “heavy,” and we now know a single storm cloud can hold hundreds of thousands of tonnes of water.</div>
+      <div class="other"><b>Other readings</b>Dark, rain-filled clouds look heavy, and “heavy clouds” is a natural description anyone could use.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The sun folded up</span><span class="ref">81:1</span></summary>
+    <p class="ar">إِذَا الشَّمْسُ كُوِّرَتْ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sun will be “wound up” and its light will end, matching the fact that stars have a limited life.</div>
+      <div class="other"><b>Other readings</b>The verse describes the Day of Judgment, and the idea of the heavens ending is common to many religions.</div>
+    </div>
+  </details>
+
+  <h2>Number patterns</h2>
+  <p class="group-intro">These claims count words or verses. The result always depends on what you choose to count.</p>
+  <details>
+    <summary><span class="t">The middle nation in the middle verse</span><span class="ref">2:143</span></summary>
+    <p class="ar">وَكَذَٰلِكَ جَعَلْنَاكُمْ أُمَّةً وَسَطًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Al-Baqarah has 286 verses, and the verse calling Muslims a “middle nation” is number 143, exactly half.</div>
+      <div class="other"><b>Other readings</b>It only works with the Kufan count. Other classical counts give al-Baqarah a slightly different number of verses.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">365 days, 12 months</span><span class="ref">word counts</span></summary>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The singular word for “day” appears 365 times and “month” 12 times.</div>
+      <div class="other"><b>Other readings</b>Counts change with the rules. Forms of “day” appear over 100 more times, and “month” appears about 21 times in all forms, around 9 in the singular.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Land and sea in Earth’s ratio</span><span class="ref">word counts</span></summary>
+    <div class="two">
+      <div class="claim"><b>The claim</b>“Sea” appears 32 times and “land” 13 times. That’s 71% and 29%, matching Earth’s surface.</div>
+      <div class="other"><b>Other readings</b>The result depends on which Arabic words count as “land.” The real ratio also shifts with ice ages and sea levels.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Matching word pairs</span><span class="ref">word counts</span></summary>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Opposites appear equally often, like life and death (145 each), or angels and devils (88 each).</div>
+      <div class="other"><b>Other readings</b>Independent counts often disagree, and with thousands of possible word pairs, some will match by chance.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">The code of 19</span><span class="ref">74:30</span></summary>
+    <p class="ar">عَلَيْهَا تِسْعَةَ عَشَرَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>“Over it are nineteen.” Rashad Khalifa argued in the 1970s that letters and words are built on multiples of 19. The site used in the iron video comes from his movement.</div>
+      <div class="other"><b>Other readings</b>His system required removing two verses (9:128–129), which mainstream Muslims reject. Most scholars don’t accept the code.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary><span class="t">300 years, and add nine</span><span class="ref">18:25</span></summary>
+    <p class="ar">وَلَبِثُوا فِي كَهْفِهِمْ ثَلَاثَ مِائَةٍ سِنِينَ وَازْدَادُوا تِسْعًا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The sleepers of the cave stayed “300 years, and add nine.” 300 solar years is almost exactly 309 lunar years, so the verse gives both calendars at once.</div>
+      <div class="other"><b>Other readings</b>The maths is right, but the calendar gap was well known before Islam. Some scholars reject this reading and take it as simply 309 years.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Jesus and Adam, 25 times each</span><span class="ref">3:59</span></summary>
+    <p class="ar">إِنَّ مَثَلَ عِيسَىٰ عِندَ اللَّهِ كَمَثَلِ آدَمَ</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>The Quran says Jesus is like Adam, and both names appear exactly 25 times.</div>
+      <div class="other"><b>Other readings</b>The match depends on what you count, such as whether “children of Adam” or “the Messiah” are included.</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="t">Mecca at the golden ratio</span><span class="ref">6:92</span></summary>
+    <p class="ar">وَلِتُنذِرَ أُمَّ الْقُرَىٰ وَمَنْ حَوْلَهَا</p>
+    <div class="two">
+      <div class="claim"><b>The claim</b>Mecca, “the mother of cities,” sits at the golden ratio between the North and South Poles.</div>
+      <div class="other"><b>Other readings</b>Every place at that latitude does too, and the east-west version needs a chosen map edge. The Quran itself doesn’t make this claim.</div>
+    </div>
+  </details>
+
+  <div class="closing">
+    <h3>How scholars see it</h3>
+    <p>The traditional miracle of the Quran is its language and message. The scientific readings are newer and divide Muslims themselves. Writers like Maurice Bucaille and Zaghloul el-Naggar popularised them, while many scholars warn against tying scripture to scientific theories that can change.</p>
+  </div>
+  <footer>Verse counts follow the Hafs (Kufan) count of 6,236 verses. Earth depths are standard textbook values.</footer>
+</main>
+
+<script>
+(function(){
+  var V=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
+  var svg=document.getElementById('bars'), NS='http://www.w3.org/2000/svg', rects=[];
+  V.forEach(function(v,i){
+    var h=Math.max(3,Math.sqrt(v/286)*175), r=document.createElementNS(NS,'rect');
+    r.setAttribute('x',i*10); r.setAttribute('y',185-h); r.setAttribute('width',7); r.setAttribute('height',h); r.setAttribute('rx',1.5);
+    r.style.setProperty('fill', i===56 ? 'var(--gold)' : 'var(--bar)');
+    var t=document.createElementNS(NS,'title'); t.textContent='Surah '+(i+1)+': '+v+' verses'; r.appendChild(t);
+    svg.appendChild(r); rects.push(r);
+  });
+  [[0,'1'],[56,'57'],[113,'114']].forEach(function(p){
+    var t=document.createElementNS(NS,'text'); t.setAttribute('x',p[0]*10+3.5); t.setAttribute('y',204); t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-size','13'); t.style.setProperty('fill', p[0]===56?'var(--gold)':'var(--muted)'); t.setAttribute('font-family','Commissioner,sans-serif'); t.textContent=p[1]; svg.appendChild(t);
+  });
+
+  var countEl=document.getElementById('count'), statusEl=document.getElementById('status'), btn=document.getElementById('go');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmt(n){return n.toLocaleString('en-US');}
+  btn.addEventListener('click',function(){
+    btn.disabled=true; rects.forEach(function(r,i){ if(i!==56) r.style.setProperty('fill','var(--bar)'); });
+    var total=0, i=0;
+    function step(){
+      if(i<56){ total+=V[i]; rects[i].style.setProperty('fill','var(--lapis)'); countEl.textContent=fmt(total); statusEl.textContent='verses in surahs 1–'+(i+1); i++; reduce?step():setTimeout(step,45); }
+      else if(i===56){ countEl.textContent=fmt(total); statusEl.textContent='verses before surah 57'; i++; reduce?step():setTimeout(step,900); }
+      else { total+=25; countEl.textContent=fmt(total); statusEl.textContent='is the number of verse 57:25, the iron verse'; btn.disabled=false; btn.textContent='Count again'; }
+    }
+    total=0; step();
+  });
+
+  var km=5150, unit='km';
+  var marker=document.getElementById('marker'), result=document.getElementById('result');
+  var names={'2890':'The core begins','5150':'The inner core begins','6371':'The centre is'};
+  function update(){
+    marker.setAttribute('r', (150*(6371-km)/6371).toFixed(1));
+    var val = unit==='km'? km : Math.round(km*0.621371/10)*10;
+    var u = unit==='km'?'km':'miles';
+    var match = unit==='km' && km===5150;
+    result.className='result'+(match?'':' miss');
+    result.textContent = names[km]+' about '+fmt(val)+' '+u+' down. '+(match?'That’s close to 5,100. This is the only setting where the number matches.':'That doesn’t match 5,100.');
+  }
+  function seg(id,cb){
+    var g=document.getElementById(id);
+    g.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b) return;
+      g.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed', x===b?'true':'false');});
+      cb(b); update();
+    });
+  }
+  seg('layers',function(b){km=+b.dataset.km;});
+  seg('units',function(b){unit=b.dataset.u;});
+  update();
+})();
+</script>
+</body>
+</html>

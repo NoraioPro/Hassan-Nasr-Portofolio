@@ -1,0 +1,182 @@
+[
+  {
+    "slug": "corpus",
+    "section": "body",
+    "title": "Corpus",
+    "subtitle": "Interactive 3D anatomy atlas",
+    "kind": "Anatomy · 3D",
+    "desc": "Build and dissect the human body in 3D. Fill the gaps with the male model's skull, ribs, muscles, vessels and nerves, then peel layers, pull muscles apart or cut the body from the top or front. English and Arabic.",
+    "src": "labs/src/corpus.html"
+  },
+  {
+    "slug": "heart-brain",
+    "section": "body",
+    "title": "Heart & Brain",
+    "subtitle": "Clinical 3D atlas",
+    "kind": "Anatomy · Clinical",
+    "desc": "Tap any chamber, vessel or brain region to see its anatomy and clinical relevance. Watch a beating heart, follow the blood flow, switch lobes and functional areas, and slice through with a section plane.",
+    "src": "labs/src/heart-brain.html"
+  },
+  {
+    "slug": "inner-voyage",
+    "section": "body",
+    "title": "Inner Voyage",
+    "subtitle": "A journey through the human body",
+    "kind": "Anatomy · Journey",
+    "desc": "Five stops through the body, from a beating heart to a strand of DNA. Drag to turn the body, then tap a glowing label.",
+    "src": "labs/src/inner-voyage.html"
+  },
+  {
+    "slug": "life",
+    "section": "body",
+    "title": "LIFE",
+    "subtitle": "The journey of evolution",
+    "kind": "Evolution · Timeline",
+    "desc": "An interactive 3D timeline of the history of life. Each claim shows how strongly the evidence supports it and how its dates were measured. English, Arabic and Norwegian.",
+    "src": "labs/src/life.html"
+  },
+  {
+    "slug": "careos-twin",
+    "section": "body",
+    "title": "CareOS Twin",
+    "subtitle": "Clinical workspace, replay",
+    "kind": "Health · Clinical",
+    "desc": "Explore a synthetic patient record: results, care pathway, tasks, notes and an audit trail. This is a recorded replay, so nothing needs to be connected.",
+    "src": "labs/src/careos-twin.html"
+  },
+  {
+    "slug": "humanity",
+    "section": "story",
+    "title": "Humanity",
+    "subtitle": "The journey of belief",
+    "kind": "History · Faiths",
+    "desc": "Fly through human history, compare beliefs side by side, visit sacred places in 3D, and ask the historian questions answered from the sources.",
+    "src": "labs/src/humanity.html"
+  },
+  {
+    "slug": "quran-miracles",
+    "section": "story",
+    "title": "Miracles in the Quran",
+    "subtitle": "Testing a viral claim against the numbers",
+    "kind": "Faith · Fact check",
+    "desc": "Checks the claim that verse numbers encode Earth's core depth. Shows what holds up, what does not, and how other well-known 'miracles' are read.",
+    "src": "labs/src/quran-miracles.html"
+  },
+  {
+    "slug": "norway-economy",
+    "section": "story",
+    "title": "Norway Economy Simulator",
+    "subtitle": "Official statistics, simulated to 2035",
+    "kind": "Economy · Simulation",
+    "desc": "Every krone, person and industry, from official statistics since 2000 to a simulated 2035. Spin the 3D model, scrub through time and change the levers. Figures from Statistics Norway and Norges Bank.",
+    "src": "labs/src/norway-economy.html"
+  },
+  {
+    "slug": "norge-eva-build-lab",
+    "section": "space",
+    "title": "NORGE EVA · Build Lab",
+    "subtitle": "Build a 3D astronaut suit",
+    "kind": "Space · Engineering",
+    "desc": "Explore a 3D astronaut suit, drive it with keyboard or gamepad, follow the build steps, and view its blueprint and cost.",
+    "src": "labs/src/norge-eva-build-lab.html"
+  },
+  {
+    "slug": "astra-twin",
+    "section": "space",
+    "title": "ASTRA TWIN",
+    "subtitle": "Astronaut, suit and mission as one system",
+    "kind": "Space · Digital twin",
+    "desc": "Rotate a 3D astronaut model, switch between body, suit and mission views, run scenarios and replay a timeline.",
+    "src": "labs/src/astra-twin.html"
+  },
+  {
+    "slug": "lunar-site-navigator",
+    "section": "space",
+    "title": "Lunar Site Navigator",
+    "subtitle": "Pick a site near the lunar south pole",
+    "kind": "Space · Planning",
+    "desc": "Pick dates and candidate sites near the lunar south pole, then compare sunlight and Earth-in-view windows. Synthetic data.",
+    "src": "labs/src/lunar-site-navigator.html"
+  },
+  {
+    "slug": "commercial-building",
+    "section": "space",
+    "title": "Commercial Building, City Centre",
+    "subtitle": "A 3D building from DWG drawings",
+    "kind": "Architecture · 3D",
+    "desc": "Orbit and zoom a 3D commercial building, cut it at any floor and spread the floors apart. Toggle glass, plans and labels.",
+    "src": "labs/src/commercial-building.html"
+  },
+  {
+    "slug": "walkway-block-39",
+    "section": "space",
+    "title": "Walkway Commercial Block 39",
+    "subtitle": "A 3D four-level commercial block",
+    "kind": "Architecture · 3D",
+    "desc": "Orbit a 3D four-level commercial block, cut it at any floor, and toggle glass, plans and labels.",
+    "src": "labs/src/walkway-block-39.html"
+  },
+  {
+    "slug": "night-circuit",
+    "section": "games",
+    "title": "Night Circuit Arcade",
+    "subtitle": "Three games in one neon arcade",
+    "kind": "Game · Arcade",
+    "desc": "Neon Drift, a synthwave racer with blasters and missions; Void Dominion, a real-time strategy battle against a commander; and Endless Saga, a dungeon-crawling RPG. Best played on a phone in portrait.",
+    "src": "labs/src/night-circuit.html"
+  },
+  {
+    "slug": "norsk-quest",
+    "section": "games",
+    "title": "Norsk Quest",
+    "subtitle": "Learn Norwegian by playing",
+    "kind": "Game · Language learning",
+    "desc": "Learn Norwegian from zero to C2 with a gamified path, job tracks, mini-games and grammar, at your own pace.",
+    "src": "labs/src/norsk-quest.html"
+  },
+  {
+    "slug": "robot-workshop",
+    "section": "games",
+    "title": "Robot Workshop",
+    "subtitle": "Build a working robot, one part at a time",
+    "kind": "Game · Robotics",
+    "desc": "Volt, your guide, explains what each part does. Build the robot, program it and test it in the arena across three missions. Works with mouse, touch or a VR headset.",
+    "src": "labs/src/robot-workshop.html"
+  },
+  {
+    "slug": "crucible-frontiers",
+    "section": "games",
+    "title": "Crucible Frontiers",
+    "subtitle": "A real-time strategy game",
+    "kind": "Game · Strategy",
+    "desc": "Pick a faction and a mode, then fight in real time. Includes a tutorial, survival and a battle lab.",
+    "src": "labs/src/crucible-frontiers.html"
+  },
+  {
+    "slug": "gorgov-valley",
+    "section": "games",
+    "title": "Gorgov Valley of Creation",
+    "subtitle": "A WebGL night-desert world",
+    "kind": "Game · 3D world",
+    "desc": "Scroll through a night-desert world built around Gorgov Digital's pyramid logo. Seven scarabs are hidden in it.",
+    "src": "labs/src/gorgov-valley.html"
+  },
+  {
+    "slug": "harness-builder",
+    "section": "tools",
+    "title": "Harness Builder",
+    "subtitle": "Design AI agent harnesses",
+    "kind": "Tool · AI agents",
+    "desc": "Build and compare AI agent harness diagrams by dragging nodes, with templates and an architect flow.",
+    "src": "labs/src/harness-builder.html"
+  },
+  {
+    "slug": "heimdall-watch",
+    "section": "tools",
+    "title": "Heimdall Network Watch",
+    "subtitle": "Network security dashboard",
+    "kind": "Tool · Security",
+    "desc": "A threat radar, map, risk matrix and filters for network security, shown on demo data.",
+    "src": "labs/src/heimdall-watch.html"
+  }
+]

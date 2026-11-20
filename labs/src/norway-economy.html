@@ -1,0 +1,1467 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Norway Economy Simulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+/* Layout: top section nav + shared timeline bar; Simulator section adds a lever rail on the left. Stacks on phones. */
+:root{
+  /* Polar night: deep fjord-blue ground, aurora light as the accent family. Deliberately single (dark) theme. */
+  --bg:#050A13; --bg2:#081222; --panel:rgba(14,24,40,.78); --panel-solid:#0E1828; --sunk:#0A1424; --line:#1C2B42; --line2:#2A3D5A;
+  --ink:#EAF2FA; --muted:#93A6BC; --faint:#64788F;
+  --fjord:#4FD1FF; --fjord-soft:rgba(79,209,255,.13); --red:#FF5C7A; --base:#5B6E86; --hist:#EAF2FA;
+  --good:#3DF5A7; --warn:#FFC857; --bad:#FF5C7A;
+  --c1:#4FD1FF; --c2:#3DF5A7; --c3:#FF5C7A; --c4:#FFC857; --c5:#A98BFF; --c6:#9BE15D; --c7:#FF8FD1; --c8:#7C93B5;
+  --men:#4FD1FF; --women:#FF8FD1;
+  --aur1:#3DF5A7; --aur2:#4FD1FF; --aur3:#A98BFF; --on-accent:#03101C;
+  --display:"Archivo",system-ui,sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.wrap{max-width:1440px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-bottom:14px;border-bottom:2px solid var(--ink)}
+.brand{display:flex;gap:14px;align-items:center}
+.flag{width:44px;height:32px;flex:none;border-radius:2px;overflow:hidden}
+h1{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:clamp(26px,4vw,40px);line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;font-size:13px}
+.asof{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.ribbon{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-bottom:1px solid var(--line);margin-bottom:14px}
+.rb{padding:10px 12px 10px 0;border-right:1px solid var(--line);margin-right:12px;min-width:0}
+.rb:last-child{border-right:0}
+.rb .k,.kpi .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rb .v{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:22px;font-variant-numeric:tabular-nums}
+.rb .s{font-size:11px;color:var(--faint);font-family:var(--mono)}
+/* section nav */
+nav.main{display:flex;gap:4px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px}
+nav.main button{font:700 14px var(--display);font-stretch:90%;letter-spacing:.02em;padding:10px 16px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--muted);cursor:pointer;white-space:nowrap}
+nav.main button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+/* timeline */
+.timeline{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 14px;margin-bottom:14px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.timeline .yr{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:28px;font-variant-numeric:tabular-nums;min-width:64px}
+.timeline input[type=range]{flex:1;min-width:160px}
+.timeline .ticks{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--faint)}
+.tlmid{flex:1;min-width:200px;display:flex;flex-direction:column}
+.play{font:600 12px var(--body);padding:7px 12px;border-radius:4px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+.tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:3px;background:var(--sunk);color:var(--muted)}
+.tag.hist{background:color-mix(in srgb,var(--ink) 12%,transparent);color:var(--ink)}
+.tag.sim{background:var(--fjord-soft);color:var(--fjord)}
+.seg{display:flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{flex:1;font:500 12px var(--body);padding:7px 10px;border:0;background:var(--sunk);color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--fjord);color:var(--panel)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--fjord);margin:4px 0 0}
+.layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+aside.rail{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 92px);max-height:calc(100vh - 104px);overflow:auto}
+@media (max-width:900px){aside.rail{position:static;max-height:none}}
+.rail h2,.sh{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.presets button{font:500 12px var(--body);padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+.presets button:hover{border-color:var(--fjord)}
+.presets button.on{background:var(--fjord);border-color:var(--fjord);color:var(--panel)}
+.grp{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.grp > .gl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);margin-bottom:8px}
+.lever{margin-bottom:12px}
+.lever .row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lever label{font-weight:500;font-size:13px}
+.lever output{font-family:var(--mono);font-size:12px;color:var(--fjord);white-space:nowrap}
+.lever .hint{font-size:11px;color:var(--faint)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px;min-width:0}
+.kpi .v{font-family:var(--display);font-stretch:85%;font-weight:700;font-size:26px;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .d{font-family:var(--mono);font-size:11.5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;color:var(--faint)}
+.chip{padding:1px 6px;border-radius:3px;font-weight:500}
+.chip.up{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.chip.dn{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.chip.eq{background:var(--sunk);color:var(--muted)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);margin-bottom:14px}
+nav.tabs button{font:600 13px var(--body);padding:9px 14px;border:0;background:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button.on{color:var(--ink);border-bottom-color:var(--red)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.card h3{font-family:var(--display);font-stretch:90%;font-weight:700;font-size:15px;margin:0}
+.card .cap{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.cv{position:relative;height:220px}
+.cv.tall{height:300px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin:0 0 12px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:5px}
+.legend i.dash{border-top-style:dashed}
+.legend i.dot{width:8px;height:8px;border:0;border-radius:50%;background:currentColor}
+.legend i.bar{width:2px;height:12px;border:0;background:currentColor;opacity:.6}
+.span2{grid-column:1/-1}
+.mb{margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+tr.sel td{background:var(--fjord-soft)}
+td.selc,th.selc{background:var(--fjord-soft);color:var(--ink)}
+.tw{overflow-x:auto}
+.note{font-size:12.5px;color:var(--muted);max-width:75ch}
+.note p{margin:0 0 8px}
+.src a{color:var(--fjord)}
+.src li{margin-bottom:4px}
+.hh{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:900px){.hh{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hh .kpi{background:var(--sunk);border:0}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.panel[hidden],.section[hidden],.cpanel[hidden]{display:none!important}
+/* stacked share bars */
+.sbar{display:flex;height:34px;border-radius:4px;overflow:hidden;margin:6px 0}
+.sbar div{display:flex;align-items:center;justify-content:center;font:600 11.5px var(--mono);color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
+.skey{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.skey span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--sw);margin-right:5px;vertical-align:-1px}
+/* treemap */
+.tmap{position:relative;height:380px;border-radius:4px;overflow:hidden}
+.tmap div{position:absolute;padding:6px 7px;color:#fff;font-size:11.5px;line-height:1.25;overflow:hidden;border:1px solid var(--panel)}
+.tmap b{display:block;font-weight:600}
+.tmap span{font-family:var(--mono);font-size:10.5px;opacity:.9}
+/* analysis prose */
+.prose{max-width:78ch;font-size:14px}
+.prose h3{font-family:var(--display);font-stretch:90%;font-size:18px;margin:18px 0 6px}
+.prose h3:first-child{margin-top:0}
+.prose p{margin:0 0 10px}
+.prose ul{margin:0 0 10px;padding-left:20px}
+.prose li{margin-bottom:6px}
+.fix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:800px){.fix{grid-template-columns:minmax(0,1fr)}}
+.fix .card h4{font-family:var(--display);font-stretch:90%;font-size:15px;margin:0 0 4px}
+.fix .card p{margin:0 0 6px;font-size:13px}
+.fix .meta{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;font:600 10.5px var(--mono);padding:2px 6px;border-radius:3px;margin-right:4px;text-transform:uppercase;letter-spacing:.04em}
+.pill.hi{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.pill.md{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.lo{background:var(--sunk);color:var(--muted)}
+.readout{border-left:3px solid var(--fjord);padding:10px 14px;background:var(--fjord-soft);border-radius:0 6px 6px 0;color:var(--ink)}
+.readout ul{margin:6px 0 0;padding-left:18px}
+.flow{width:100%;height:auto}
+.flow text{font-family:var(--body);fill:var(--ink)}
+.flow .sm{font-size:11px;fill:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ===== Polar-night revamp ===== */
+html{background:var(--bg)}
+body{background:radial-gradient(1200px 600px at 80% -10%,rgba(79,209,255,.08),transparent 60%),radial-gradient(900px 500px at 0% 10%,rgba(61,245,167,.06),transparent 60%),var(--bg);background-attachment:fixed}
+.card,.kpi,.timeline,aside.rail,nav.main button,.yearbar{background:var(--panel);border-color:var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.card{border-radius:12px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.card:hover{border-color:var(--line2);box-shadow:0 10px 40px -18px rgba(79,209,255,.35)}
+.kpi{border-radius:12px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:auto -30% -60% auto;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(79,209,255,.12),transparent 70%);pointer-events:none}
+.kpi .v{background:linear-gradient(180deg,var(--ink),#B9CCE0);-webkit-background-clip:text;background-clip:text;color:transparent}
+nav.main button{border-radius:999px;transition:all .2s}
+nav.main button:hover{color:var(--ink);border-color:var(--line2)}
+nav.main button.on{background:linear-gradient(90deg,var(--aur1),var(--aur2));color:var(--on-accent);border-color:transparent;box-shadow:0 6px 24px -8px rgba(61,245,167,.6)}
+.seg button.on,.presets button.on{background:var(--fjord);color:var(--on-accent)}
+.timeline{border-radius:12px}
+.play{background:linear-gradient(90deg,var(--aur1),var(--aur2));color:var(--on-accent);border:0;font-weight:700}
+input[type=range]{accent-color:var(--aur1)}
+.ribbon{border-bottom:1px solid var(--line)}
+.readout{background:linear-gradient(90deg,rgba(79,209,255,.10),rgba(169,139,255,.06));border-left-color:var(--aur2)}
+.tmap div{border-color:var(--bg)}
+.section:not([hidden]),.panel:not([hidden]),.cpanel:not([hidden]){animation:rise .55s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{transform:translateY(14px);opacity:.25}to{transform:none;opacity:1}}
+.flow line{stroke-dasharray:6 6;animation:flowdash 1.2s linear infinite}
+@keyframes flowdash{to{stroke-dashoffset:-24}}
+/* hero */
+.hero{position:relative;margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px))) 18px;padding:28px max(16px,env(safe-area-inset-left,0px)) 20px;overflow:hidden;border-bottom:1px solid var(--line)}
+#aurora{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.hero-in{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:24px;align-items:stretch}
+@media (max-width:1000px){.hero-in{grid-template-columns:minmax(0,1fr)}}
+.eyebrow{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--aur1);display:flex;align-items:center;gap:10px}
+.hero h1{font-size:clamp(34px,5.4vw,68px);font-stretch:75%;line-height:.95;margin:12px 0 10px;background:linear-gradient(100deg,#fff 10%,var(--aur2) 55%,var(--aur1) 80%,var(--aur3));-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:shine 9s ease-in-out infinite alternate}
+@keyframes shine{to{background-position:100% 0}}
+.hero .lede{color:var(--muted);max-width:52ch;font-size:15px;margin:0 0 18px}
+.live{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.live{grid-template-columns:minmax(0,1fr)}}
+.lt{background:rgba(8,18,34,.65);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0;position:relative;overflow:hidden}
+.lt .k{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.lt .v{font:600 clamp(18px,2.1vw,24px) var(--mono);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lt .s{font-size:11px;color:var(--faint)}
+.lt .bar{position:absolute;left:0;bottom:0;height:2px;background:linear-gradient(90deg,var(--aur1),var(--aur2));transition:width .3s linear}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--aur1);box-shadow:0 0 0 0 rgba(61,245,167,.7);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,245,167,.6)}70%{box-shadow:0 0 0 10px rgba(61,245,167,0)}100%{box-shadow:0 0 0 0 rgba(61,245,167,0)}}
+.clock{font:500 12px var(--mono);color:var(--muted)}
+.stage{position:relative;min-height:440px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 110%,rgba(79,209,255,.16),transparent 60%),rgba(5,10,19,.55)}
+#city{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#city:active{cursor:grabbing}
+.stage-ui{position:absolute;left:12px;right:12px;top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:flex-start;z-index:2;pointer-events:none}
+.stage-ui > *{pointer-events:auto}
+.modes{display:flex;flex-wrap:wrap;gap:4px;background:rgba(5,10,19,.7);border:1px solid var(--line);border-radius:999px;padding:3px}
+.modes button{font:600 12px var(--body);padding:6px 11px;border-radius:999px;border:0;background:none;color:var(--muted);cursor:pointer}
+.modes button.on{background:var(--fjord);color:var(--on-accent)}
+.stage-title{font:700 15px var(--display);font-stretch:85%;color:var(--ink);text-shadow:0 2px 12px #000}
+.stage-cap{position:absolute;left:14px;bottom:10px;right:14px;z-index:2;font-size:11.5px;color:var(--muted);pointer-events:none;text-shadow:0 1px 6px #000}
+.tip{position:absolute;z-index:3;pointer-events:none;background:rgba(5,10,19,.92);border:1px solid var(--line2);border-radius:8px;padding:7px 10px;font-size:12px;color:var(--ink);white-space:nowrap;transform:translate(-50%,-120%)}
+.tip b{display:block;font-size:12.5px}
+.lbl{position:absolute;z-index:2;pointer-events:none;font:600 10.5px var(--body);color:var(--ink);background:rgba(5,10,19,.6);padding:2px 6px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-100%)}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:20px;text-align:center}
+@media (prefers-reduced-motion:reduce){.hero h1{animation:none}.dot{animation:none}}
+/* confidence badges & source registry */
+.cf{display:inline-flex;align-items:center;gap:4px;font:600 10.5px var(--mono);padding:1px 6px 1px 4px;border-radius:999px;border:1px solid currentColor;line-height:1.5;white-space:nowrap;cursor:help;vertical-align:middle;-webkit-text-fill-color:currentColor}
+.cf::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.cf.b1{color:var(--good)} .cf.b2{color:var(--c1)} .cf.b3{color:var(--warn)} .cf.b4{color:var(--c5)}
+.srcrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:11.5px;color:var(--muted);margin:-2px 0 8px}
+.srcrow a{color:var(--muted);text-decoration:none;border-bottom:1px dotted var(--line2)}
+.srcrow a:hover{color:var(--ink)}
+.rb .k .cf{margin-left:6px}
+.reg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.src{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:start;transition:border-color .2s,transform .2s}
+.src:hover{border-color:var(--line2);transform:translateY(-2px)}
+.src h4{margin:0 0 2px;font:700 14px var(--display);font-stretch:90%;color:var(--ink)}
+.src h4 a{color:inherit;text-decoration:none}
+.src h4 a:hover{text-decoration:underline}
+.src .meta{font-size:11.5px;color:var(--muted);margin:0 0 4px}
+.src .use{font-size:12px;color:var(--ink);margin:0 0 4px}
+.src .why{font-size:11.5px;color:var(--faint);margin:0}
+.ring{width:56px;height:56px}
+.ring text{font:700 15px var(--mono);fill:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.chips button{font:500 12px var(--body);padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--sunk);color:var(--muted);cursor:pointer}
+.chips button.on{background:var(--fjord);color:var(--on-accent);border-color:var(--fjord)}
+.bands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:800px){.bands{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.band{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+.band .t{font:700 13px var(--display);display:flex;align-items:center;gap:8px}
+.band .r{font:600 22px var(--mono);margin:4px 0}
+.band p{margin:0;font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <canvas id="aurora" aria-hidden="true"></canvas>
+    <div class="hero-in">
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <div class="eyebrow"><svg class="flag" style="width:26px;height:19px" viewBox="0 0 22 16" aria-hidden="true"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg>Kongeriket Norge · <span class="dot" aria-hidden="true"></span> live economy</div>
+        <h1>Norway Economy Simulator</h1>
+        <p class="lede">Every krone, person and industry, from official statistics since 2000 to a simulated 2035. Spin the 3D model, scrub through time, and change the levers.</p>
+        <div class="live" id="live"></div>
+        <p class="note" style="margin:10px 0 0;font-size:11.5px"><span class="clock" id="clock"></span> · Live figures extrapolate the latest official numbers at their recent pace; they are estimates, not real-time measurements.</p>
+      </div>
+      <div class="stage" id="stage">
+        <canvas id="city" aria-label="3D model of the Norwegian economy"></canvas>
+        <div class="stage-ui">
+          <div class="stage-title" id="stageTitle">Industries by value added, 2025</div>
+          <div class="modes" role="group" aria-label="3D view">
+            <button data-m="ind" class="on">Industries</button><button data-m="co">Companies</button><button data-m="pop">People</button><button data-m="fund">Oil fund</button>
+          </div>
+        </div>
+        <div id="labels"></div>
+        <div class="tip" id="tip" hidden></div>
+        <div class="stage-cap" id="stageCap">Drag to rotate · scroll to zoom · hover a tower</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="ribbon" aria-label="Latest official figures">
+    <div class="rb"><div class="k">Population</div><div class="v">5,636,904</div><div class="s">SSB, end Q2 2026</div></div>
+    <div class="rb"><div class="k">Policy rate</div><div class="v">4.50%</div><div class="s">Norges Bank, from 24 Sep 2026</div></div>
+    <div class="rb"><div class="k">CPI / CPI-ATE</div><div class="v">3.4% / 3.0%</div><div class="s">SSB, Sep 2026 y/y</div></div>
+    <div class="rb"><div class="k">Unemployment</div><div class="v">5.0%</div><div class="s">SSB LFS Sep · NAV reg. 2.0%</div></div>
+    <div class="rb"><div class="k">GDP 2025</div><div class="v">5,511 bn</div><div class="s">SSB · mainland 4,398 bn</div></div>
+    <div class="rb"><div class="k">Oil fund</div><div class="v">22,014 bn</div><div class="s">NBIM, 30 Sep 2026</div></div>
+    <div class="rb"><div class="k">Birth rate</div><div class="v">1.48</div><div class="s">SSB, children per woman 2025</div></div>
+  </section>
+
+  <nav class="main" id="mainNav" aria-label="Sections">
+    <button data-s="overview" class="on">Overview</button>
+    <button data-s="people">People</button>
+    <button data-s="engine">What builds the economy</button>
+    <button data-s="sim">Simulator</button>
+    <button data-s="comp">Companies &amp; tax</button>
+    <button data-s="analysis">Analysis &amp; politics</button>
+    <button data-s="data">Sources &amp; confidence</button>
+  </nav>
+
+  <div class="timeline" id="timeline">
+    <div class="seg" role="group" aria-label="View mode"><button id="m_all" class="on">All years</button><button id="m_year">Year by year</button></div>
+    <span class="yr" id="yrLbl">2025</span>
+    <span class="tag" id="yrTag">history</span>
+    <div class="tlmid"><input type="range" id="year" min="2000" max="2035" step="1" value="2025" aria-label="Selected year"><div class="ticks"><span>2000</span><span>2010</span><span>2020</span><span>2026 ▸ simulated</span><span>2035</span></div></div>
+    <button class="play" id="play" aria-label="Play through the years">▶ Play</button>
+  </div>
+
+  <!-- ================= OVERVIEW ================= -->
+  <section class="section" id="s_overview">
+    <div id="snap" class="kpis"></div>
+    <div class="legend"><span style="color:var(--hist)"><i></i>History</span><span style="color:var(--fjord)"><i></i>Your scenario</span><span style="color:var(--base)"><i class="dash"></i>Official baseline</span><span style="color:var(--red)"><i class="bar"></i>Selected year</span></div>
+    <div class="grid2">
+      <div class="card"><h3>Mainland GDP growth</h3><p class="cap">Volume, % per year. History: SSB national accounts (table 09189). 2026+: simulation.</p><div class="cv"><canvas id="lv_g" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Inflation (CPI)</h3><p class="cap">% per year (SSB). Target 2.5% until 2018, 2.0% since.</p><div class="cv"><canvas id="lv_cpi" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Unemployment (LFS)</h3><p class="cap">% of labour force, SSB Labour Force Survey. Comparable series starts 2009.</p><div class="cv"><canvas id="lv_u" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Interest rate</h3><p class="cap">3-month money-market rate (SSB), annual average. Dashed red: Norges Bank policy rate, annual average.</p><div class="cv"><canvas id="lv_r" data-time="1"></canvas></div></div>
+      <div class="card"><h3>The oil fund (GPFG)</h3><p class="cap">Market value, NOK billion, end of year (NBIM).</p><div class="cv"><canvas id="lv_f" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Population</h3><p class="cap">Million, 1 January (SSB table 05803).</p><div class="cv"><canvas id="lv_p" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Oil price</h3><p class="cap">Brent crude, USD per barrel, annual average (SSB table 12880).</p><div class="cv"><canvas id="lv_oil" data-time="1"></canvas></div></div>
+      <div class="card"><h3>House prices</h3><p class="cap">% change per year (SSB table 12880).</p><div class="cv"><canvas id="lv_h" data-time="1"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ================= PEOPLE ================= -->
+  <section class="section" id="s_people" hidden>
+    <div id="psnap" class="kpis"></div>
+
+    <div class="grid2 mb">
+      <div class="card"><h3>Who lives in Norway</h3><p class="cap">1 January 2026, SSB.</p>
+        <div class="k" style="font-size:12px;font-weight:600;margin-top:6px">Background</div>
+        <div class="sbar" id="bar_origin"></div><div class="skey" id="key_origin"></div>
+        <div class="k" style="font-size:12px;font-weight:600;margin-top:14px">Age</div>
+        <div class="sbar" id="bar_age"></div><div class="skey" id="key_age"></div>
+        <div class="k" style="font-size:12px;font-weight:600;margin-top:14px">Sex (SSB, 1 January 2026)</div>
+        <div class="sbar" id="bar_sex"></div><div class="skey" id="key_sex"></div>
+      </div>
+      <div class="card"><h3>Population pyramid, 2026</h3><p class="cap">Thousand persons by 5-year age group, 1 January 2026 (SSB table 07459).</p><div class="cv" style="height:360px"><canvas id="pp_pyr"></canvas></div></div>
+    </div>
+
+    <div class="card mb"><h3>Work and support status</h3><p class="cap">Thousand persons. Groups overlap (some disability recipients and pensioners also work), so they don't add up to the population.</p>
+      <div class="grid2"><div class="cv" style="height:280px"><canvas id="pp_work"></canvas></div>
+      <div class="note" id="workTxt"></div></div>
+    </div>
+
+    <div class="grid2 mb">
+      <div class="card"><h3>Birth rate (TFR)</h3><p class="cap">Children per woman. Dashed line: 2.1 needed to replace the population without migration.</p><div class="cv"><canvas id="pp_tfr" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Births and deaths</h3><p class="cap">Per year. The gap is natural population growth.</p><div class="cv"><canvas id="pp_bd" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Immigration and emigration</h3><p class="cap">Persons moving to and from Norway per year.</p><div class="cv"><canvas id="pp_mig" data-time="1"></canvas></div></div>
+      <div class="card"><h3>Largest immigrant groups</h3><p class="cap">Thousand, by country of birth, 1 Jan 2026. Lighter: Norwegian-born children of immigrants.</p><div class="cv"><canvas id="pp_ctry"></canvas></div></div>
+      <div class="card"><h3>Immigrant population over time</h3><p class="cap">Thousand persons, 1 January (SSB table 05182).</p><div class="cv"><canvas id="pp_imm"></canvas></div></div>
+      <div class="card"><h3>Average monthly earnings</h3><p class="cap">Full-time equivalent, NOK, 2025 (SSB earnings statistics). Women earn about 12% less than men on average.</p><div class="cv"><canvas id="pp_earn"></canvas></div></div>
+      <div class="card"><h3>Disability benefit by sex</h3><p class="cap">Share of people aged 18–67 on uføretrygd, end-2025 (NAV).</p><div class="cv"><canvas id="pp_dis"></canvas></div></div>
+      <div class="card"><h3>Where demography is heading</h3><p class="cap">SSB 2026 projection, main alternative.</p><div class="cv"><canvas id="pp_proj"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ================= ENGINE ================= -->
+  <section class="section" id="s_engine" hidden>
+    <div class="card mb"><h3>What the economy is made of</h3><p class="cap">Value added at basic prices by industry, 2025, NOK billion and share of total NOK 5,024 bn (SSB table 09170, preliminary). Box size = size of the industry.</p>
+      <div class="tmap" id="tmap"></div>
+      <div class="skey" style="margin-top:8px"><span style="--sw:var(--c4)">Oil, gas &amp; shipping</span><span style="--sw:var(--c2)">Public &amp; welfare services</span><span style="--sw:var(--c1)">Private services</span><span style="--sw:var(--c5)">Goods &amp; construction</span><span style="--sw:var(--c6)">Nature-based</span></div>
+    </div>
+    <div class="grid2 mb">
+      <div class="card"><h3>Who spends the money</h3><p class="cap">GDP by use, NOK billion and % of GDP, 2025 (SSB table 09189). Imports subtract.</p><div class="cv"><canvas id="en_exp"></canvas></div></div>
+      <div class="card"><h3>Where people work</h3><p class="cap">Employed persons (employees and self-employed) by industry, thousand, 2025. Total 3,013k (SSB national accounts, table 09174).</p><div class="cv" style="height:420px"><canvas id="en_emp"></canvas></div></div>
+    </div>
+    <div class="card mb"><h3>How oil money reaches the budget</h3><p class="cap">The fiscal rule: petroleum income goes into the fund; the budget may use about the fund's expected real return (3%).</p>
+      <div class="tw"><svg class="flow" viewBox="0 50 920 135" role="img" aria-label="Oil money flow diagram" id="flow"></svg></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h3>Main trading partners</h3><p class="cap">Goods trade 2025, NOK billion (SSB table 08804). Total goods exports 1,779 bn, imports 1,118 bn.</p><div class="cv" style="height:300px"><canvas id="en_part"></canvas></div></div>
+      <div class="card"><h3>What Norway exports</h3><p class="cap">Exports of goods and services 2025, NOK billion. Total 2,512 bn (SSB table 09189).</p><div class="cv" style="height:300px"><canvas id="en_xp"></canvas></div></div>
+      <div class="card span2"><h3>Size of the economy, 2000–2025</h3><p class="cap">GDP in current prices, NOK billion: mainland vs. petroleum &amp; ocean shipping (SSB table 09189). 2022 spike = gas-price boom.</p><div class="cv tall"><canvas id="en_size" data-time="1"></canvas></div></div>
+    </div>
+  </section>
+
+  <!-- ================= SIMULATOR ================= -->
+  <section class="section" id="s_sim" hidden>
+  <div class="layout">
+    <aside class="rail" aria-label="Simulation levers">
+      <h2>Scenarios</h2>
+      <div class="presets" id="presets"></div>
+      <div class="grp"><div class="gl">Energy &amp; petroleum</div>
+        <div class="lever"><div class="row"><label for="oil">Brent oil price shift</label><output id="oil_o"></output></div>
+          <input type="range" id="oil" min="-50" max="60" step="5" value="0"><div class="hint">vs. SSB path ($81 in 2027 → $70)</div></div>
+        <div class="lever"><div class="row"><label for="phase">Faster petroleum phase-down</label><output id="phase_o"></output></div>
+          <input type="range" id="phase" min="0" max="15" step="1" value="0"><div class="hint">extra yearly fall in oil &amp; gas output from 2028</div></div>
+      </div>
+      <div class="grp"><div class="gl">Fiscal policy &amp; the fund</div>
+        <div class="lever"><div class="row"><label for="spend">Fund spending (share of fund)</label><output id="spend_o"></output></div>
+          <input type="range" id="spend" min="1.5" max="5" step="0.1" value="2.7"><div class="hint">2027 budget: 2.7% · fiscal rule ceiling: 3.0%</div></div>
+        <div class="lever"><div class="row"><label for="ret">Fund real return per year</label><output id="ret_o"></output></div>
+          <input type="range" id="ret" min="-2" max="8" step="0.5" value="3"><div class="hint">Finance Ministry assumes 3%</div></div>
+        <div class="lever"><div class="row"><label for="crash">Market crash in 2027</label><output id="crash_o"></output></div>
+          <input type="range" id="crash" min="-40" max="0" step="5" value="0"></div>
+      </div>
+      <div class="grp"><div class="gl">Monetary policy &amp; krone</div>
+        <div class="lever"><div class="row"><label>Interest rate setting</label><output id="rmode_o"></output></div>
+          <div class="seg" role="group" aria-label="Interest rate mode"><button id="rm_auto" class="on">Norges Bank reacts</button><button id="rm_man">Manual</button></div></div>
+        <div class="lever" id="rateLever"><div class="row"><label for="rate">Rate vs. baseline</label><output id="rate_o"></output></div>
+          <input type="range" id="rate" min="-3" max="3" step="0.25" value="0"></div>
+        <div class="lever"><div class="row"><label for="nok">Krone strength</label><output id="nok_o"></output></div>
+          <input type="range" id="nok" min="-15" max="15" step="1" value="0"><div class="hint">+ = stronger NOK (import-weighted)</div></div>
+      </div>
+      <div class="grp"><div class="gl">People, world &amp; supply side</div>
+        <div class="lever"><div class="row"><label for="imm">Net immigration</label><output id="imm_o"></output></div>
+          <input type="range" id="imm" min="0" max="100" step="2" value="22"><div class="hint">thousand per year · 2025 actual: 22k</div></div>
+        <div class="lever"><div class="row"><label for="part">Labour participation</label><output id="part_o"></output></div>
+          <input type="range" id="part" min="-50" max="100" step="10" value="0"><div class="hint">thousand more (or fewer) in work by 2030, e.g. from disability, sick-leave or integration reforms</div></div>
+        <div class="lever"><div class="row"><label for="glob">Global demand shock 2027–28</label><output id="glob_o"></output></div>
+          <input type="range" id="glob" min="-4" max="3" step="0.5" value="0"><div class="hint">trading-partner growth vs. baseline</div></div>
+        <div class="lever"><div class="row"><label for="prod">Productivity growth</label><output id="prod_o"></output></div>
+          <input type="range" id="prod" min="-1" max="1" step="0.1" value="0"><div class="hint">pp per year vs. baseline (AI, automation…)</div></div>
+        <div class="lever"><div class="row"><label for="hs">Housing price shock 2027</label><output id="hs_o"></output></div>
+          <input type="range" id="hs" min="-25" max="10" step="1" value="0"></div>
+      </div>
+    </aside>
+
+    <main style="min-width:0">
+      <p class="note" id="simNote" style="margin:0 0 10px"></p>
+      <section class="kpis" id="kpis"></section>
+      <nav class="tabs" id="tabs" role="tablist">
+        <button data-t="macro" class="on">Macro</button>
+        <button data-t="fund">Oil &amp; Fund</button>
+        <button data-t="fiscal">Public finances</button>
+        <button data-t="sectors">Industries</button>
+        <button data-t="house">Households</button>
+        <button data-t="trade">Trade</button>
+      </nav>
+      <div class="legend"><span style="color:var(--fjord)"><i></i>Your scenario</span><span style="color:var(--base)"><i class="dash"></i>Official baseline</span><span style="color:var(--red)"><i class="dot"></i>SSB forecast (Sep 2026)</span></div>
+
+      <section class="panel" id="p_macro">
+        <div class="grid2">
+          <div class="card"><h3>Mainland GDP growth</h3><p class="cap">Volume, % per year. Excludes oil, gas and ocean shipping.</p><div class="cv"><canvas id="ch_g" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Consumer prices (CPI)</h3><p class="cap">% per year. Target 2%.</p><div class="cv"><canvas id="ch_cpi" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Unemployment (LFS)</h3><p class="cap">% of labour force.</p><div class="cv"><canvas id="ch_u" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Interest rate</h3><p class="cap">3-month money-market rate, %, annual average.</p><div class="cv"><canvas id="ch_r" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Output gap</h3><p class="cap">Scenario deviation from baseline capacity use, % of mainland GDP.</p><div class="cv"><canvas id="ch_gap" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Krone (import-weighted)</h3><p class="cap">Index, 2025 = 100. Higher = stronger NOK.</p><div class="cv"><canvas id="ch_nok" data-time="1"></canvas></div></div>
+        </div>
+      </section>
+      <section class="panel" id="p_fund" hidden>
+        <div class="grid2">
+          <div class="card span2"><h3>Government Pension Fund Global</h3><p class="cap">Market value, NOK billion, end of year.</p><div class="cv tall"><canvas id="ch_fund" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Money in and out of the fund</h3><p class="cap">Scenario, NOK billion per year.</p><div class="cv"><canvas id="ch_flows" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Brent crude</h3><p class="cap">USD per barrel, annual average.</p><div class="cv"><canvas id="ch_oil" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Fund per person</h3><p class="cap">NOK thousand per resident.</p><div class="cv"><canvas id="ch_fpc" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Petroleum share of GDP</h3><p class="cap">Oil, gas and ocean shipping, % of nominal GDP.</p><div class="cv"><canvas id="ch_ps" data-time="1"></canvas></div></div>
+        </div>
+      </section>
+      <section class="panel" id="p_fiscal" hidden>
+        <div class="grid2">
+          <div class="card"><h3>Oil money spent in the budget</h3><p class="cap">Structural non-oil deficit, NOK billion. Line: 3% fiscal-rule ceiling.</p><div class="cv"><canvas id="ch_wd" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Spending as share of fund</h3><p class="cap">% of fund value at start of year.</p><div class="cv"><canvas id="ch_wdp" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Oil money as share of the economy</h3><p class="cap">Structural deficit, % of mainland GDP.</p><div class="cv"><canvas id="ch_wdg" data-time="1"></canvas></div></div>
+          <div class="card"><h3>State petroleum cash flow</h3><p class="cap">Net government cash flow from oil and gas, NOK billion.</p><div class="cv"><canvas id="ch_cf" data-time="1"></canvas></div></div>
+          <div class="card span2"><h3>Fiscal sustainability check</h3><p class="cap" id="fiscalTxt"></p></div>
+        </div>
+      </section>
+      <section class="panel" id="p_sectors" hidden>
+        <div class="grid2">
+          <div class="card span2"><h3>Value added by industry, <span class="ySel">2027</span></h3><p class="cap">NOK billion in 2025 prices. Grey bar = 2025 level.</p><div class="cv" style="height:460px"><canvas id="ch_sec"></canvas></div></div>
+          <div class="card span2"><h3>Industry growth table</h3><p class="cap">Real change since 2025, scenario vs. baseline.</p><div class="tw"><table id="secTbl"></table></div></div>
+        </div>
+      </section>
+      <section class="panel" id="p_house" hidden>
+        <div class="card mb"><h3>A typical household in <span class="ySel">2027</span></h3><p class="cap">Average monthly earnings (SSB 2025: NOK 62,070) and an illustrative NOK 3 million mortgage over 25 years at money-market rate + 1.4 pp.</p><div class="hh" id="hh"></div></div>
+        <div class="grid2">
+          <div class="card"><h3>Employed persons</h3><p class="cap">Thousand (LFS).</p><div class="cv"><canvas id="ch_emp" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Wages vs. prices</h3><p class="cap">Wage growth and real wage growth, % per year.</p><div class="cv"><canvas id="ch_wage" data-time="1"></canvas></div></div>
+          <div class="card"><h3>House prices</h3><p class="cap">% change per year.</p><div class="cv"><canvas id="ch_house" data-time="1"></canvas></div></div>
+          <div class="card"><h3>Population</h3><p class="cap">Thousand, end of year.</p><div class="cv"><canvas id="ch_pop" data-time="1"></canvas></div></div>
+        </div>
+      </section>
+      <section class="panel" id="p_trade" hidden>
+        <div class="grid2">
+          <div class="card"><h3>Exports by type, <span class="ySel">2027</span></h3><p class="cap">Goods and services, NOK billion. 2025 base: SSB table 09189.</p><div class="cv tall"><canvas id="ch_xmix"></canvas></div></div>
+          <div class="card"><h3>Trade balance</h3><p class="cap">Goods and services, NOK billion. 2025 base: SSB.</p><div class="cv tall"><canvas id="ch_tb" data-time="1"></canvas></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  </section>
+
+  <!-- ================= COMPANIES ================= -->
+  <section class="section" id="s_comp" hidden>
+    <nav class="tabs" id="ctabs" role="tablist">
+      <button data-c="rev" class="on">Largest companies</button>
+      <button data-c="tax">Largest taxpayers</button>
+    </nav>
+
+    <section class="cpanel" id="c_rev">
+      <div class="kpis" id="ckpis"></div>
+      <div class="grid2 mb">
+        <div class="card span2"><h3>Top 25 by revenue, 2025</h3><p class="cap">NOK billion. Group (consolidated) revenue for Norwegian-headquartered groups; company revenue for Norwegian subsidiaries of foreign groups. Amber bars = basis differs (bank income, net revenue, older year); see table notes.</p><div class="cv" style="height:560px"><canvas id="co_top"></canvas></div></div>
+        <div class="card"><h3>Revenue by sector</h3><p class="cap">Sum of the companies in the list, NOK billion.</p><div class="cv tall"><canvas id="co_sector"></canvas></div></div>
+        <div class="card"><h3>Who owns them</h3><p class="cap">Number of companies and combined revenue by ownership type.</p><div class="cv tall"><canvas id="co_own"></canvas></div></div>
+      </div>
+      <div class="card mb">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <h3>All companies (<span id="ccount"></span>)</h3>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <input id="csearch" type="search" placeholder="Search company" aria-label="Search company" style="font:13px var(--body);padding:6px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);min-width:160px">
+            <select id="csector" aria-label="Filter by sector" style="font:13px var(--body);padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)"></select>
+            <select id="cown" aria-label="Filter by ownership" style="font:13px var(--body);padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)"></select>
+          </div>
+        </div>
+        <div class="tw"><table id="ctable"></table></div>
+        <p class="note" style="margin-top:10px">Click a column header to sort. USD converted at 10.40 NOK (2025 average implied by SSB table 12880: oil price NOK 707 ÷ USD 68), EUR at 11.7188 (Norges Bank 2025 average). Subsidiaries already inside a listed group are not counted twice: Lerøy (in Austevoll), Vitusapotek/NMD (in NorgesGruppen), Uno-X (in Reitan), Widerøe (in Norwegian), Kongsberg Maritime (in Kongsberg).</p>
+      </div>
+      <div class="card note"><h3>Still to verify for a complete top 100</h3>
+        <p>These large companies could not be confirmed from an official or company source in this round, so they are not ranked yet. Several would likely place in the top 100:</p>
+        <p id="cmissing"></p>
+        <p>A direct pull from the Brønnøysund Register of Company Accounts would close these gaps; it needs the linked computer or Chrome to be online.</p>
+      </div>
+    </section>
+
+    <section class="cpanel" id="c_tax" hidden>
+      <div class="card mb readout">
+        <b>Why there is no full top-500 taxpayer list here.</b> Skatteetaten publishes every company's tax as a searchable list, but the complete download is password-protected and given only to registered press. The public can look up one company at a time. Lists for income year 2025 are published on 2 December 2026. Below is everything available from official sources now.
+      </div>
+      <div class="kpis" id="tkpis"></div>
+      <div class="grid2 mb">
+        <div class="card span2"><h3>Petroleum companies: tax on the continental shelf</h3><p class="cap">Income year 2023, NOK billion: ordinary + special petroleum tax (Skatteetaten official list, published Nov 2024). Negative = refund of exploration costs.</p><div class="cv" style="height:520px"><canvas id="tx_petro"></canvas></div></div>
+        <div class="card"><h3>Resource-rent tax 2024</h3><p class="cap">NOK billion, all companies combined (Skatteetaten). Company-level files exist but could not be downloaded.</p><div class="cv"><canvas id="tx_rr"></canvas></div></div>
+        <div class="card note"><h3>Key official totals</h3>
+          <p><b>NOK 382 bn</b> in petroleum tax for income year 2024: 20 companies paid NOK 383.5 bn and 9 received NOK 1.5 bn back (Skatteetaten press release).</p>
+          <p><b>Equinor</b> reports USD 19.2 bn in Norwegian company taxes and production fees for 2024, plus USD 1.5 bn in employment taxes (company tax-contribution report, not the tax list).</p>
+          <p><b>Aquaculture resource-rent tax</b> raised NOK 1.0 bn gross / 0.47 bn net in 2024; Norway's largest salmon farmers (Mowi, SalMar, Grieg) paid none for 2024, according to the Finance Minister's answer to the Storting and E24.</p>
+        </div>
+      </div>
+      <div class="card"><h3>Full petroleum tax list, income year 2023</h3><p class="cap">All 37 companies in Skatteetaten's official list. "Taxable income" = ordinary income on the continental shelf.</p><div class="tw"><table id="ttable"></table></div></div>
+    </section>
+  </section>
+
+  <!-- ================= ANALYSIS ================= -->
+  <section class="section" id="s_analysis" hidden>
+    <div class="card mb"><h3 class="sh" style="font-size:13px">Your scenario, explained</h3><div class="readout" id="readout"></div></div>
+    <div class="grid2 mb">
+      <div class="card prose">
+        <h3>Where Norway stands, autumn 2026</h3>
+        <p><b>Inflation is the main problem.</b> Prices rose 3.4% in the year to September, and core inflation (CPI-ATE) 3.0% (SSB). Annual inflation has been above the 2% target every year since 2021. Norges Bank raised the policy rate to 4.50% in September and expects inflation to reach 2% only in 2029.</p>
+        <p><b>Growth is weak but positive.</b> SSB expects mainland growth of 1.4% in 2026 and 2.1% in 2027. The Finance Ministry is more cautious (1.1% and 1.7%) and expects CPI inflation to fall from 3.3% to 2.7%. LFS unemployment rose to 5.0% in September (4.7% a year earlier), while NAV registered unemployment is 2.0% (59,413 people).</p>
+        <p><b>The krone has strengthened</b> (SSB expects 6.2% on the import-weighted index in 2026), which slowly lowers import prices. Oil prices have been high in 2026 (SSB assumes $89, up from $68 in 2025), keeping petroleum income strong: about NOK 671 bn to the state this year (Norwegianpetroleum.no). The current-account surplus is forecast at 20% of GDP.</p>
+        <p><b>The fund keeps growing.</b> NBIM valued it at NOK 22,014 billion on 30 September 2026, about NOK 3.9 million per resident. The 2027 budget proposal uses NOK 608.4 bn of oil money, 2.7% of the fund, below the 3% rule, and the government calls the budget neutral for activity.</p>
+      </div>
+      <div class="card prose">
+        <h3>Politics and its economic effects</h3>
+        <p><b>Government:</b> Labour (Ap) under Jonas Gahr Støre governs alone as a minority, after the Centre Party left in January 2025. Labour won the 8 September 2025 election with 28.0%, ahead of the Progress Party (FrP, 23.8%, up from 11.6%) and the Conservatives (H, 14.6%, down from 20.4%). Official results from SSB:</p><div class="cv" style="height:220px;margin-bottom:10px"><canvas id="an_elect"></canvas></div>
+        <p><b>Budget 2027:</b> To pass it, Labour needs SV, the Red Party, the Greens and the Centre Party. The draft cuts income taxes by over NOK 6 bn (lower social-security contributions), raises the wealth-tax threshold slightly, adds NOK 6.5 bn for defence, lifts the fixed electricity price (Norgespris) from 50 to 56 øre/kWh, cuts the VAT exemption for electric cars and halves postal funding. The government calls the budget neutral for activity, which matters while Norges Bank fights inflation.</p>
+        <p><b>Opinion has shifted:</b> October 2026 opinion polls (not official results; PolitPro average) put FrP around 31%, Labour around 21% and the Conservatives around 13%. The next Storting election is due in 2029. A right-leaning majority would likely push for lower taxes and fuel duties and stricter immigration; the left-of-centre parties favour higher wealth taxes and faster climate transition. Both directions have budget and fund-spending implications that the simulator can test.</p>
+        <p><b>Hot topics:</b> electricity prices and links to Europe, the wealth tax and business owners moving abroad, defence spending and NATO targets, immigration and integration, postal and rural services, and the pace of the oil and gas transition.</p>
+      </div>
+    </div>
+
+    <div class="card prose mb" style="max-width:none">
+      <h3>The long-term challenges</h3>
+      <div class="grid3" style="margin-top:8px">
+        <div><p><b>1. An ageing population.</b> 959,633 people are 67+ (17%). SSB expects people over 65 to outnumber those under 20 in the early 2030s, and the 80+ share to almost double to 9.5% by 2050. More pensions and health care, fewer workers per pensioner.</p></div>
+        <div><p><b>2. Record-low birth rates.</b> 1.48 children per woman in 2025, up from 1.40 in 2023 but far below the 2.1 replacement level and the 1.98 of 2009. From around 2046, SSB expects more deaths than births; immigration alone will then drive population growth.</p></div>
+        <div><p><b>3. Many outside work.</b> 374,900 people (10.5% of 18–67) receive disability benefit and 169,300 (4.7%) receive work assessment allowance. Together that is about one in seven of working age (NAV).</p></div>
+        <div><p><b>4. An integration gap.</b> 21.8% of residents are immigrants or Norwegian-born to immigrant parents (SSB), up from 6.3% in 2000. Immigrants' employment rate is about 12 percentage points below the rest of the population (down from 14 in 2015, IMDi), and recent refugee arrivals, mainly from Ukraine, are still early in the introduction programme.</p></div>
+        <div><p><b>5. Petroleum decline.</b> Petroleum and ocean shipping were 20% of GDP in 2025 and crude oil and gas 44% of all exports (SSB), but SSB forecasts petroleum investment to fall 4% in 2027 and 6% in 2028. Without new export industries the trade surplus shrinks steadily in the 2030s.</p></div>
+        <div><p><b>6. Fund dependence and slow productivity.</b> The NOK 608 bn of oil money in 2027 is roughly 13% of mainland GDP. If fund returns disappoint or spending grows faster than the fund, room for welfare narrows; lasting gains must come from higher productivity.</p></div>
+      </div>
+    </div>
+
+    <h3 class="sh">How Norway could improve: options and trade-offs</h3>
+    <p class="note" style="margin:0 0 10px">These are policy options widely discussed by the OECD, IMF, Norway's Productivity Commission and the political parties. Each has trade-offs; parties weigh them differently. Try them in the Simulator with the levers shown.</p>
+    <div class="fix" id="fixes"></div>
+  </section>
+
+  <!-- ================= DATA ================= -->
+  <section class="section" id="s_data" hidden>
+    <div class="card mb">
+      <h3>Where every number comes from</h3>
+      <p class="cap">Each source carries a confidence score from 0 to 100: a base set by the type of source, adjusted for preliminary, rounded, older or derived figures. The same badge appears next to charts, figures and table rows across the simulator. Hover any badge for the reason.</p>
+      <div class="kpis" id="regKpis" style="margin:10px 0 14px"></div>
+      <div class="bands" id="bands"></div>
+    </div>
+    <div class="grid2 mb">
+      <div class="card"><h3>Sources by confidence</h3><p class="cap">Score of each source, coloured by band.</p><div class="cv" style="height:620px"><canvas id="reg_bar"></canvas></div></div>
+      <div class="card"><h3>How the score is built</h3><p class="cap">Base score by type of source, then adjustments.</p>
+        <div class="tw"><table id="ruleTbl"></table></div>
+        <div class="tw" style="margin-top:12px"><table id="adjTbl"></table></div>
+      </div>
+    </div>
+    <div class="card mb">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3>Source registry (<span id="regCount"></span>)</h3>
+        <input id="regSearch" type="search" placeholder="Search sources or uses" aria-label="Search sources" style="font:13px var(--body);padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--ink);min-width:200px">
+      </div>
+      <div class="chips" id="regChips"></div>
+      <div class="reg-grid" id="regGrid"></div>
+    </div>
+    <div class="card mb"><h3>History table, 2000–2025</h3><p class="cap">Selected year is highlighted.</p><div class="tw"><table id="histTbl"></table></div></div>
+    <div class="card mb"><h3>Scenario table, 2025–2035</h3><p class="cap">2026 is an estimate; 2027 onwards responds to the Simulator levers.</p><div class="tw"><table id="dataTbl"></table></div></div>
+    <div class="grid2">
+      <div class="card note"><h3>How the model works</h3>
+        <p>The baseline is the official outlook: SSB's forecast of 15 September 2026 for 2026–2029, the National Budget 2027 for the fund, and gradual convergence to long-run values (1.5% growth, 2% inflation, 4% unemployment) to 2035.</p>
+        <p>Levers create deviations from that baseline through a small semi-structural model: an output gap driven by fiscal impulse, interest rates, oil-related investment, the krone and global demand; a Phillips curve with exchange-rate pass-through; Okun's law for unemployment; a Taylor-type rule when Norges Bank reacts; population from births, deaths and migration; and the fund's accounting (returns + petroleum cash flow − budget withdrawals).</p>
+        <p>It is a tool for exploring, not an official forecast. Coefficients are stylised and calibrated to typical Norwegian estimates.</p>
+        <p><b>All historical and current figures come from official sources</b> (Statistics Norway, Norges Bank, NBIM, NAV, IMDi and the Ministry of Finance), listed with table numbers on the right. 2023–2025 national-accounts figures are preliminary and may be revised by SSB.</p>
+        <p><b>Model assumptions (not data):</b> the levers' effect sizes, sector sensitivities, the 2030–35 extension of the SSB forecast, baseline net immigration (22,000/yr, the 2025 level), the mortgage margin of 1.4 pp, and the end-2026 fund value implied by the budget's 2.7% (NOK 22,533 bn).</p>
+      </div>
+      <div class="card note src"><h3>Official sources</h3>
+        <ul>
+          <li><b>Statistics Norway (SSB) StatBank</b>, via the <a href="https://data.ssb.no/api/pxwebapi/v2/tables/12880/metadata?lang=en" target="_blank" rel="noopener">PxWeb API</a>:
+            <ul>
+              <li>12880 Main economic indicators, accounts &amp; forecasts 1991–2029 (growth, CPI, CPI-ATE, LFS unemployment, wages, house prices, money-market rate, oil price, NOK, current account)</li>
+              <li>09189 GDP and main aggregates 1970–2025 (GDP levels, GDP by use, exports by type)</li>
+              <li>09170 Value added by industry 2025 · 09174 Employment by industry 2025</li>
+              <li>05803 Population and population changes 1735–2026 · 04232 Total fertility rate</li>
+              <li>07459 Population by sex and age, 1 Jan 2026 · 05182 Immigrants and Norwegian-born to immigrant parents 1970–2026</li>
+              <li>08804 External trade in goods by country 2025 · 08092 Storting election results</li>
+              <li>13760 Labour Force Survey, monthly, seasonally adjusted</li>
+            </ul></li>
+          <li><a href="https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/konjunkturer/statistikk/konjunkturtendensene" target="_blank" rel="noopener">SSB Economic trends, forecast 15 Sep 2026</a> · <a href="https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/nasjonalregnskap/statistikk/nasjonalregnskap" target="_blank" rel="noopener">Quarterly national accounts</a> · <a href="https://www.ssb.no/kpi" target="_blank" rel="noopener">CPI September 2026</a></li>
+          <li><a href="https://www.ssb.no/en/befolkning/folketall/statistikk/befolkning" target="_blank" rel="noopener">SSB Population</a> · <a href="https://www.ssb.no/en/befolkning/fodte-og-dode/statistikk/fodte" target="_blank" rel="noopener">Births</a> · <a href="https://www.ssb.no/en/befolkning/innvandrere/statistikk/innvandrere-og-norskfodte-med-innvandrerforeldre" target="_blank" rel="noopener">Immigrants by country</a> · <a href="https://www.ssb.no/en/befolkning/befolkningsframskrivinger/artikler/norways-2026-national-population-projections" target="_blank" rel="noopener">2026 projections</a> · <a href="https://www.ssb.no/en/arbeid-og-lonn/lonn-og-arbeidskraftkostnader/statistikk/lonn" target="_blank" rel="noopener">Earnings 2025</a></li>
+          <li><a href="https://data.norges-bank.no/api/data/IR/A.KPRA.SD.R?format=csv&amp;startPeriod=2000&amp;locale=en" target="_blank" rel="noopener">Norges Bank policy rate, annual averages</a> · <a href="https://www.norges-bank.no/en/news-events/news/Press-releases/2026/2026-09-24-rate/" target="_blank" rel="noopener">Rate decision 24 Sep 2026</a></li>
+          <li>NBIM: <a href="https://www.nbim.no/en/the-fund/market-value/" target="_blank" rel="noopener">market value</a> · <a href="https://www.nbim.no/contentassets/f2782e7e18174221a4fbbb153e3c12b3/spu_annual_report_2019_en_web.pdf" target="_blank" rel="noopener">Annual report 2019 (values 1998–2019)</a> · <a href="https://www.nbim.no/en/news-and-insights/reports/2021/annual-report-2021/" target="_blank" rel="noopener">2021</a> · <a href="https://www.nbim.no/en/news-and-insights/reports/2023/annual-report-2023/" target="_blank" rel="noopener">2023</a></li>
+          <li>NAV: <a href="https://www.nav.no/no/nav-og-samfunn/statistikk/aap-nedsatt-arbeidsevne-og-uforetrygd-statistikk/nyheter/lav-vekst-i-antall-uforetrygdede-i-2025" target="_blank" rel="noopener">disability benefit 2025</a> · <a href="https://www.nav.no/no/nav-og-samfunn/statistikk/aap-nedsatt-arbeidsevne-og-uforetrygd-statistikk/nyheter/svak-vekst-i-antall-aap-mottakere" target="_blank" rel="noopener">AAP Q3 2026</a> · <a href="https://www.nav.no/no/nav-og-samfunn/statistikk/pensjon-statistikk/alderspensjon/arkiv-alderspensjon/arkiv-alderspensjon.juni-2016-2026" target="_blank" rel="noopener">old-age pension Jun 2026</a> · <a href="https://www.nav.no/_/attachment/download/e6a3b2ad-b32e-493e-9673-836310cc7ea2:06f155295b2bac0c04b8f0b6888da75a18bd0f28/Hovedtall%20om%20arbeidsmarkedet.%20September%202026.pdf" target="_blank" rel="noopener">registered unemployment Sep 2026</a></li>
+          <li><a href="https://www.imdi.no/en/english/what-is-the-status-of-integration-in-norway/" target="_blank" rel="noopener">IMDi integration status 2026</a> · <a href="https://www.norskpetroleum.no/en/economy/management-of-revenues/" target="_blank" rel="noopener">Norwegianpetroleum.no (Ministry of Energy): petroleum cash flow</a></li>
+          <li>National Budget 2027 (Ministry of Finance), as reported by <a href="https://www.tu.no/energi/vil-bruke-6084-mrd-oljekroner-neste-ar/7144202" target="_blank" rel="noopener">TU</a> and <a href="https://www.thelocal.no/20261007/what-norways-proposed-2027-budget-could-mean-for-you" target="_blank" rel="noopener">The Local</a>; regjeringen.no could not be read directly. <a href="https://www.regjeringen.no/en/whats-new/proposes-to-strengthen-defence-capability-with-65-billion-norwegian-kroner/id3174288/" target="_blank" rel="noopener">Defence +NOK 6.5 bn</a></li>
+          <li>Opinion polls (not official): <a href="https://politpro.eu/en/norway" target="_blank" rel="noopener">PolitPro poll average</a></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ===================== DATA ===================== */
+// History 2000–2025
+const HY=[];for(let y=2000;y<=2025;y++)HY.push(y);
+// ---- Official history, 2000–2025 (SSB table 12880 / 09189; Norges Bank; NBIM) ----
+const H={
+  mainG:[3.1,1.9,1.6,1.4,5.4,5.0,5.5,6.4,2.2,-1.3,2.2,2.2,3.8,2.6,2.3,1.7,1.0,2.4,2.1,2.7,-2.7,4.7,5.2,0.9,0.6,1.7],
+  gdpG:[3.4,2.2,1.5,1.1,4.3,3.0,2.8,3.4,0.8,-1.6,1.0,1.4,2.8,1.3,2.1,2.0,1.3,2.7,1.1,1.5,-1.4,4.1,4.1,0.4,1.4,1.1],
+  cpi:[3.1,3.0,1.3,2.5,0.4,1.6,2.3,0.8,3.8,2.1,2.5,1.2,0.8,2.1,2.0,2.1,3.6,1.8,2.7,2.2,1.3,3.5,5.8,5.5,3.1,3.1],
+  ate:[null,null,null,null,0.4,1.0,0.8,1.4,2.6,2.6,1.4,0.9,1.2,1.6,2.4,2.7,3.0,1.4,1.6,2.2,3.0,1.7,3.9,6.2,3.7,3.1],
+  u:[null,null,null,null,null,null,null,null,null,3.3,3.8,3.4,3.3,3.8,3.6,4.5,4.7,4.2,3.8,3.7,4.6,4.4,3.2,3.6,4.0,4.5],
+  rate:[6.8,7.2,6.9,4.1,2.0,2.2,3.1,5.0,6.2,2.5,2.5,2.9,2.2,1.8,1.7,1.3,1.1,0.9,1.1,1.6,0.7,0.5,2.1,4.2,4.7,4.4],
+  policy:[6.22,6.98,6.73,4.21,1.82,1.92,2.74,4.38,5.32,1.75,1.92,2.14,1.55,1.50,1.49,1.05,0.55,0.50,0.57,1.15,0.36,0.08,1.33,3.54,4.50,4.29],
+  wage:[4.5,5.3,5.4,4.5,3.5,3.3,4.1,5.4,6.3,4.2,3.7,4.2,4.0,3.9,3.1,2.8,1.7,2.3,2.8,3.5,3.1,3.5,4.3,5.2,5.6,4.9],
+  house:[15.9,6.9,5.0,1.7,10.2,8.3,13.7,12.6,-1.1,1.9,8.2,8.0,6.8,4.0,2.7,6.1,7.0,5.0,1.4,2.5,4.3,10.5,5.2,-0.5,2.7,5.5],
+  oil:[26,23,25,29,38,55,66,72,99,62,80,111,112,109,100,53,45,55,72,64,43,71,99,82,80,68],
+  ca:[14.5,15.6,12.3,12.0,12.4,16.2,16.3,12.3,15.9,11.1,11.4,13.0,13.7,11.3,11.7,9.2,5.3,5.4,8.6,3.6,1.8,14.4,27.8,17.1,15.0,14.2],
+  fund:[386,614,609,845,1016,1399,1784,2019,2275,2640,3077,3312,3816,5038,6431,7475,7510,8488,8256,10088,10914,12340,12429,15765,19742,21268],
+  gdpNom:[1501.8,1560.9,1559.7,1622.7,1790.8,2006.3,2243.2,2390.5,2662.4,2488.1,2660.2,2874.4,3054.7,3173.3,3250.6,3231.1,3219.6,3438.3,3696.9,3733.4,3599.2,4480.5,5935.0,5304.9,5382.4,5511.3],
+  mainNom:[1135.4,1202.8,1252.2,1304.5,1408.2,1520.9,1676.8,1855.9,1980.0,2006.2,2125.5,2216.4,2358.4,2493.2,2613.7,2707.0,2787.9,2904.1,3041.3,3193.8,3197.8,3458.1,3864.9,4021.6,4191.8,4397.7],
+  immig:[238.462,249.904,259.221,277.262,289.104,301.045,318.514,341.830,380.644,422.595,459.346,500.500,546.732,593.321,633.110,669.380,698.550,724.987,746.661,765.108,790.497,800.094,819.356,877.227,931.081,965.113],
+  nb:[44.025,47.827,51.483,55.531,59.836,63.936,68.185,73.488,78.970,85.604,92.967,100.422,108.438,117.144,126.075,135.583,149.657,158.764,169.964,179.294,188.757,197.848,205.819,213.810,221.459,230.237]
+};
+// Vital statistics 1990–2025 (SSB table 05803; TFR table 04232). pop = 1 January (thousand)
+const VY=[];for(let y=1990;y<=2025;y++)VY.push(y);
+const V={
+ pop:[4233.116,4249.830,4273.634,4299.167,4324.815,4348.410,4369.957,4392.714,4417.599,4445.329,4478.497,4503.436,4524.066,4552.252,4577.457,4606.363,4640.219,4681.134,4737.171,4799.252,4858.199,4920.305,4985.870,5051.275,5109.056,5165.802,5213.985,5258.317,5295.619,5328.212,5367.580,5391.369,5425.270,5488.984,5550.203,5594.340],
+ births:[60939,60808,60109,59678,60092,60292,60927,59801,58352,59298,59234,56696,55434,56458,56951,56756,58545,58459,60497,61807,61442,60220,60255,58995,59084,59058,58890,56633,55120,54495,52979,56060,51480,51980,54013,55401],
+ deaths:[46021,44923,44731,46597,44071,45190,43860,44595,44112,45170,44002,43981,44465,42478,41200,41232,41253,41954,41712,41449,41499,41393,41992,41282,40394,40727,40726,40774,40840,40684,40611,42002,45774,43803,44242,45040],
+ tfr:[1.93,1.92,1.88,1.86,1.87,1.87,1.89,1.86,1.81,1.85,1.85,1.78,1.75,1.80,1.83,1.84,1.90,1.90,1.96,1.98,1.95,1.88,1.85,1.78,1.76,1.73,1.71,1.62,1.56,1.53,1.48,1.55,1.41,1.40,1.44,1.48],
+ imm:[25494,26283,26743,31711,26911,25678,26407,31957,36704,41841,36542,34264,40122,35957,36482,40148,45776,61774,66961,65186,73852,79498,78570,75789,70030,67276,66800,58192,52485,52153,38071,53947,90475,86589,66077,55243],
+ emi:[23784,18238,16801,18903,19475,19312,20590,21257,22881,22842,26854,26309,22948,24672,23271,21709,22053,22122,23615,26549,31506,32466,31227,35716,31875,37474,40724,36843,34382,26826,26744,34297,32536,34011,31968,32919]
+};
+const POP26=5627.4;
+const AGE26=[["0–19",1238634,"--c2"],["20–66",3429133,"--c1"],["67–79",674694,"--c4"],["80+",284939,"--c3"]];
+const ORIGIN26=[["Immigrants",987120,"--c4"],["Norwegian-born to immigrant parents",238507,"--c7"],["Rest of population",5627400-987120-238507,"--c1"]];
+// SSB table 07459, 1 January 2026
+const PYR=[["0-4",141575,134425],["5-9",151686,143046],["10-14",165924,156874],["15-19",178614,166490],["20-24",172468,162727],["25-29",188283,179093],["30-34",201141,191812],["35-39",203031,195717],["40-44",189432,181769],["45-49",181878,174134],["50-54",190736,184440],["55-59",190230,183767],["60-64",169759,165289],["65-69",149555,150514],["70-74",128706,134434],["75-79",113120,121792],["80-84",71710,84932],["85-89",34199,48516],["90-94",11983,22723],["95-99",2594,6900],["100+",293,1089]];
+const MEN26=PYR.reduce((a,r)=>a+r[1],0), WOMEN26=PYR.reduce((a,r)=>a+r[2],0);
+const SEX26=[["Men",MEN26,"--men"],["Women",WOMEN26,"--women"]];
+const CTRY=[["Poland",111740,18032],["Ukraine",85461,1945],["Lithuania",43065,2001],["Syria",42040,8628],["Sweden",37732,4913],["Germany",28145,3906],["Somalia",27769,16975],["Eritrea",25819,10488],["Philippines",25673,4240],["Pakistan",24821,19292]];
+const WORK=[["Employed (LFS, Sep 2026)",2930,"--c1"],["Children 0–19 (1 Jan 2026)",1239,"--c2"],["Old-age pensioners (Jun 2026)",1097,"--c4"],["Disability benefit (end-2025)",375,"--c3"],["Work assessment allowance (Sep 2026)",169,"--c5"],["Unemployed (LFS, Sep 2026)",156,"--c8"],["Registered fully unemployed (NAV, Sep 2026)",59,"--c8"]];
+const EARN=[["All employees",62070],["Men",65610],["Women",57690]];
+// SSB table 09170: value added at basic prices, 2025, NOK million (current prices, preliminary)
+const SECT=[ // name, NOK mn, trend pp, beta, oilS, rateS, nokS, kind, group
+ ["Oil & gas extraction & pipelines",1081595,0,0,0,0,0,"petro","oil"],
+ ["Ocean shipping",32023,0,0.5,0,0,0.6,"ship","oil"],
+ ["Oil & gas services",76865,-1,0.5,2.5,0,0.3,"","oil"],
+ ["Health & social care",499078,0.9,0.3,0,0,0,"","pub"],
+ ["Real estate & housing",494852,0.2,0.9,0,1.2,0,"","priv"],
+ ["Wholesale & retail",364392,-0.1,1.2,0,0.3,0,"","priv"],
+ ["Manufacturing",334783,-0.4,1.3,0.9,0.2,0.8,"","goods"],
+ ["Public administration & defence",319512,0.6,0.2,0,0,0,"","pub"],
+ ["Construction",257631,-0.1,1.6,0.3,1.5,0,"","goods"],
+ ["Professional, scientific & technical",235710,0.4,1.4,0.4,0.2,0,"","priv"],
+ ["Education",232659,0,0.2,0,0,0,"","pub"],
+ ["Information & communication",213503,1.6,1.0,0,0.1,0.2,"","priv"],
+ ["Finance & insurance",196980,0.2,0.8,0,0.3,0,"","priv"],
+ ["Transport & postal (excl. ocean)",140071,0,1.1,0.3,0,0.2,"","priv"],
+ ["Administrative & support services",124327,0.3,1.4,0.2,0.1,0,"","priv"],
+ ["Electricity, gas & steam",121158,0.3,0.4,0,0,0.3,"","nat"],
+ ["Arts, entertainment & other services",88528,0,0.8,0,0.1,0,"","priv"],
+ ["Accommodation & food",73839,0.6,1.5,0,0.2,0.4,"","priv"],
+ ["Fishing & aquaculture",57912,1.2,0.4,0,0,0.9,"","nat"],
+ ["Water, sewerage & waste",36593,0.2,0.3,0,0,0,"","nat"],
+ ["Agriculture & forestry",35045,-0.3,0.2,0,0,0,"","nat"],
+ ["Mining & quarrying",6446,0.5,0.8,0,0,0.5,"","goods"]
+];
+const GVA25=SECT.reduce((a,r)=>a+r[1],0)/1000; // 5,023.5 bn
+const GROUPC={oil:"--c4",pub:"--c2",priv:"--c1",goods:"--c5",nat:"--c6"};
+// SSB table 09174: employed persons (employees and self-employed), 2025, thousand
+const EMPIND=[["Health & social care",631.2],["Wholesale & retail",372.1],["Construction",248.9],["Education",239.3],["Manufacturing",234.7],["Public admin & defence",215.1],["Professional, scientific & technical",164.3],["Administrative & support",130.8],["Transport (excl. ocean)",129.5],["Arts, entertainment & other",122.5],["Accommodation & food",118.5],["Information & communication",118.3],["Oil & gas incl. services",68.1],["Finance & insurance",54.4],["Agriculture & forestry",47.1],["Real estate",30.0],["Fishing & aquaculture",22.9],["Water & waste",20.4],["Electricity",19.2],["Postal & courier",16.0],["Ocean transport",5.2],["Mining & quarrying",4.7]];
+// SSB table 09189: GDP by use, 2025, NOK billion (current prices)
+const EXPEND=[["Household consumption",2340.6],["Government consumption",1255.0],["Investment (fixed)",1284.4],["Stocks & discrepancy",-19.0],["Exports",2511.8],["Imports",-1861.4]];
+// SSB table 09189: exports 2025 by type (NOK billion) — also drives the simulator trade module
+const XMIX=[["Crude oil & natural gas",1099.907,"petro"],["Traditional goods",721.874,"trad"],["Services",675.376,"serv"],["Ships & platforms",14.689,"ship"]];
+const X25=2511.847, M25=1861.448;
+// SSB table 08804: goods trade by country, 2025, NOK million
+const PARTNERS=[["United Kingdom",316579,45823],["Germany",310141,130630],["Netherlands",173056,45807],["Sweden",114952,110997],["Poland",104572,43911],["France",102439,32399],["Denmark",100677,46642],["Belgium",90115,22494],["United States",68279,79160],["China",48733,133302]];
+// SSB table 08092: Storting election, % of valid votes
+const ELECT=[["Labour (Ap)",26.3,28.0],["Progress (FrP)",11.6,23.8],["Conservative (H)",20.4,14.6],["Centre (Sp)",13.5,5.6],["Socialist Left (SV)",7.6,5.6],["Red (R)",4.7,5.3],["Green (MDG)",3.9,4.7],["Christian Dem. (KrF)",3.8,4.2],["Liberal (V)",4.6,3.7]];
+
+/* ===================== MODEL ===================== */
+const Y=[2025,2026,2027,2028,2029,2030,2031,2032,2033,2034,2035], N=Y.length;
+const B={
+  oil:[68,89,81,75,72,71,70,70,70,70,70],
+  mainG:[null,1.4,2.1,1.5,1.9,1.7,1.6,1.6,1.5,1.5,1.5],
+  petroG:[null,1.4,-2.4,-3.5,-5.6,-4,-4,-4.5,-5,-5,-5],
+  cpi:[3.1,3.2,2.5,2.2,2.1,2.0,2.0,2.0,2.0,2.0,2.0],
+  u:[4.5,4.6,4.4,4.3,4.2,4.1,4.0,4.0,4.0,4.0,4.0],
+  rate:[4.4,4.5,4.6,4.0,3.8,3.6,3.5,3.4,3.3,3.25,3.25],
+  wage:[4.9,4.3,3.7,3.4,3.0,3.0,3.0,3.0,3.0,3.0,3.0],
+  house:[null,3.1,3.5,4.0,4.6,4.0,3.8,3.5,3.5,3.5,3.5],
+  nokDep:[0,-6.2,-2.2,0,0,0,0,0,0,0,0],
+  empG:[null,0.5,0.6,0.6,0.5,0.4,0.4,0.3,0.3,0.3,0.3],
+  mVol:[null,0.8,2.8,2.7,4.7,1.5,1.5,1.5,1.5,1.5,1.5]
+};
+const SSB={mainG:[1.4,2.1,1.5,1.9],cpi:[3.2,2.5,2.2,2.1],u:[4.6,4.4,4.3,4.2],rate:[4.5,4.6,4.0,3.8],house:[3.1,3.5,4.0,4.6],wage:[4.3,3.7,3.4,3.0],oil:[89,81,75,72]};
+const BASE_IMM=22, NAT=10;
+const DEF={oil:0,phase:0,spend:2.7,ret:3,crash:0,rate:0,nok:0,glob:0,prod:0,imm:22,part:0,hs:0,auto:true};
+const PRESETS=[
+ ["Official baseline",{}],["Oil crash",{oil:-40}],["Energy boom",{oil:45}],["Global recession",{glob:-3,crash:-20}],
+ ["Break the fiscal rule",{spend:4.2}],["Austerity",{spend:2.0}],["Strong krone",{nok:12}],["Fast oil phase-out",{phase:10}],
+ ["AI productivity boom",{prod:0.8}],["Immigration surge",{imm:70}],["Work reform (+60k)",{part:60}],["Housing crash",{hs:-20}],["Rate cuts now",{auto:false,rate:-1.5}]
+];
+
+function run(s){
+  const o={}; ["oil","mainG","petroG","totG","cpi","u","rate","wage","house","nokIdx","gap","dRate","dNok","dInf","mainNom","petroNom","gdpNom","petroShare","fund","cf","wd","wdPctFund","wdPctGdp","ret","pop","lf","emp","salary","mort","realWage","xTot","mTot","tb","fpc"].forEach(k=>o[k]=new Array(N).fill(null));
+  o.sec=SECT.map(()=>new Array(N).fill(null)); o.xmix=XMIX.map(()=>new Array(N).fill(null));
+  o.oil[0]=B.oil[0]; o.mainNom[0]=4397.7; o.petroNom[0]=5511.3-4397.7; o.gdpNom[0]=5511.3;
+  o.fund[0]=21268; o.pop[0]=POP26; o.lf[0]=3045; o.emp[0]=2905; o.salary[0]=62070; o.nokIdx[0]=100;
+  o.house[0]=5.5;o.mainG[0]=1.7;o.gap[0]=0;o.dRate[0]=0;o.dNok[0]=0;o.dInf[0]=0;o.cpi[0]=B.cpi[0];o.u[0]=B.u[0];o.rate[0]=B.rate[0];o.wage[0]=B.wage[0];o.totG[0]=1.1;
+  SECT.forEach((r,j)=>o.sec[j][0]=r[1]/1000);
+  XMIX.forEach((r,j)=>o.xmix[j][0]=r[1]); o.xTot[0]=X25; o.mTot[0]=M25; o.tb[0]=X25-M25;
+  o.petroShare[0]=o.petroNom[0]/o.gdpNom[0]*100; o.fpc[0]=o.fund[0]/o.pop[0]*1000;
+  let lfBase=3045, petroVol=1, petroVol27=1, cumImm=0;
+  for(let i=1;i<N;i++){
+    const sim=i>=2;
+    const glob=sim&&i<=3?s.glob:0, dOil=sim?s.oil:0;
+    const oil=Math.max(15,B.oil[i]+dOil); o.oil[i]=oil;
+    const defDev=sim?(s.spend-2.7)/100*o.fund[i-1]/o.mainNom[i-1]*100:0;
+    const immLab=sim?(s.imm-BASE_IMM)*0.65/3050*100:0;
+    // participation reform phases in linearly to 2030 (i=5)
+    const partLab=sim?(s.part/4)/3050*100*(i<=5?1:0):0;
+    const potDev=sim?s.prod+immLab+partLab:0;
+    let dRate=0;
+    if(sim) dRate=s.auto?0.5*o.dRate[i-1]+0.5*(1.2*o.dInf[i-1]+0.5*o.gap[i-1]):s.rate;
+    const rateLvl=Math.max(0,B.rate[i]+dRate); dRate=rateLvl-B.rate[i];
+    const dNok=sim?s.nok+0.12*dOil+1.5*dRate:0;
+    const hs=sim&&i===2?s.hs:0, crash=sim&&i===2?s.crash:0;
+    let gap=0;
+    if(sim) gap=0.5*o.gap[i-1]+0.18*defDev-0.2*dRate-0.2*o.dRate[i-1]+0.35*glob+0.015*(i>=3?s.oil:0)+0.006*dOil-0.04*dNok+0.05*hs+0.01*crash+0.4*immLab+0.3*partLab;
+    const dNokChg=dNok-o.dNok[i-1];
+    const dInf=sim?0.45*o.dInf[i-1]+0.28*gap-0.1*dNokChg+0.006*(dOil-(i>2?s.oil:0)):0;
+    o.gap[i]=gap;o.dRate[i]=dRate;o.dNok[i]=dNok;o.dInf[i]=dInf;o.rate[i]=rateLvl;
+    o.mainG[i]=B.mainG[i]+(gap-o.gap[i-1])+potDev;
+    o.cpi[i]=B.cpi[i]+dInf;
+    o.u[i]=Math.max(1.5,B.u[i]-0.4*gap+(sim?0.25*immLab:0));
+    o.wage[i]=B.wage[i]+(sim?0.6*o.dInf[i-1]+0.35*gap+s.prod:0);
+    const immPop=sim?(s.imm-BASE_IMM)/5600*100:0;
+    o.house[i]=B.house[i]+(sim?1.2*(gap-o.gap[i-1])-3.0*(dRate-o.dRate[i-1])+hs+0.8*immPop:0);
+    const appr=-B.nokDep[i]+dNokChg;
+    o.nokIdx[i]=o.nokIdx[i-1]*(1+appr/100);
+    let pg=B.petroG[i]; if(sim&&i>=3) pg-=s.phase; if(sim) pg+=0.02*Math.min(0,s.oil+20);
+    o.petroG[i]=pg; petroVol*=1+pg/100; if(i===2) petroVol27=petroVol;
+    o.mainNom[i]=o.mainNom[i-1]*(1+o.mainG[i]/100)*(1+(o.cpi[i]+0.2)/100);
+    o.petroNom[i]=o.petroNom[i-1]*(1+pg/100)*Math.pow(oil/o.oil[i-1],0.8)*(1-appr/100);
+    o.gdpNom[i]=o.mainNom[i]+o.petroNom[i];
+    const wP=o.petroNom[i-1]/o.gdpNom[i-1];
+    o.totG[i]=(1-wP)*o.mainG[i]+wP*pg;
+    o.petroShare[i]=o.petroNom[i]/o.gdpNom[i]*100;
+    if(i===1){o.cf[i]=671;o.wd[i]=583.4;o.ret[i]=null;o.fund[i]=22533;}
+    else{
+      o.cf[i]=568*(oil/81)*(petroVol/petroVol27)*(1-dNok/100)*Math.pow(0.99,i-2);
+      o.wd[i]=s.spend/100*o.fund[i-1];
+      const nomRet=s.ret+2.5-appr+(i===2?crash:0);
+      o.ret[i]=o.fund[i-1]*nomRet/100;
+      o.fund[i]=Math.max(0,o.fund[i-1]+o.ret[i]+o.cf[i]-o.wd[i]);
+    }
+    o.wdPctFund[i]=o.wd[i]/o.fund[i-1]*100;
+    o.wdPctGdp[i]=o.wd[i]/o.mainNom[i]*100;
+    const imm=sim?s.imm:BASE_IMM; cumImm+=(imm-BASE_IMM);
+    o.pop[i]=o.pop[i-1]+NAT-(i>=6?1.5*(i-5):0)+imm;
+    lfBase=lfBase*(1+B.empG[i]/100);
+    const partCum=sim?s.part*Math.min(1,(i-1)/4):0;
+    o.lf[i]=lfBase+cumImm*0.65+partCum;
+    o.emp[i]=o.lf[i]*(1-o.u[i]/100);
+    o.salary[i]=o.salary[i-1]*(1+o.wage[i]/100);
+    o.realWage[i]=o.wage[i]-o.cpi[i];
+    const mr=(o.rate[i]+1.4)/100/12; o.mort[i]=3e6*mr/(1-Math.pow(1+mr,-300));
+    o.fpc[i]=o.fund[i]/o.pop[i]*1000;
+    const cyc=o.mainG[i]-B.mainG[i];
+    SECT.forEach((r,j)=>{
+      let g;
+      if(r[7]==="petro") g=pg;
+      else if(r[7]==="ship") g=1+0.8*glob-0.18*dNokChg;
+      else g=o.mainG[i]+r[2]+r[3]*cyc+(sim?r[4]*0.02*dOil-r[5]*(dRate-o.dRate[i-1])-r[6]*0.3*dNokChg+(r[6]>0?0.5*glob:0):0);
+      o.sec[j][i]=o.sec[j][i-1]*(1+g/100);
+    });
+    let xt=0;
+    XMIX.forEach((r,j)=>{
+      let g;
+      if(r[2]==="petro") g=(1+pg/100)*(oil/o.oil[i-1])*(1-appr/100)-1;
+      else{const bs={trad:.025,serv:.03,ship:0}[r[2]],ge={trad:1.2,serv:.8,ship:.5}[r[2]];g=bs+ge*glob/100-0.6*appr/100+(B.cpi[i]-2)/100;}
+      o.xmix[j][i]=o.xmix[j][i-1]*(1+g); xt+=o.xmix[j][i];
+    });
+    o.xTot[i]=xt;
+    o.mTot[i]=o.mTot[i-1]*(1+(B.mVol[i]+1.3*(o.mainG[i]-B.mainG[i]))/100)*(1+(o.cpi[i]-0.5*appr)/100);
+    o.tb[i]=o.xTot[i]-o.mTot[i];
+  }
+  o.emp[0]=2905;
+  return o;
+}
+
+/* ===================== STATE & HELPERS ===================== */
+let S={...DEF}, selYear=2025, mode="all", activePreset=0, section="overview", simTab="macro", O, BASE=run(DEF);
+const $=id=>document.getElementById(id);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt=(v,d=1)=>v==null||isNaN(v)?"–":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const simYear=()=>Math.min(2035,Math.max(2026,selYear));
+const LV=[];for(let y=2000;y<=2035;y++)LV.push(y);   // long-view labels
+const LVs=LV.map(String);
+// join history (2000-2025) and scenario (2026-2035) onto long-view axis
+function hist(arr){return LV.map(y=>y<=2025?arr[y-2000]:null);}
+function proj(o,key){return LV.map(y=>y>=2025?o[key][y-2025]:null);}
+
+/* year marker plugin */
+const yearMarker={id:"yearMarker",afterDatasetsDraw(c){
+  if(mode!=="year"||c.canvas.dataset.time!=="1") return;
+  const idx=c.data.labels.indexOf(String(selYear)); if(idx<0) return;
+  const x=c.scales.x.getPixelForValue(idx), a=c.chartArea, ctx=c.ctx;
+  ctx.save(); ctx.strokeStyle=css("--red"); ctx.globalAlpha=.55; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x,a.top); ctx.lineTo(x,a.bottom); ctx.stroke(); ctx.restore();
+}};
+if(window.Chart){Chart.register(yearMarker);Chart.defaults.font.family="IBM Plex Sans";}
+
+const charts={};
+function baseOpts(unit,opt={}){
+  const ink=css("--muted"), line=css("--line");
+  return {responsive:true,maintainAspectRatio:false,animation:{duration:900,easing:"easeOutQuart"},interaction:{mode:"index",intersect:false},
+    plugins:{legend:{display:!!opt.legend,labels:{color:ink,boxWidth:12,font:{family:"IBM Plex Sans",size:11}}},
+      tooltip:{filter:i=>i.parsed.y!=null,callbacks:{label:c=>c.dataset.label+": "+fmt(c.parsed.y,opt.dec??1)+(unit||"")}}},
+    scales:{x:{stacked:!!opt.stacked,grid:{display:false},ticks:{color:ink,font:{family:"IBM Plex Mono",size:10},maxRotation:0,autoSkipPadding:8}},
+      y:{stacked:!!opt.stacked,beginAtZero:!!opt.zero,suggestedMin:opt.min,grid:{color:line},border:{display:false},ticks:{color:ink,font:{family:"IBM Plex Mono",size:10},callback:v=>fmt(v,opt.tickDec??(Math.abs(v)>=100?0:1))}}}};
+}
+function hbarOpts(unit,dec=0){const op=baseOpts(unit,{dec});op.indexAxis="y";op.scales.y.grid={display:false};op.scales.x.grid={color:css("--line")};op.scales.y.ticks.font={family:"IBM Plex Sans",size:11};op.scales.y.ticks.callback=function(v){return this.getLabelForValue(v)};op.scales.x.ticks.callback=v=>fmt(v,0);op.interaction={mode:"index",axis:"y",intersect:false};return op;}
+function L(label,data,color,dash,extra={}){return {label,data,borderColor:color,backgroundColor:color,borderWidth:dash?1.5:2.5,borderDash:dash?[5,4]:[],pointRadius:0,pointHoverRadius:3,cubicInterpolationMode:"monotone",spanGaps:false,...extra};}
+function ssbSet(arr){const d=new Array(N).fill(null);arr.forEach((v,k)=>d[k+1]=v);return {label:"SSB forecast",data:d,type:"line",showLine:false,pointRadius:3.5,borderColor:css("--red"),backgroundColor:css("--red")};}
+function mk(id,cfg){if(!window.Chart)return; if(charts[id])charts[id].destroy(); const el=$(id); if(!el)return; charts[id]=new Chart(el,cfg);}
+
+/* ===================== CHARTS ===================== */
+function drawLongView(){
+  const Hc=css("--hist"),F=css("--fjord"),BS=css("--base");
+  const lv=(id,hk,pk,unit,opt={})=>mk(id,{type:"line",data:{labels:LVs,datasets:[L("History",hist(H[hk]),Hc),L("Scenario",proj(O,pk),F),L("Baseline",proj(BASE,pk),BS,true)]},options:baseOpts(unit,opt)});
+  lv("lv_g","mainG","mainG","%"); lv("lv_cpi","cpi","cpi","%"); lv("lv_u","u","u","%"); lv("lv_oil","oil","oil"," $",{dec:0}); lv("lv_h","house","house","%");
+  mk("lv_r",{type:"line",data:{labels:LVs,datasets:[L("Money-market rate (SSB)",hist(H.rate),Hc),L("Policy rate, avg (Norges Bank)",hist(H.policy),css("--red"),true),L("Scenario",proj(O,"rate"),F),L("Baseline",proj(BASE,"rate"),BS,true)]},options:baseOpts("%",{dec:2})});
+  lv("lv_f","fund","fund"," bn",{dec:0});
+  // population (1 Jan): history 2000–2025 + 2026 actual + projection (end-year model pop → next Jan)
+  const ph=LV.map(y=>y<=2025?V.pop[y-1990]/1000:(y===2026?POP26/1000:null));
+  const pj=o=>LV.map(y=>y<2026?null:(y===2026?POP26/1000:o.pop[y-2026]/1000));
+  mk("lv_p",{type:"line",data:{labels:LVs,datasets:[L("History",ph,Hc),L("Scenario",pj(O),F),L("Baseline",pj(BASE),BS,true)]},options:baseOpts(" m",{dec:2,tickDec:1})});
+}
+function drawPeople(){
+  const VYs=VY.map(String), F=css("--fjord"), R=css("--red"), G=css("--c2"), C4=css("--c4");
+  mk("pp_tfr",{type:"line",data:{labels:VYs,datasets:[L("Children per woman",V.tfr,F),L("Replacement level",VY.map(()=>2.1),R,true)]},options:baseOpts("",{dec:2,min:1.2})});
+  mk("pp_bd",{type:"bar",data:{labels:VYs,datasets:[{label:"Births",data:V.births,backgroundColor:G},{label:"Deaths",data:V.deaths,backgroundColor:css("--c8")}]},options:baseOpts("",{dec:0,legend:true,zero:true})});
+  mk("pp_mig",{type:"bar",data:{labels:VYs,datasets:[{label:"Immigration",data:V.imm,backgroundColor:C4},{label:"Emigration",data:V.emi,backgroundColor:css("--c8")},
+     {label:"Net migration",type:"line",data:V.imm.map((v,i)=>v==null?null:v-V.emi[i]),borderColor:css("--ink"),backgroundColor:css("--ink"),borderWidth:2,pointRadius:0}]},options:baseOpts("",{dec:0,legend:true,zero:true})});
+  // pyramid
+  const op=hbarOpts(" k",1); op.scales.x.stacked=true; op.scales.y.stacked=true; op.scales.y.reverse=true; op.scales.x.ticks.callback=v=>fmt(Math.abs(v),0);
+  op.plugins.tooltip.callbacks.label=c=>c.dataset.label+": "+fmt(Math.abs(c.parsed.x),1)+"k"; op.plugins.legend.display=true;
+  mk("pp_pyr",{type:"bar",data:{labels:PYR.map(r=>r[0]),datasets:[{label:"Men",data:PYR.map(r=>-r[1]/1000),backgroundColor:css("--men"),barPercentage:1,categoryPercentage:.92},{label:"Women",data:PYR.map(r=>r[2]/1000),backgroundColor:css("--women"),barPercentage:1,categoryPercentage:.92}]},options:op});
+  const wo=hbarOpts(" k",0);
+  mk("pp_work",{type:"bar",data:{labels:WORK.map(w=>w[0]),datasets:[{label:"Persons",data:WORK.map(w=>w[1]),backgroundColor:WORK.map(w=>css(w[2]))}]},options:wo});
+  const co=hbarOpts(" k",1); co.scales.x.stacked=true; co.scales.y.stacked=true; co.plugins.legend.display=true;
+  mk("pp_ctry",{type:"bar",data:{labels:CTRY.map(c=>c[0]),datasets:[{label:"Immigrants",data:CTRY.map(c=>c[1]/1000),backgroundColor:C4},{label:"Norwegian-born children",data:CTRY.map(c=>c[2]/1000),backgroundColor:css("--fjord-soft")}]},options:co});
+  const IY=HY.concat([2026]).map(String);
+  mk("pp_imm",{type:"line",data:{labels:IY,datasets:[{label:"Immigrants",data:H.immig.concat([987.120]),borderColor:css("--c4"),backgroundColor:css("--c4"),fill:"origin",pointRadius:0,borderWidth:2},{label:"Norwegian-born to immigrant parents",data:H.immig.map((v,i)=>+(v+H.nb[i]).toFixed(3)).concat([1225.627]),borderColor:css("--c7"),backgroundColor:css("--c7"),fill:"-1",pointRadius:0,borderWidth:2}]},options:(()=>{const o=baseOpts(" k",{legend:true,dec:0});o.plugins.tooltip.callbacks.label=c=>c.dataset.label+": "+fmt(c.datasetIndex===0?c.parsed.y:c.parsed.y-c.chart.data.datasets[0].data[c.dataIndex],0)+"k";return o;})()});
+  mk("pp_earn",{type:"bar",data:{labels:EARN.map(e=>e[0]),datasets:[{label:"NOK per month, 2025",data:EARN.map(e=>e[1]),backgroundColor:[F,css("--men"),css("--women")]}]},options:baseOpts(" kr",{dec:0,zero:true})});
+  mk("an_elect",{type:"bar",data:{labels:ELECT.map(e=>e[0]),datasets:[{label:"2021",data:ELECT.map(e=>e[1]),backgroundColor:css("--base")},{label:"2025",data:ELECT.map(e=>e[2]),backgroundColor:F}]},options:baseOpts("%",{legend:true,zero:true})});
+  mk("pp_dis",{type:"bar",data:{labels:["Women","Men","All 18–67"],datasets:[{label:"On disability benefit",data:[12.6,8.5,10.5],backgroundColor:[css("--women"),css("--men"),F]}]},options:baseOpts("%",{zero:true})});
+  mk("pp_proj",{type:"line",data:{labels:["2026","2030","2050","2100"],datasets:[
+    {label:"Population (m)",data:[5.63,5.75,6.2,6.4],borderColor:F,backgroundColor:F,yAxisID:"y",borderWidth:2.5,pointRadius:4},
+    {label:"Share aged 80+ (%)",data:[5.1,null,9.5,15],borderColor:R,backgroundColor:R,yAxisID:"y1",borderWidth:2,pointRadius:4,spanGaps:true},
+    {label:"Immigrant share (%)",data:[17.5,null,22,null],borderColor:C4,backgroundColor:C4,yAxisID:"y1",borderWidth:2,pointRadius:4,spanGaps:true}]},
+    options:(()=>{const o=baseOpts("",{legend:true,dec:1});o.scales.y1={position:"right",grid:{display:false},ticks:{color:css("--muted"),font:{family:"IBM Plex Mono",size:10},callback:v=>v+"%"}};o.scales.y.ticks.callback=v=>fmt(v,1)+"m";return o;})()});
+  // share bars
+  const bar=(id,key,items,tot)=>{ $(id).innerHTML=items.map(([n,v,c])=>`<div style="flex:${v};background:var(${c})" title="${n}: ${fmt(v,0)}">${v/tot>0.08?fmt(v/tot*100,1)+"%":""}</div>`).join(""); $(key).innerHTML=items.map(([n,v,c])=>`<span style="--sw:var(${c})">${n} · ${fmt(v,0)} (${fmt(v/tot*100,1)}%)</span>`).join(""); };
+  bar("bar_origin","key_origin",ORIGIN26,5627400); bar("bar_age","key_age",AGE26,5627400); bar("bar_sex","key_sex",SEX26,5652988);
+  const wa=3429133, dep=(1238634+959633)/wa*100, old=959633/wa*100;
+  $("workTxt").innerHTML=`<p><b>${fmt(dep,0)} dependants per 100 people of working age</b> (0–19 and 67+ per 100 aged 20–66). The old-age part alone is ${fmt(old,0)} per 100, and SSB expects it to rise steadily as the large post-war and 1960s cohorts retire.</p>
+   <p><b>About one in seven of working age is on a health-related benefit:</b> 374,900 on disability benefit (10.5% of 18–67, stable since 2020) and 169,300 on work assessment allowance (4.7% of 18–66). Women are far more likely to receive disability benefit (12.6%) than men (8.5%).</p>
+   <p><b>1,097,400 people receive old-age pension</b> (NAV, June 2026), 24,200 more than a year earlier and 215,300 more than in 2016.</p>`;
+}
+function squarify(items,x,y,w,h,out){
+  if(!items.length)return; if(items.length===1){out.push({...items[0],x,y,w,h});return;}
+  const tot=items.reduce((a,b)=>a+b.v,0); let acc=0,k=0;
+  while(k<items.length-1&&acc+items[k].v<tot/2){acc+=items[k].v;k++;} if(k===0){acc=items[0].v;k=1;}
+  const A=items.slice(0,k),Bb=items.slice(k),f=acc/tot;
+  if(w>=h){squarify(A,x,y,w*f,h,out);squarify(Bb,x+w*f,y,w*(1-f),h,out);}
+  else{squarify(A,x,y,w,h*f,out);squarify(Bb,x,y+h*f,w,h*(1-f),out);}
+}
+function drawEngine(){
+  const tm=$("tmap"); const items=SECT.map(r=>({n:r[0],v:r[1]/1000/GVA25*100,bn:r[1]/1000,g:r[8]})).sort((a,b)=>b.v-a.v);
+  const out=[]; squarify(items,0,0,100,100,out);
+  tm.innerHTML=out.map(r=>`<div style="left:${r.x}%;top:${r.y}%;width:${r.w}%;height:${r.h}%;background:var(${GROUPC[r.g]})" title="${r.n}: ${fmt(r.v,1)}% · NOK ${fmt(r.bn,0)} bn">${r.w*r.h>40?`<b>${r.n}</b><span>${fmt(r.v,1)}% · ${fmt(r.bn,0)} bn</span>`:r.w*r.h>12?`<span>${fmt(r.v,1)}%</span>`:""}</div>`).join("");
+  mk("en_exp",{type:"bar",data:{labels:EXPEND.map(e=>e[0]+" ("+fmt(e[1]/5511.3*100,0)+"%)"),datasets:[{label:"NOK bn, 2025",data:EXPEND.map(e=>e[1]),backgroundColor:EXPEND.map(e=>e[1]<0?css("--red"):css("--fjord"))}]},options:hbarOpts(" bn",0)});
+  const GY=HY.map(String);
+  mk("en_size",{type:"bar",data:{labels:GY,datasets:[{label:"Mainland Norway",data:H.mainNom,backgroundColor:css("--fjord"),stack:"g"},{label:"Petroleum & ocean shipping",data:H.gdpNom.map((v,i)=>+(v-H.mainNom[i]).toFixed(1)),backgroundColor:css("--c4"),stack:"g"}]},options:baseOpts(" bn",{stacked:true,legend:true,dec:0})});
+  mk("en_xp",{type:"doughnut",data:{labels:XMIX.map(r=>r[0]),datasets:[{data:XMIX.map(r=>Math.round(r[1])),backgroundColor:[css("--c4"),css("--c1"),css("--c2"),css("--c5")],borderColor:css("--panel"),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{position:"right",labels:{color:css("--muted"),boxWidth:10,font:{family:"IBM Plex Sans",size:11}}},tooltip:{callbacks:{label:c=>c.label+": NOK "+fmt(c.parsed,0)+" bn ("+fmt(c.parsed/X25*100,1)+"%)"}}}}});
+  mk("en_emp",{type:"bar",data:{labels:EMPIND.map(e=>e[0]),datasets:[{label:"Employed",data:EMPIND.map(e=>e[1]),backgroundColor:css("--c2")}]},options:hbarOpts(" k",0)});
+  (()=>{const op=hbarOpts(" bn",0);op.plugins.legend.display=true;mk("en_part",{type:"bar",data:{labels:PARTNERS.map(p=>p[0]),datasets:[{label:"Exports to",data:PARTNERS.map(p=>p[1]/1000),backgroundColor:css("--fjord")},{label:"Imports from",data:PARTNERS.map(p=>p[2]/1000),backgroundColor:css("--c8")}]},options:op});})();
+  // flow diagram
+  const box=(x,w,t,s,c)=>`<rect x="${x}" y="60" width="${w}" height="80" rx="6" fill="var(${c})" opacity=".14" stroke="var(${c})"/><text x="${x+w/2}" y="94" text-anchor="middle" font-weight="600" font-size="14">${t}</text><text class="sm" x="${x+w/2}" y="116" text-anchor="middle">${s}</text>`;
+  const arr=(x1,x2,t)=>`<line x1="${x1}" y1="100" x2="${x2-8}" y2="100" stroke="var(--muted)" stroke-width="2"/><polygon points="${x2},100 ${x2-10},94 ${x2-10},106" fill="var(--muted)"/><text x="${(x1+x2)/2}" y="88" text-anchor="middle" font-size="12" font-weight="600">${t}</text>`;
+  $("flow").innerHTML=box(10,170,"Oil & gas fields","taxes, SDFI, dividends","--c4")+arr(180,270,"NOK 671 bn")+box(270,190,"The oil fund","NOK 22.0 tn (30 Sep 2026)","--c1")+arr(460,560,"NOK 608 bn (2.7%)")+box(560,170,"State budget","welfare, health, defence","--c2")+arr(730,770,"")+box(770,140,"People","services & transfers","--c5")+
+   `<text class="sm" x="365" y="170" text-anchor="middle">Returns stay in the fund (≈3% real expected)</text><text class="sm" x="645" y="170" text-anchor="middle">Rule: spend ≤ 3% of fund over time</text><text class="sm" x="12" y="170" text-anchor="start">2026 estimate, falling as fields deplete</text>`;
+}
+function drawSim(){
+  const F=css("--fjord"),BS=css("--base"),R=css("--red"),G=css("--good"),C2=css("--c2"),C4=css("--c4"); const o=O,b=BASE; const yrs=Y.map(String);
+  const cmp=(id,key,unit,ssbKey,opt={})=>mk(id,{type:"line",data:{labels:yrs,datasets:[L("Scenario",o[key],F),L("Baseline",b[key],BS,true)].concat(ssbKey?[ssbSet(SSB[ssbKey])]:[])},options:baseOpts(unit,opt)});
+  cmp("ch_g","mainG","%","mainG"); cmp("ch_cpi","cpi","%","cpi"); cmp("ch_u","u","%","u"); cmp("ch_r","rate","%","rate",{dec:2});
+  mk("ch_gap",{type:"bar",data:{labels:yrs,datasets:[{label:"Output gap vs baseline",data:o.gap.map(v=>v==null?null:+v.toFixed(2)),backgroundColor:o.gap.map(v=>v>=0?F:R)}]},options:baseOpts("%",{dec:2})});
+  cmp("ch_nok","nokIdx","",null);
+  mk("ch_fund",{type:"line",data:{labels:yrs,datasets:[L("Scenario",o.fund,F,false,{fill:{target:"origin"},backgroundColor:css("--fjord-soft")}),L("Baseline",b.fund,BS,true)]},options:baseOpts(" bn",{dec:0})});
+  mk("ch_flows",{type:"bar",data:{labels:yrs,datasets:[{label:"Petroleum cash flow",data:o.cf,backgroundColor:C4,stack:"a"},{label:"Investment return",data:o.ret,backgroundColor:C2,stack:"a"},{label:"Spent in budget",data:o.wd.map(v=>v==null?null:-v),backgroundColor:R,stack:"a"}]},options:baseOpts(" bn",{stacked:true,legend:true,dec:0})});
+  mk("ch_oil",{type:"line",data:{labels:yrs,datasets:[L("Scenario",o.oil,F),L("Baseline",b.oil,BS,true),ssbSet(SSB.oil)]},options:baseOpts(" $",{dec:0})});
+  cmp("ch_fpc","fpc"," k",null,{dec:0}); cmp("ch_ps","petroShare","%",null);
+  mk("ch_wd",{type:"bar",data:{labels:yrs,datasets:[{label:"Structural deficit",data:o.wd,backgroundColor:F,order:2},{label:"3% of fund",type:"line",data:o.fund.map((v,i)=>i>=1?o.fund[i-1]*0.03:null),borderColor:R,borderDash:[5,4],borderWidth:1.5,pointRadius:0,order:1}]},options:baseOpts(" bn",{dec:0,zero:true,legend:true})});
+  cmp("ch_wdp","wdPctFund","%",null,{dec:2}); cmp("ch_wdg","wdPctGdp","%",null); cmp("ch_cf","cf"," bn",null,{dec:0});
+  cmp("ch_emp","emp"," k",null,{dec:0});
+  mk("ch_wage",{type:"line",data:{labels:yrs,datasets:[L("Wage growth",o.wage,F),L("Real wage growth",o.realWage,G),L("Baseline wages",b.wage,BS,true),ssbSet(SSB.wage)]},options:baseOpts("%",{legend:true})});
+  cmp("ch_house","house","%","house"); cmp("ch_pop","pop"," k",null,{dec:0});
+  mk("ch_tb",{type:"bar",data:{labels:yrs,datasets:[{label:"Exports",data:o.xTot,backgroundColor:F,order:2},{label:"Imports",data:o.mTot,backgroundColor:css("--c8"),order:2},{label:"Trade surplus",type:"line",data:o.tb,borderColor:C4,backgroundColor:C4,borderWidth:2.5,pointRadius:2,order:1},{label:"Surplus (baseline)",type:"line",data:b.tb,borderColor:BS,borderDash:[5,4],borderWidth:1.5,pointRadius:0,order:1}]},options:baseOpts(" bn",{dec:0,legend:true})});
+  drawSimYear();
+}
+function drawSimYear(){
+  const o=O, yi=Y.indexOf(simYear()), F=css("--fjord"),C4=css("--c4");
+  const order=SECT.map((r,j)=>j).sort((a,c)=>o.sec[c][yi]-o.sec[a][yi]);
+  const op=hbarOpts(" bn",0);
+  mk("ch_sec",{type:"bar",data:{labels:order.map(j=>SECT[j][0]),datasets:[{label:String(simYear()),data:order.map(j=>o.sec[j][yi]),backgroundColor:order.map(j=>SECT[j][7]==="petro"?C4:F),grouped:false,order:1,barPercentage:.6,categoryPercentage:.9},{label:"2025",data:order.map(j=>o.sec[j][0]),backgroundColor:css("--line"),grouped:false,order:2,barPercentage:.95,categoryPercentage:.9}]},options:op});
+  const pal=["--c1","--c8","--c2","--c4","--c5","--c6","--c7"].map(css);
+  mk("ch_xmix",{type:"doughnut",data:{labels:XMIX.map(r=>r[0]),datasets:[{data:o.xmix.map(a=>Math.round(a[yi])),backgroundColor:pal,borderColor:css("--panel"),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{position:"right",labels:{color:css("--muted"),boxWidth:10,font:{family:"IBM Plex Sans",size:11}}},tooltip:{callbacks:{label:c=>c.label+": "+fmt(c.parsed,0)+" bn"}}}}});
+}
+
+/* ===================== TEXT / CARDS ===================== */
+function chip(d,goodUp,dec=1,unit=""){
+  if(d==null||Math.abs(d)<Math.pow(10,-dec)/2) return '<span class="chip eq">= baseline</span>';
+  const good=goodUp?d>0:d<0; return `<span class="chip ${good?"up":"dn"}">${d>0?"+":""}${fmt(d,dec)}${unit} vs base</span>`;
+}
+const card=(k,v,d)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
+function val(year,hk,ok){ return year<=2025?H[hk][year-2000]:O[ok][year-2025]; }
+function snapshot(){
+  const y=selYear;
+  if(mode==="all"){
+    const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+    $("snap").innerHTML=[
+      card("Avg mainland growth 2000–25",fmt(avg(H.mainG))+"%","Worst: 2020 (−2.7%) · best: 2007 (+6.4%)"),
+      card("Avg inflation 2000–25",fmt(avg(H.cpi))+"%","Peak 5.8% in 2022"),
+      card("Unemployment 2009–25",fmt(Math.min(...H.u.filter(v=>v!=null)))+"–"+fmt(Math.max(...H.u.filter(v=>v!=null)))+"%","Lowest 2022, highest 2016"),
+      card("Policy rate (annual avg)","0.08–6.98%","Low 2021 · high 2001 · 4.50% now"),
+      card("Oil fund growth",fmt(H.fund[25]/H.fund[0],0)+"×","NOK 386 bn (2000) → 21,268 bn (2025)"),
+      card("Population growth","+"+fmt((V.pop[35]/V.pop[10]-1)*100,0)+"%","4.48 m (2000) → 5.59 m (2025)"),
+      card("Birth rate","1.85 → 1.48","children per woman, 2000 → 2025"),
+      card("Fund in 2035 (scenario)",fmt(O.fund[10]/1000,1)+" tn",chip((O.fund[10]-BASE.fund[10])/1000,true,1," tn"))
+    ].join("");
+  } else {
+    const isH=y<=2025, oi=y-2025;
+    const pop=y<=2025?V.pop[y-1990]:(y===2026?POP26:O.pop[y-2026]);
+    $("snap").innerHTML=[
+      card("Mainland GDP growth",fmt(val(y,"mainG","mainG"))+"%",isH?"SSB · total GDP "+fmt(H.gdpG[y-2000])+"%":chip(O.mainG[oi]-BASE.mainG[oi],true,1," pp")),
+      card("Inflation (CPI)",fmt(val(y,"cpi","cpi"))+"%",isH?(y<=2018?"target 2.5%":"target 2.0%"):chip(O.cpi[oi]-BASE.cpi[oi],false,1," pp")),
+      card("Unemployment",fmt(val(y,"u","u"))+"%",isH?(y<2009?"LFS series starts 2009":"SSB LFS"):chip(O.u[oi]-BASE.u[oi],false,1," pp")),
+      card("Interest rate",fmt(val(y,"rate","rate"),1)+"%",isH?"money-market · policy "+fmt(H.policy[y-2000],2)+"%":chip(O.rate[oi]-BASE.rate[oi],false,2," pp")),
+      card("Oil fund",fmt(val(y,"fund","fund"),0)+" bn",isH?"NOK, year-end":chip(O.fund[oi]-BASE.fund[oi],true,0," bn")),
+      card("Population, 1 Jan",fmt(pop/1000,3)+" m",isH?"SSB":"projection"),
+      card("Births",y<=2025?fmt(V.births[y-1990],0):"–",y<=2025?"TFR "+fmt(V.tfr[y-1990],2):"not modelled by year"),
+      card("Net migration",y>=1999&&y<=2025?fmt(V.imm[y-1990]-V.emi[y-1990],0):(y>2025?fmt((y===2026?BASE_IMM:S.imm)*1000,0):"–"),y<=2025?"immigration − emigration":"scenario lever")
+    ].join("");
+  }
+  // people snapshot
+  const py=Math.min(selYear,2025), pi=py-1990;
+  const pp=mode==="year"&&selYear<=2025;
+  $("psnap").innerHTML=[
+    card("Population",pp?fmt(V.pop[pi]/1000,3)+" m":"5,627,400",pp?"1 Jan "+py:"1 Jan 2026"),
+    card("Births",fmt(V.births[pi],0),"in "+py+" · deaths "+fmt(V.deaths[pi],0)),
+    card("Birth rate (TFR)",fmt(V.tfr[pi],2),"children per woman, "+py+" · replacement 2.1"),
+    card("Net migration",V.imm[pi]!=null?fmt(V.imm[pi]-V.emi[pi],0):"–","in "+py),
+    card("Immigrant background","21.8%","17.5% immigrants + 4.2% born here to immigrant parents"),
+    card("Aged 67+","17.1%","959,633 people · 80+: 284,939"),
+    card("Men per 100 women",fmt(MEN26/WOMEN26*100,1),fmt(MEN26,0)+" men · "+fmt(WOMEN26,0)+" women"),
+    card("Disability + AAP","544,200","374,900 + 169,300 (NAV)")
+  ].join("");
+}
+function simKpis(){
+  const o=O,b=BASE,i=Y.indexOf(simYear());
+  $("simNote").innerHTML=selYear<2026?`The timeline is on <b>${selYear}</b> (history). Simulator figures below show <b>2026</b>; move the timeline to 2027–2035 to see simulated years.`:`Key figures for <b>${simYear()}</b>${simYear()===2026?" (estimate)":" (simulated)"}. Chips compare with the official baseline.`;
+  $("kpis").innerHTML=[
+    card("Mainland GDP growth",fmt(o.mainG[i])+"%",chip(o.mainG[i]-b.mainG[i],true,1," pp")+" Total "+fmt(o.totG[i])+"%"),
+    card("Inflation (CPI)",fmt(o.cpi[i])+"%",chip(o.cpi[i]-b.cpi[i],false,1," pp")+" Target 2.0%"),
+    card("Unemployment",fmt(o.u[i])+"%",chip(o.u[i]-b.u[i],false,1," pp")+" "+fmt(o.emp[i],0)+"k employed"),
+    card("Interest rate",fmt(o.rate[i],2)+"%",chip(o.rate[i]-b.rate[i],false,2," pp")+(S.auto?" Norges Bank reacting":" Manual")),
+    card("Oil fund",fmt(o.fund[i]/1000,1)+" tn",chip((o.fund[i]-b.fund[i])/1000,true,1," tn")+" "+fmt(o.fpc[i],0)+"k per person"),
+    card("Oil money in budget",fmt(o.wd[i],0)+" bn",chip(o.wd[i]-b.wd[i],true,0," bn")+" "+fmt(o.wdPctFund[i],1)+"% of fund"),
+    card("House prices",(o.house[i]>0?"+":"")+fmt(o.house[i])+"%",chip(o.house[i]-b.house[i],true,1," pp")),
+    card("Population (end of year)",fmt(o.pop[i]/1000,3)+" m",chip((o.pop[i]-b.pop[i]),true,0,"k"))
+  ].join("");
+  document.querySelectorAll(".ySel").forEach(e=>e.textContent=simYear());
+  const sal=o.salary[i],mort=o.mort[i],m0=b.mort[i];
+  $("hh").innerHTML=[card("Monthly salary",fmt(sal,0)+" kr",chip(sal-b.salary[i],true,0," kr")),card("Real wage growth",(o.realWage[i]>0?"+":"")+fmt(o.realWage[i])+"%",chip(o.realWage[i]-b.realWage[i],true,1," pp")),card("Mortgage payment",fmt(mort,0)+" kr/mo",chip(mort-m0,false,0," kr")),card("Mortgage share of gross pay",fmt(mort/sal*100)+"%",chip((mort/sal-m0/b.salary[i])*100,false,1," pp"))].join("");
+  $("secTbl").innerHTML="<tr><th>Industry</th><th>2025 (bn)</th><th>"+simYear()+" (bn)</th><th>Scenario Δ</th><th>Baseline Δ</th><th>Gap</th></tr>"+SECT.map((r,j)=>{const s=(o.sec[j][i]/o.sec[j][0]-1)*100,bb=(b.sec[j][i]/b.sec[j][0]-1)*100,d=s-bb;return `<tr><td>${r[0]}</td><td>${fmt(o.sec[j][0],0)}</td><td>${fmt(o.sec[j][i],0)}</td><td>${fmt(s)}%</td><td>${fmt(bb)}%</td><td class="${d>0.05?"pos":d<-0.05?"neg":""}">${d>0?"+":""}${fmt(d)} pp</td></tr>`;}).join("");
+  const last=N-1,fEnd=o.fund[last],realChg=(fEnd/Math.pow(1.025,9))/o.fund[1]*100-100;
+  $("fiscalTxt").innerHTML=`By 2035 the fund is <b>NOK ${fmt(fEnd/1000,1)} trillion</b> (baseline ${fmt(b.fund[last]/1000,1)} tn), about <b>${fmt(Math.abs(realChg),0)}% ${realChg>=0?"larger":"smaller"}</b> than end-2026 in real terms. Spending ${fmt(S.spend,1)}% of the fund each year ${S.spend>3?"<b class='neg'>breaks the 3% fiscal rule</b> and erodes the fund for future generations":S.spend>S.ret?"<b class='neg'>exceeds the expected real return</b>, so the fund shrinks in real terms":"<b class='pos'>is within the expected real return</b>, so the fund's real value is preserved"}. In 2035 the budget uses NOK ${fmt(o.wd[last],0)} bn of oil money, ${fmt(o.wdPctGdp[last])}% of mainland GDP.`;
+}
+const FIXES=[
+ ["Get more people into work","Reform sick-leave and disability rules so more people keep a partial job; faster NAV follow-up and more graded benefits. 60,000 more in work is about 2% more employment, lifting GDP by roughly 1.5–2%.","Saves benefits and raises tax income. Risk: tighter rules can hurt people with real health limits.","part","Labour participation +60k","hi"],
+ ["Close the integration gap","Earlier Norwegian training, faster recognition of foreign qualifications, more on-the-job language programmes, and employer subsidies for refugees, especially Ukrainians now leaving the introduction programme.","Higher employment and lower child poverty (47% of immigrant children live in persistent low income). Costs upfront; results take years.","part","Labour participation +30k","hi"],
+ ["Raise productivity","Digitalise public services and health care (AI in hospitals, shared patient records), simplify regulation, more competition in retail and construction, and invest in skills.","The only lasting source of higher real wages. Benefits are slow and uncertain.","prod","Productivity +0.5 pp","hi"],
+ ["Build more homes","Faster zoning and planning, especially around Oslo; more housing for young families and students.","Lower housing costs and better labour mobility. Short-term: more construction pressure on prices and interest rates.","hs","—","md"],
+ ["Keep the fiscal rule credible","Stay at or below 3% of the fund, prioritise spending that raises productivity, and keep a buffer for market falls.","Protects future generations and helps Norges Bank cut rates sooner. Limits room for tax cuts or new spending.","spend","Fund spending 2.7% vs 4.2%","hi"],
+ ["Prepare for life after oil","Use offshore skills for wind, carbon capture, hydrogen, electrified industry and critical minerals; grow aquaculture and seafood exports.","Spreads risk as petroleum falls. New industries need power, grid and subsidies; some may not become profitable.","phase","Fast oil phase-out","md"],
+ ["More power and grid","Speed up approval of new power and grid capacity, and decide on long-term price policy (Norgespris vs. market prices, export cables).","Cheaper, more secure electricity for industry and homes. Trade-offs: nature, local opposition and fiscal cost of price support.","oil","—","md"],
+ ["Family policy for birth rates","Affordable housing for young adults, flexible parental leave, kindergarten capacity and support for fertility treatment. International evidence shows modest effects.","Helps the long-run age balance. Costly; effects on fertility are small and slow.","imm","—","lo"],
+ ["Tax reform","Broaden the tax base (housing and wealth taxation are long-debated), lower taxes on work and investment. Parties disagree sharply on the wealth tax.","Can raise investment and work incentives; distribution effects are contested.","spend","—","md"]
+];
+const SRC={
+ s05803:{n:"SSB 05803 Population and population changes",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/befolkning/folketall/statistikk/befolkning",use:"Population, births, deaths, migration 1990–2026",why:"Final register data from the national statistics office."},
+ s04232:{n:"SSB 04232 Total fertility rate",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/befolkning/fodte-og-dode/statistikk/fodte",use:"Birth rate 1990–2025",why:"Final register data."},
+ s07459:{n:"SSB 07459 Population by sex and age",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/befolkning/folketall/statistikk/befolkning",use:"Population pyramid, men and women, age groups (1 Jan 2026)",why:"Final register count."},
+ s05182:{n:"SSB 05182 Persons by immigration category",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/befolkning/innvandrere/statistikk/innvandrere-og-norskfodte-med-innvandrerforeldre",use:"Immigrants and Norwegian-born to immigrant parents 2000–2026",why:"Final register count."},
+ sImm:{n:"SSB Immigrants by country of birth",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/befolkning/innvandrere/statistikk/innvandrere-og-norskfodte-med-innvandrerforeldre",use:"Top 10 countries of origin, 1 Jan 2026",why:"Final register count."},
+ s13760:{n:"SSB 13760 Labour Force Survey (monthly)",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://data.ssb.no/api/pxwebapi/v2/tables/12880/metadata?lang=en",use:"Unemployment 5.0% and 2.93 m employed, Sep 2026",why:"Official survey; seasonally adjusted monthly figures move ±0.3 pp."},
+ sCPI:{n:"SSB Consumer price index",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/kpi",use:"CPI 3.4%, CPI-ATE 3.0%, Sep 2026; CPI index history",why:"Official monthly release, not revised."},
+ sEarn:{n:"SSB Earnings statistics",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://www.ssb.no/en/arbeid-og-lonn/lonn-og-arbeidskraftkostnader/statistikk/lonn",use:"Average monthly earnings by sex, 2025",why:"Official annual statistic."},
+ s08092:{n:"SSB 08092 Storting election results",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://data.ssb.no/api/pxwebapi/v2/tables/12880/metadata?lang=en",use:"2021 and 2025 election results by party",why:"Final official count."},
+ s08804:{n:"SSB 08804 External trade in goods by country",p:"Statistics Norway",t:"Official statistic",s:95,u:"https://data.ssb.no/api/pxwebapi/v2/tables/12880/metadata?lang=en",use:"Exports and imports by partner, 2025",why:"Official customs-based statistic."},
+ nbRate:{n:"Norges Bank policy rate data",p:"Norges Bank",t:"Central bank",s:95,u:"https://data.norges-bank.no/api/data/IR/A.KPRA.SD.R?format=csv&startPeriod=2000&locale=en",use:"Policy rate annual averages 2000–2025",why:"Primary source: the rate-setter's own data."},
+ nbDec:{n:"Norges Bank rate decision, 24 Sep 2026",p:"Norges Bank",t:"Central bank",s:95,u:"https://www.norges-bank.no/en/news-events/news/Press-releases/2026/2026-09-24-rate/",use:"Policy rate 4.50% and rate outlook",why:"Primary source."},
+ nbim:{n:"NBIM fund market value and annual reports",p:"Norges Bank Investment Management",t:"Fund manager",s:95,u:"https://www.nbim.no/en/the-fund/market-value/",use:"Oil fund value 2000–2025 and 30 Sep 2026",why:"The fund manager's own audited figures."},
+ nav:{n:"NAV statistics",p:"Norwegian Labour and Welfare Administration",t:"Official statistic",s:95,u:"https://www.nav.no/no/nav-og-samfunn/statistikk/aap-nedsatt-arbeidsevne-og-uforetrygd-statistikk/nyheter/lav-vekst-i-antall-uforetrygdede-i-2025",use:"Disability benefit, AAP, old-age pensioners, registered unemployment",why:"Administrative register counts."},
+ skRR:{n:"Skatteetaten resource-rent tax 2024",p:"Norwegian Tax Administration",t:"Tax authority",s:95,u:"https://www.skatteetaten.no/en/person/taxes/tax-assessment/search-the-tax-lists/grunnrenteskatt-2024/",use:"Hydropower, aquaculture and wind resource-rent totals",why:"Official assessment totals."},
+ s12880:{n:"SSB 12880 Main economic indicators and forecasts",p:"Statistics Norway",t:"Official statistic",s:90,u:"https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/konjunkturer/statistikk/konjunkturtendensene",use:"Growth, CPI, unemployment, wages, house prices, rates, oil price 1991–2025; baseline forecast 2026–2029",why:"Official; 2023–2025 preliminary (−5); 2026–2029 are SSB forecasts."},
+ s09189:{n:"SSB 09189 GDP and main aggregates",p:"Statistics Norway",t:"Official statistic",s:90,u:"https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/nasjonalregnskap/statistikk/nasjonalregnskap",use:"GDP levels 2000–2025, GDP by use, exports by type",why:"Official; 2023–2025 preliminary (−5)."},
+ sInd:{n:"SSB 09170 / 09174 Industry accounts",p:"Statistics Norway",t:"Official statistic",s:90,u:"https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/nasjonalregnskap/statistikk/nasjonalregnskap",use:"Value added and employment by industry, 2025",why:"Official; 2025 preliminary (−5)."},
+ sQNA:{n:"SSB Quarterly national accounts",p:"Statistics Norway",t:"Official statistic",s:90,u:"https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/nasjonalregnskap/statistikk/nasjonalregnskap",use:"GDP Q2 2026",why:"Official; first estimate, often revised (−5)."},
+ imdi:{n:"IMDi integration status 2026",p:"Directorate of Integration and Diversity",t:"Government agency",s:90,u:"https://www.imdi.no/en/english/what-is-the-status-of-integration-in-norway/",use:"Immigrant employment gap, child low income",why:"Official agency summary of SSB data."},
+ npet:{n:"Norwegianpetroleum.no",p:"Ministry of Energy",t:"Government agency",s:85,u:"https://www.norskpetroleum.no/en/economy/management-of-revenues/",use:"State petroleum cash flow 2026–2027",why:"Official, but 2026–2027 are government estimates (−5)."},
+ skPet:{n:"Skatteetaten petroleum tax list 2023",p:"Norwegian Tax Administration",t:"Tax authority",s:85,u:"https://www.skatteetaten.no/contentassets/6233c974aa184ee7a052d8acd2e18d5a/2024-11-skatteliste-for-petroleumsselskaper-2023.pdf",use:"Tax paid by each petroleum company",why:"Official list, but income year 2023, one year older than wanted (−10)."},
+ sProj:{n:"SSB 2026 population projections",p:"Statistics Norway",t:"Official projection",s:85,u:"https://www.ssb.no/en/befolkning/befolkningsframskrivinger/artikler/norways-2026-national-population-projections",use:"Population, 80+ share and immigrant share to 2100",why:"Official, but a projection under assumptions (−10)."},
+ coRep:{n:"Company annual and quarterly reports",p:"Listed and private companies",t:"Company filing",s:87,u:"https://newsweb.oslobors.no/",use:"2025 revenue for about 55 companies (each linked in the company table)",why:"Primary company filings; quarterly reports are unaudited (85), annual reports audited (90)."},
+ eur:{n:"Norges Bank EUR/NOK 2025 average",p:"Norges Bank via valuta-kurser.no",t:"Official rate (third-party page)",s:85,u:"https://www.valuta-kurser.no/en/norges-bank-monthly-average-2025-exchange-rate",use:"Converting EUR revenue at 11.7188",why:"Official rate read from a third-party page (−5); matches SSB's 11.72."},
+ usd:{n:"USD/NOK 10.40, derived from SSB 12880",p:"Our calculation",t:"Derived",s:80,u:"https://www.ssb.no/en/nasjonalregnskap-og-konjunkturer/konjunkturer/statistikk/konjunkturtendensene",use:"Converting USD revenue (oil price NOK 707 ÷ USD 68)",why:"Derived from official inputs (−10); rounding gives ±0.8%."},
+ agg:{n:"21st.ai and proff.no",p:"Brønnøysund-based aggregators",t:"Registry aggregator",s:70,u:"https://www.proff.no/",use:"Revenue of about 25 subsidiaries and private firms",why:"Copies of official filed accounts, but consolidation and year labels are sometimes unclear."},
+ press:{n:"TU and The Local on Budget 2027",p:"Press",t:"Press",s:65,u:"https://www.tu.no/energi/vil-bruke-6084-mrd-oljekroner-neste-ar/7144202",use:"Fund spending NOK 608.4 bn, budget measures, ministry forecasts",why:"Reports official figures, but regjeringen.no could not be read directly."},
+ polls:{n:"PolitPro poll average",p:"PolitPro",t:"Poll aggregator",s:50,u:"https://politpro.eu/en/norway",use:"October 2026 party polls",why:"Opinion polls, not results; each poll has a ±2–3 pp margin."},
+ stockan:{n:"stockanalysis.com",p:"Data aggregator",t:"Data aggregator",s:50,u:"https://stockanalysis.com/quote/osl/KOMPL/financials/",use:"Komplett revenue",why:"Unofficial aggregator; not checked against the annual report."},
+ live:{n:"Live estimates in the header",p:"Our extrapolation",t:"Live estimate",s:40,u:"",use:"Ticking fund value, population, GDP, petroleum money, births",why:"Official starting points run forward at recent average pace; real values move differently."},
+ sim:{n:"Simulation model",p:"Our model",t:"Model output",s:30,u:"",use:"All 2027–2035 scenario values",why:"Stylised model around the SSB forecast; shows direction, not a forecast."}
+};
+function band(s){return s>=90?["b1","Verified"]:s>=75?["b2","Reliable"]:s>=55?["b3","Indicative"]:["b4","Estimate"];}
+function esc(t){return String(t).replace(/"/g,"&quot;");}
+function badge(s,why,label){const [b,l]=band(s);return `<span class="cf ${b}" title="${esc((label?label+" · ":"")+l+" ("+s+"/100)"+(why?": "+why:""))}">${s}</span>`;}
+function srcBadge(id){const r=SRC[id];return r?badge(r.s,r.why,r.n):"";}
+/* ===================== COMPANIES ===================== */
+const USDNOK=10.40, EURNOK=11.7188;
+// [name, NOK bn, sector, ownership, fy, original figure, flag(1=basis differs), note, source url]
+const CO=[
+["Equinor ASA",106462*USDNOK/1000,"Oil & gas","Listed (state 67%)",2025,"USD 106.5 bn",0,"Total revenues and other income","https://ml-eu.globenewswire.com/Resource/Download/ad11c78b-d28a-47f7-906d-0feb7dec1fdb"],
+["Norsk Hydro ASA",207.971,"Industry & materials","Listed (state 34%)",2025,"NOK 208.0 bn",0,"","https://via.ritzau.dk/files/90446/14791568/341453/en"],
+["Yara International ASA",15700*USDNOK/1000,"Industry & materials","Listed (state 36%)",2025,"USD 15.7 bn",0,"Rounded figure from annual report","https://beta.yara.com/siteassets/investors/057-reports-and-presentations/annual-reports/2025/yara-annual-report-2025.pdf"],
+["NorgesGruppen ASA",125.3,"Retail & consumer","Private",2025,"NOK 125.3 bn",0,"Operating revenue excl. IFRS 16","https://kommunikasjon.ntb.no/pressemelding/18846680/rekordomsetning-og-lavere-marginer-for-norgesgruppen-i-2025"],
+["Reitan AS (REMA 1000, Uno-X…)",116.465,"Retail & consumer","Private",2025,"NOK 116.5 bn",1,"Brønnøysund accounts via 21st.ai; consolidation not labelled","https://21st.ai/en/companies/1066968/no/trondheim/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-912609987-reitan-as/summary"],
+["Aker BP ASA",10943.1*USDNOK/1000,"Oil & gas","Listed",2025,"USD 10.9 bn",0,"Total income","https://mb.cision.com/Public/1629/4305628/9aeaed336f6150a6.pdf"],
+["DNB Bank ASA",90.649,"Finance","Listed (state 34%)",2025,"NOK 90.6 bn",1,"Bank: total income, not sales","https://content.dnb.no/docs/9728317/annual-report-2025-dnb-group.pdf"],
+["Vår Energi ASA",8096*USDNOK/1000,"Oil & gas","Listed (Eni majority)",2025,"USD 8.1 bn",0,"Total income","https://mb.cision.com/Public/21086/4305025/bd1a0561bff4ea5b.pdf"],
+["Telenor ASA",76.548,"Telecom & tech","Listed (state 54%)",2025,"NOK 76.5 bn",0,"","https://www.telenor.com/binaries/investors/reports-and-information/quarterly/2025/Report-Q4-and-Full-Year-2025.pdf"],
+["Orkla ASA",71.5,"Retail & consumer","Listed",2025,"NOK 71.5 bn",0,"","https://www.orkla.com/media/press-releases/2026/orkla-reports-growth-in-the-fourth-quarter/"],
+["Mowi ASA",5720.2*EURNOK/1000,"Seafood","Listed",2025,"EUR 5.72 bn",0,"","https://ml-eu.globenewswire.com/Resource/Download/96c5e442-0aa6-4e23-91e0-60d4c12dd67d"],
+["Coop Norge SA",66.836,"Retail & consumer","Cooperative",2025,"NOK 66.8 bn",1,"Company accounts via 21st.ai; excludes local co-ops","https://21st.ai/en/companies/136545/no/oslo/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-936560288-coop-norge-sa/summary"],
+["KLP",65.124,"Finance","Mutual",2025,"NOK 65.1 bn",1,"Pension: premium income, not sales","https://www.klp.no/om-klp/finans-og-ir/rapporter-og-presentasjoner/_/attachment/inline/9753dfdc-9b56-4efa-a823-1815678b2a6f:689c7639e59b121bb73dd67b5ba2c37a87ae8933/NOR%20Kvartalsrapport%20NOR%20Q4%202025.pdf"],
+["Aker Solutions ASA",63.202,"Oil service & engineering","Listed",2025,"NOK 63.2 bn",0,"","https://prod.akersolutions.com/contentassets/e65190004f3f46dcb62562887c16bc50/aker-solutions-annual-report-2025.pdf"],
+["TotalEnergies EP Norge AS",61.5,"Oil & gas","Foreign-owned",2025,"NOK 61.5 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/325071/no/stavanger/extraction-of-crude-petroleum-and-natural-gas/org-number-927066440-totalenergies-ep-norge-as/summary"],
+["Kongsberg Gruppen ASA",58.599,"Industry & materials","Listed (state 50%)",2025,"NOK 58.6 bn",0,"Incl. Kongsberg Maritime (demerged 2026)","https://www.kongsberg.com/globalassets/kongsberg-asa/5.-investor-relations/1.3.-reports-and-presentations/1.3.1.-annual-report/annual-report-2025/kog-annual-report-2025.pdf"],
+["Wallenius Wilhelmsen ASA",5240*USDNOK/1000,"Shipping & transport","Listed",2025,"USD 5.24 bn",0,"","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/02/11/665330_Wallenius%20Wilhelmsen%20Quarterly%20report%20Q4%202025.pdf"],
+["Statkraft AS",47.585,"Energy & utilities","State-owned",2025,"NOK 47.6 bn",1,"Underlying NET revenue; gross not published in source","https://ml-eu.globenewswire.com/Resource/Download/e688939a-9153-4677-9511-e845c983a116"],
+["Elkjøp Nordic AS",43.524,"Retail & consumer","Foreign-owned",2025,"NOK 43.5 bn",1,"Company accounts; Nordic group FY25/26 = NOK 50.9 bn","https://elkjopnordic.com/articles/elkjop-nordic-surpasses-50b-nok-delivers-strongest-profitability-in-years"],
+["Veidekke ASA",43.143,"Construction & real estate","Listed",2025,"NOK 43.1 bn",0,"","https://mb.cision.com/Main/17348/4328063/4012434.pdf"],
+["Gjensidige Forsikring ASA",42.77,"Finance","Listed",2025,"NOK 42.8 bn",1,"Insurer: insurance revenue (IFRS 17)","https://www.inderes.fi/en/releases/gjensidige-forsikring-asa-delivered-on-all-financial-targets-for-2025"],
+["ConocoPhillips Skandinavia AS",39.871,"Oil & gas","Foreign-owned",2025,"NOK 39.9 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/941187/no/tananger/extraction-of-crude-petroleum-and-natural-gas/org-number-918110127-conocophillips-skandinavia-as/summary"],
+["Møller Mobility Group",39.378,"Retail & consumer","Private",2024,"NOK 39.4 bn",1,"FY2024 (2025 full year not found)","https://mollergruppen.s3.eu-west-1.amazonaws.com/TERTIALRAPPORT-2.TERTIAL-PR-31.08.2025-2.pdf"],
+["Austevoll Seafood ASA (incl. Lerøy)",39.32,"Seafood","Listed",2025,"NOK 39.3 bn",0,"Consolidates Lerøy Seafood (NOK 34.4 bn)","https://www.auss.no/media/1659/financial-report-q4-2025-auss.pdf"],
+["Atea ASA",37.376,"Telecom & tech","Listed",2025,"NOK 37.4 bn",0,"","https://www.atea.com/media/w00dugjf/atea_q4_2025_report.pdf"],
+["DNV Group AS",35.291,"Services","Foundation-owned",2025,"NOK 35.3 bn",0,"","https://www.dnv.com/annualreport/"],
+["Nortura SA",33.835,"Food & agriculture","Cooperative",2025,"NOK 33.8 bn",0,"","https://www.nortura.no/attachments/%C3%85rsmeldinger/Nortura_aarsmelding_2025B.pdf"],
+["Visma",2803*EURNOK/1000,"Telecom & tech","Private (PE-owned)",2025,"EUR 2.80 bn",0,"Preliminary; mostly non-Norwegian revenue","https://mfn.se/a/visma/visma-delivers-strong-2025-with-record-customer-intake-and-continued-ai-led-innovation"],
+["AF Gruppen ASA",31.992,"Construction & real estate","Listed",2025,"NOK 32.0 bn",0,"","https://www.afgruppen.com/4993df/siteassets/investor-en-dokumenter/annual-reports/af-annual-report-2025.pdf"],
+["Elkem ASA",30.806,"Industry & materials","Listed (Bluestar majority)",2025,"NOK 30.8 bn",0,"","https://mb.cision.com/Main/16930/4306937/3932562.pdf"],
+["Microsoft Norge AS",30.292,"Telecom & tech","Foreign-owned",2025,"NOK 30.3 bn",1,"Company accounts via 21st.ai; year label unclear","https://21st.ai/en/companies/533624/no/oslo/-/org-number-957485030-microsoft-norge-as/summary"],
+["Tine SA",30.1,"Food & agriculture","Cooperative",2025,"NOK 30.1 bn",1,"Sales revenue","https://www.mynewsdesk.com/no/tine-sa/pressreleases/tine-deler-ut-17-milliarder-til-melkeboender-i-hele-landet-3431977"],
+["ORLEN Upstream Norway AS",28.457,"Oil & gas","Foreign-owned",2025,"NOK 28.5 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/744311/no/stavanger/extraction-of-crude-petroleum-and-natural-gas/org-number-991317155-orlen-upstream-norway-as/summary"],
+["SalMar ASA",27.394,"Seafood","Listed",2025,"NOK 27.4 bn",0,"","https://ml-eu.globenewswire.com/Resource/Download/d7c13774-e5cf-4a3a-9be7-b4aab1a012df"],
+["Lyse AS",26.659,"Energy & utilities","Municipal",2025,"NOK 26.7 bn",0,"Total income","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/03/25/669268_B%C3%B8rsmelding%20Lyse%20%C3%85rsrapport%202025.pdf"],
+["Posten Bring AS",25.289,"Shipping & transport","State-owned",2025,"NOK 25.3 bn",0,"","https://www.mynewsdesk.com/no/posten-bring/pressreleases/et-godt-aar-i-et-usikkert-marked-3432723"],
+["A/S Norske Shell",25.249,"Oil & gas","Foreign-owned",2025,"NOK 25.2 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/1009325/no/stavanger/extraction-of-crude-petroleum-and-natural-gas/org-number-914807077-a-s-norske-shell/summary"],
+["Felleskjøpet Agri SA",22.407,"Food & agriculture","Cooperative",2025,"NOK 22.4 bn",0,"","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/02/26/666926_%C3%85rsrapport%202025.pdf"],
+["Vy (Vygruppen AS)",20.8,"Shipping & transport","State-owned",2025,"NOK 20.8 bn",0,"","https://www.vy.no/nn/vygruppen/presse-og-nyhende/2026/3432492"],
+["Statnett SF",20.205,"Energy & utilities","State-owned",2025,"NOK 20.2 bn",0,"","https://www.statnett.no/globalassets/om-statnett/investorrelasjoner/arsrapporter/arsrapport-2025.pdf"],
+["Apotek 1 Gruppen AS",19.648,"Health & pharma","Foreign-owned",2025,"NOK 19.6 bn",1,"Company accounts via 21st.ai; year label unclear","https://21st.ai/en/companies/81089/no/lorenskog/retail-trade-except-of-motor-vehicles-and-motorcycles/org-number-983044778-apotek-1-gruppen-as/summary"],
+["Bane NOR SF",19.584,"Shipping & transport","State-owned",2025,"NOK 19.6 bn",0,"Mostly state purchase payments","https://21st.ai/en/companies/956570/no/oslo/civil-engineering/org-number-917082308-bane-nor-sf/summary"],
+["Power International AS",19.295,"Retail & consumer","Private",2025,"NOK 19.3 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/518770/no/lorenskog/-/org-number-955672828-power-international-as/summary"],
+["AS Vinmonopolet",18.707,"Retail & consumer","State-owned",2025,"NOK 18.7 bn",0,"Company accounts via proff.no","https://www.proff.no/selskap/vinmonopolet/oslo/butikkhandel/IDIJN6I10MC"],
+["Aker ASA",18.4,"Industry & materials","Listed",2025,"NOK 18.4 bn",0,"Holding; Aker BP and Aker Solutions not fully consolidated","https://www.akerasa.com/~/media/Files/A/aker-corp/results-and-presentations/Aker_ASA_Annual_Report-2025.pdf"],
+["OMV (Norge) AS",16.747,"Oil & gas","Foreign-owned",2025,"NOK 16.7 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/1005752/no/stavanger/extraction-of-crude-petroleum-and-natural-gas/org-number-988400025-omv-norge-as/summary"],
+["St1 Norge AS",16.284,"Energy & utilities","Foreign-owned",2025,"NOK 16.3 bn",0,"Company accounts via proff.no","https://www.proff.no/selskap/st1-norge-as/oslo/butikkhandel/IF3QVQE10MC"],
+["TGS ASA",1526.9*USDNOK/1000,"Oil service & engineering","Listed",2025,"USD 1.53 bn",0,"","https://ml-eu.globenewswire.com/Resource/Download/35ae040e-7a2c-4cc6-a80a-d03b49ec2357"],
+["Komplett ASA",15.405,"Retail & consumer","Listed",2025,"NOK 15.4 bn",1,"From data aggregator; verify against annual report","https://stockanalysis.com/quote/osl/KOMPL/financials/"],
+["Tomra Systems ASA",1318*EURNOK/1000,"Industry & materials","Listed",2025,"EUR 1.32 bn",0,"","https://mb.cision.com/Public/4659/4307254/b2ddd275a5c7fc81.pdf"],
+["DNO ASA",1474*USDNOK/1000,"Oil & gas","Listed",2025,"USD 1.47 bn",0,"","https://www.dno.no/en/investors/announcements/dno-exits-landmark-year-prepped-for-a-nervous-and-frisky-market-in-2026-2026-02-05/"],
+["Skanska Norge AS",15.215,"Construction & real estate","Foreign-owned",2025,"NOK 15.2 bn",0,"Company accounts via proff.no","https://www.proff.no/selskap/skanska-norge-as/oslo/bygg-og-anleggsleverand%C3%B8rer/IFLGTMJ0CVG-3"],
+["Europris ASA",14.878,"Retail & consumer","Listed",2025,"NOK 14.9 bn",0,"","https://s21.q4cdn.com/815767348/files/doc_events/general-meetings/2026/Europris-ASA-Annual-report-2025.pdf"],
+["Höegh Autoliners ASA",1426*USDNOK/1000,"Shipping & transport","Listed",2025,"USD 1.43 bn",0,"","https://annualreport2025.hoeghautoliners.com/year-2025/key-figures/"],
+["Elopak ASA",1205.6*EURNOK/1000,"Industry & materials","Listed",2025,"EUR 1.21 bn",0,"","https://storage.mfn.se/486babf6-cb95-43a8-bdd5-a6cc0ac9a43d/elopak-asa-q4-2025-report.pdf"],
+["Telia Norge AS",14.137,"Telecom & tech","Foreign-owned",2025,"NOK 14.1 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/492048/no/oslo/telecommunications/org-number-981929055-telia-norge-as/summary"],
+["SpareBank 1 Sør-Norge ASA",14.04,"Finance","Listed",2025,"NOK 14.0 bn",1,"Bank: total income","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/03/26/669385_%C3%85rsrapport%202025.pdf"],
+["OBOS BBL",13.949,"Construction & real estate","Cooperative",2025,"NOK 13.9 bn",0,"","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/04/10/670355_OBOS%20%C3%85rsrapport%202025.pdf"],
+["Avinor AS",13.912,"Shipping & transport","State-owned",2025,"NOK 13.9 bn",0,"","https://om.avinor.no/siteassets/investorer/finansiering/avinor-q1-2026-nor.pdf"],
+["Ruter AS",13.788,"Shipping & transport","Municipal",2025,"NOK 13.8 bn",0,"","https://ruter.no/rapporter/aarsrapport2025/okonomi-2025/ruters-okonomi-og-nokkeltall-2025"],
+["BAMA Gruppen AS",13.706,"Food & agriculture","Private",2025,"NOK 13.7 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/556885/no/oslo/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-914224314-bama-gruppen-as/summary"],
+["Circle K Norge AS",13.437,"Energy & utilities","Foreign-owned",2025,"NOK 13.4 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/918792/no/oslo/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-914766451-circle-k-norge-as/summary"],
+["Wilh. Wilhelmsen Holding ASA",1234*USDNOK/1000,"Shipping & transport","Listed",2025,"USD 1.23 bn",0,"","https://www.wilhelmsen.com/globalassets/investor-relations/quarterly-reportspresentation/wilhelmsen-q4-2025-presentation.pdf"],
+["Alliance Healthcare Norge AS",12.37,"Health & pharma","Foreign-owned",2025,"NOK 12.4 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/447509/no/oslo/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-912672719-alliance-healthcare-norge-as/summary"],
+["Optimera AS",11.234,"Construction & real estate","Foreign-owned",2025,"NOK 11.2 bn",0,"Company accounts via proff.no","https://www.proff.no/selskap/optimera-as/oslo/detaljhandel/IFZQG1S10MN"],
+["Eviny AS",10.958,"Energy & utilities","Municipal",2025,"NOK 11.0 bn",0,"","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/03/25/669251_Eviny%20-%20%C3%85rsrapport%202025.pdf"],
+["Eidsiva Energi AS",10.212,"Energy & utilities","Municipal",2025,"NOK 10.2 bn",0,"","https://live.euronext.com/sites/default/files/company_press_releases/attachments_oslo/2026/02/11/665424_Kvartalsrapport%20Q4%202025.pdf"],
+["Norsk Tipping AS",10.2,"Services","State-owned",2025,"NOK 10.2 bn",1,"Net gaming revenue","https://g3newswire.com/norsk-tipping-delivers-its-second-best-year-of-results-ever-with-nok7-69bn/"],
+["Norconsult ASA",10.103,"Services","Listed",2025,"NOK 10.1 bn",1,"Net operating revenue","https://mfn.se/all/a/norconsult/norconsult-asa-q4-and-full-year-2025-solid-organic-growth-and-stable-profitability-06b25a6a"],
+["Bertel O. Steen AS",9.109,"Retail & consumer","Private",2025,"NOK 9.1 bn",1,"Company only; group is larger","https://21st.ai/en/companies/125103/no/lorenskog/wholesale-trade-except-of-motor-vehicles-and-motorcycles/org-number-916218753-bertel-o-steen-as/summary"],
+["SpareBank 1 SMN",9.068,"Finance","Listed",2025,"NOK 9.1 bn",1,"Bank: total income","https://www.sparebank1.no/content/dam/SB1/bank/smn/vedlegg/Investor/ars-og-kvartalsrapporter/2025-q4-rapport-norsk.pdf"],
+["Kitron ASA",738*EURNOK/1000,"Industry & materials","Listed",2025,"EUR 738 m",0,"","https://www.inderes.dk/releases/kitron-raises-outlook-on-defence-super-cycle-as-q4-delivers-record-results"],
+["OKEA ASA",808.1*USDNOK/1000,"Oil & gas","Listed",2025,"USD 808 m",0,"","https://mb.cision.com/Public/18168/4301570/bad197c2d5489026.pdf"],
+["Borregaard ASA",7.713,"Industry & materials","Listed",2025,"NOK 7.7 bn",0,"","https://www.borregaard.com/investors/ir-news/4th-quarter-2025-results-borregaard"],
+["Nordic Semiconductor ASA",668*USDNOK/1000,"Telecom & tech","Listed",2025,"USD 668 m",0,"","https://www.inderes.dk/releases/nod-fourth-quarter-and-preliminary-full-year-results-2025"],
+["Cermaq Norway AS",6.702,"Seafood","Foreign-owned",2025,"NOK 6.7 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/629811/no/nordfold/fishing-and-aquaculture/org-number-961922976-cermaq-norway-as/summary"],
+["Vend Marketplaces ASA",6.317,"Telecom & tech","Listed",2025,"NOK 6.3 bn",0,"","https://vend.com/news/interim-report-q4-2025"],
+["Multiconsult ASA",5.657,"Services","Listed",2025,"NOK 5.7 bn",1,"Net operating revenue","https://www.multiconsultgroup.com/investor-relations/news/news-item/2026/february/multiconsult-fourth-quarter-and-full-year-2025--stable-quarter-in-a-challenging-market/"],
+["ISS Facility Services AS",5.74,"Services","Foreign-owned",2024,"NOK 5.7 bn",1,"FY2024 (latest available)","https://www.proff.no/selskap/iss-facility-services-as/oslo/annen-forretningsmessig-tjenesteyting/IF4N5T710LQ"],
+["Scatec ASA",5.238,"Energy & utilities","Listed",2025,"NOK 5.2 bn",0,"","https://www.inderes.fi/releases/scatec-fourth-quarter-2025-growth-continues"],
+["Amedia AS",5.0,"Telecom & tech","Foundation-owned",2025,"≈ NOK 5.0 bn",0,"Media; incl. Berlingske (Denmark)","https://www.amedia.no/images/dokumenter/2261085%20Arsrapport%202025.pdf"],
+["Felleskjøpet Rogaland Agder SA",3.965,"Food & agriculture","Cooperative",2025,"NOK 4.0 bn",0,"Company accounts via 21st.ai","https://21st.ai/en/companies/230389/no/stavanger/manufacture-of-food-products/org-number-915442552-felleskjopet-rogaland-agder-sa/summary"],
+["Kid ASA",3.945,"Retail & consumer","Listed",2025,"NOK 3.9 bn",0,"","https://investor.kid.no/media/36607/kid-asa_quarterly_presentation-q4-25.pdf"],
+["Grieg Seafood ASA",3.694,"Seafood","Listed",2025,"NOK 3.7 bn",0,"Continuing operations","https://storage.mfn.se/8bc09e24-f9fd-463d-8eee-d4d7e6a0e19f/2025-gsf-annual-report.pdf"],
+["Hexagon Composites ASA",2.955,"Industry & materials","Listed",2025,"NOK 3.0 bn",0,"","https://hexagongroup.com/news/hexagon-composites-asa-fourth-quarter-and-full-year-2025"],
+["Selvaag Bolig ASA",2.087,"Construction & real estate","Listed",2025,"NOK 2.1 bn",0,"","https://storage.mfn.se/059c890c-3304-4c2a-b1c9-a79a493e1099/report-4th-quarter-2025.pdf"]
+].sort((a,b)=>b[1]-a[1]);
+const CMISSING=["Norwegian Air Shuttle (≈ NOK 38 bn implied, exact figure not found)","Hafslund","Å Energi","Storebrand","Sparebanken Norge","Varner-Gruppen","Harbour Energy Norge (currency unclear)","Subsea 7 Norway","Aibel","Vard","Nammo","Esso Norge","Alcoa Norway","Halliburton AS","Schlumberger Norge","TechnipFMC Norge","OneSubsea","Baker Hughes Norge","Odfjell","Bonheur","DOF Group","Hurtigruten","Color Line","Schibsted Media","XXL","Tesla Norway","Nexans Norway","GE HealthCare AS","Peab","NCC Norge","Kruse Smith","Backe","Mestergruppen","Norsk Gjenvinning","Nye Veier","Aker BioMarine","Ulstein","Norske Skog","Pelagia","Nordlaks","Kverva","Skretting","EWOS / Cargill","Akastor"];
+// Skatteetaten petroleum tax list, income year 2023: [name, orgnr, taxable income NOK, total tax NOK]
+const PT=[["Equinor Energy AS","990888213",321144240551,232074877265],["Aker BP ASA","989795848",101473161845,64783724988],["TotalEnergies EP Norge AS","927066440",54917839163,40171820409],["Wintershall Dea Norge AS (now Harbour)","985224323",27652633602,20251579459],["Vår Energi ASA","919160675",33603187871,18114950603],["ConocoPhillips Skandinavia AS","918110127",24437387237,15718709655],["A/S Norske Shell","914807077",20545305286,15555945610],["Vår Energi Norge AS","983426417",18649404557,15009657005],["OMV (Norge) AS","988400025",16500701695,12169935496],["Sval Energi AS","996888177",11755729757,8785897272],["ORLEN Upstream Norway AS","991317155",14474875642,7572521152],["INPEX Idemitsu Norge AS","953133210",5859264664,4621103776],["OKEA ASA","915419062",5158509186,2930539236],["Repsol Norge AS","993787787",3495372527,2894216181],["CapeOmega AS","995152142",3694822460,2299360029],["ORLEN Upstream Norway 2 AS","946680591",3295116188,2196478461],["Hav Energy NCS Gas AS","921166753",1942353022,1182412571],["Silex Gas Norway AS","996739910",741993496,443450284],["North Sea Infrastructure AS","918500863",324422892,236027260],["Pandion Energy AS","918175334",136856460,209970434],["M Vest Energy AS","916358857",206602245,79089880],["Norpipe Oil AS","975871932",118325571,75239511],["DNO Norge AS","913905881",528228795,8924005],["INPEX Norge AS","913120981",0,0],["Lotos Exploration and Production Norge AS","991735194",0,0],["Petro-Canada Norway (NUF)","977095239",0,0],["ExxonMobil E&P Norway AS","914048990",0,-1603738],["Lukoil Overseas North Shelf AS","998152550",0,-2826670],["MOL Norge AS","988120545",0,-3528141],["Lime Petroleum AS","998726441",0,-44554323],["Petrolia NOCO AS","997015231",0,-49176842],["Source Energy AS","919886080",0,-201775356],["Harbour Energy Norge AS","919496649",0,-217126042],["Concedo AS","988217867",0,-222484899],["Japex Norge AS","924186720",0,-311846565],["Wellesley Petroleum AS","913561473",0,-417510408],["Kistos Energy (Norway) AS","918980946",0,-901120060]];
+const SECCOL={"Oil & gas":"--c4","Oil service & engineering":"--c7","Industry & materials":"--c5","Retail & consumer":"--c1","Finance":"--c8","Telecom & tech":"--c2","Seafood":"--c6","Food & agriculture":"--c6","Energy & utilities":"--c3","Shipping & transport":"--c8","Construction & real estate":"--c5","Services":"--c2","Health & pharma":"--c3"};
+let csort={k:2,dir:-1};
+function ownGroup(o){return o.startsWith("Listed")?"Listed":o.startsWith("State")?"State-owned":o.startsWith("Municipal")?"Municipal":o.startsWith("Foreign")?"Foreign-owned":o.startsWith("Cooperative")||o.startsWith("Mutual")?"Cooperative / mutual":o.startsWith("Foundation")?"Foundation-owned":"Private";}
+function drawCompanies(){
+  const tot=CO.reduce((a,r)=>a+r[1],0), oil=CO.filter(r=>r[2]==="Oil & gas").reduce((a,r)=>a+r[1],0);
+  $("ckpis").innerHTML=[card("Companies ranked",CO.length,"with a verified 2025 figure"),card("Largest","Equinor","NOK "+fmt(CO[0][1],0)+" bn"),card("Combined revenue","NOK "+fmt(tot/1000,2)+" tn","incl. foreign revenue of global groups"),card("Oil & gas share",fmt(oil/tot*100,0)+"%","of the listed companies' revenue")].join("");
+  const top=CO.slice(0,25), op=hbarOpts(" bn",0);
+  op.plugins.tooltip.callbacks.label=c=>{const r=top[c.dataIndex];return "NOK "+fmt(r[1],1)+" bn · "+r[5]+(r[7]?" · "+r[7]:"");};
+  mk("co_top",{type:"bar",data:{labels:top.map(r=>r[0]),datasets:[{label:"Revenue",data:top.map(r=>+r[1].toFixed(1)),backgroundColor:top.map(r=>r[6]?css("--c4"):css("--fjord"))}]},options:op});
+  const bySec={};CO.forEach(r=>bySec[r[2]]=(bySec[r[2]]||0)+r[1]);
+  const secs=Object.entries(bySec).sort((a,b)=>b[1]-a[1]);
+  mk("co_sector",{type:"bar",data:{labels:secs.map(s=>s[0]),datasets:[{label:"NOK bn",data:secs.map(s=>+s[1].toFixed(0)),backgroundColor:secs.map(s=>css(SECCOL[s[0]]||"--c1"))}]},options:hbarOpts(" bn",0)});
+  const byOwn={};CO.forEach(r=>{const g=ownGroup(r[3]);byOwn[g]=byOwn[g]||[0,0];byOwn[g][0]++;byOwn[g][1]+=r[1];});
+  const owns=Object.entries(byOwn).sort((a,b)=>b[1][1]-a[1][1]);
+  const oo=baseOpts("",{legend:true,dec:0,zero:true}); oo.scales.y1={position:"right",grid:{display:false},beginAtZero:true,ticks:{color:css("--muted"),font:{family:"IBM Plex Mono",size:10}}};
+  mk("co_own",{type:"bar",data:{labels:owns.map(o=>o[0]),datasets:[{label:"Revenue, NOK bn",data:owns.map(o=>+o[1][1].toFixed(0)),backgroundColor:css("--fjord"),yAxisID:"y"},{label:"Companies",data:owns.map(o=>o[1][0]),backgroundColor:css("--c4"),yAxisID:"y1"}]},options:oo});
+  // filters
+  const sel=(id,vals,all)=>{const el=$(id);if(el.options.length)return;el.innerHTML=`<option value="">${all}</option>`+vals.map(v=>`<option>${v}</option>`).join("");};
+  sel("csector",[...new Set(CO.map(r=>r[2]))].sort(),"All sectors");
+  sel("cown",[...new Set(CO.map(r=>ownGroup(r[3])))].sort(),"All owners");
+  ctable();
+  $("cmissing").textContent=CMISSING.join(" · ");
+  // tax
+  const pos=PT.filter(r=>r[3]>0).reduce((a,r)=>a+r[3],0);
+  $("tkpis").innerHTML=[card("Petroleum tax 2024","NOK 382 bn","all companies, Skatteetaten"),card("Largest payer 2023","Equinor Energy","NOK "+fmt(PT[0][3]/1e9,1)+" bn"),card("Top 5 share (2023)",fmt(PT.slice(0,5).reduce((a,r)=>a+r[3],0)/pos*100,0)+"%","of petroleum tax paid"),card("Hydropower resource rent 2024","NOK 16.9 bn","all companies combined")].join("");
+  const pt=PT.filter(r=>r[3]!==0), tp=hbarOpts(" bn",1);
+  tp.plugins.tooltip.callbacks.label=c=>"NOK "+fmt(pt[c.dataIndex][3]/1e9,2)+" bn";
+  mk("tx_petro",{type:"bar",data:{labels:pt.map(r=>r[0]),datasets:[{label:"Tax 2023",data:pt.map(r=>+(r[3]/1e9).toFixed(2)),backgroundColor:pt.map(r=>r[3]<0?css("--red"):css("--c4"))}]},options:tp});
+  mk("tx_rr",{type:"bar",data:{labels:["Hydropower","Aquaculture (gross)","Aquaculture (net of levy)","Onshore wind (gross)"],datasets:[{label:"NOK bn",data:[16.933,1.005,0.469,0.023],backgroundColor:[css("--c3"),css("--c6"),css("--c2"),css("--c1")]}]},options:baseOpts(" bn",{dec:2,zero:true})});
+  $("ttable").innerHTML="<tr><th>#</th><th>Company</th><th>Org. no.</th><th>Taxable income (NOK m)</th><th>Tax (NOK m)</th><th>Confidence</th></tr>"+PT.map((r,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${r[0]}</td><td>${r[1]}</td><td>${fmt(r[2]/1e6,0)}</td><td class="${r[3]<0?"neg":""}">${fmt(r[3]/1e6,0)}</td><td>${srcBadge("skPet")}</td></tr>`).join("");
+}
+function ctable(){
+  const q=($("csearch").value||"").toLowerCase(), s=$("csector").value, o=$("cown").value;
+  let rows=CO.map((r,i)=>[i+1,...r]).filter(r=>(!q||r[1].toLowerCase().includes(q))&&(!s||r[3]===s)&&(!o||ownGroup(r[4])===o));
+  const k=csort.k; rows.sort((a,b)=>{const x=a[k],y=b[k];return (typeof x==="number"?x-y:String(x).localeCompare(String(y)))*csort.dir;});
+  const H=[["#",0],["Company",1],["Revenue NOK bn",2],["Confidence",-1],["Reported",6],["Sector",3],["Ownership",4],["Year",5],["Note",8],["Source",-1]];
+  $("ccount").textContent=rows.length+" of "+CO.length;
+  $("ctable").innerHTML="<tr>"+H.map(([h,i])=>`<th${i>=0?` data-k="${i}" style="cursor:pointer"`:""}>${h}${csort.k===i?(csort.dir<0?" ▾":" ▴"):""}</th>`).join("")+"</tr>"+
+    rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:left;white-space:normal;min-width:180px"><b>${r[1]}</b></td><td>${fmt(r[2],1)}</td><td>${badge(coScore(r.slice(1)),coWhy(r.slice(1)),r[1])}</td><td>${r[6]}</td><td style="text-align:left">${r[3]}</td><td style="text-align:left">${r[4]}</td><td>${r[5]}</td><td style="text-align:left;white-space:normal;min-width:180px">${r[7]?'<span class="pill md">check basis</span> ':''}${r[8]||""}</td><td><a href="${r[9]}" target="_blank" rel="noopener" style="color:var(--fjord)">source</a></td></tr>`).join("");
+  $("ctable").querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=+th.dataset.k;csort=csort.k===k?{k,dir:-csort.dir}:{k,dir:k===1||k===3||k===4?1:-1};ctable();});
+}
+["csearch","csector","cown"].forEach(id=>$(id).addEventListener("input",ctable));
+document.querySelectorAll("#ctabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll("#ctabs button").forEach(x=>x.classList.toggle("on",x===b));document.querySelectorAll(".cpanel").forEach(p=>p.hidden=p.id!=="c_"+b.dataset.c);requestAnimationFrame(()=>Object.values(charts).forEach(c=>c.resize()));});
+function drawFixes(){
+  $("fixes").innerHTML=FIXES.map(([t,w,tr,_lv,lab,imp])=>`<div class="card"><h4>${t}</h4><p>${w}</p><p class="meta"><b>Trade-off:</b> ${tr}</p><p class="meta"><span class="pill ${imp}">${imp==="hi"?"high impact":imp==="md"?"medium impact":"slow / uncertain"}</span>${lab!=="—"?" Try it: <b>"+lab+"</b>":""}</p></div>`).join("");
+}
+function readout(){
+  const o=O,b=BASE,i=Y.indexOf(2030),f=N-1,lines=[];
+  const isBase=JSON.stringify(S)===JSON.stringify(DEF);
+  if(isBase) lines.push("You are looking at the <b>official baseline</b>: inflation falls to target by 2029, mainland growth around 1.5–2%, unemployment edges down to about 4%, and the fund keeps growing to about NOK "+fmt(b.fund[f]/1000,1)+" trillion by 2035. Change levers in the Simulator to see alternatives.");
+  else{
+    lines.push(`<b>Growth:</b> mainland GDP averages ${fmt(avgR(o.mainG,2,f))}% a year 2027–35 (baseline ${fmt(avgR(b.mainG,2,f))}%).`);
+    const pk=Math.max(...o.cpi.slice(2)); lines.push(`<b>Inflation:</b> peaks at ${fmt(pk)}% and is ${fmt(o.cpi[i])}% in 2030 (${o.cpi[i]>2.3?"still above target, so rates stay high":o.cpi[i]<1.7?"below target, so Norges Bank cuts":"close to target"}). The interest rate is ${fmt(o.rate[i],2)}% in 2030 vs ${fmt(b.rate[i],2)}% in the baseline.`);
+    lines.push(`<b>Jobs:</b> unemployment ${fmt(o.u[i])}% in 2030 (baseline ${fmt(b.u[i])}%); ${fmt(o.emp[i]-b.emp[i],0)}k ${o.emp[i]>=b.emp[i]?"more":"fewer"} people employed.`);
+    lines.push(`<b>Fund:</b> NOK ${fmt(o.fund[f]/1000,1)} tn in 2035 (${o.fund[f]>=b.fund[f]?"+":""}${fmt((o.fund[f]-b.fund[f])/1000,1)} tn vs baseline), NOK ${fmt(o.fpc[f],0)}k per person.`);
+    lines.push(`<b>Households:</b> real wages ${o.realWage.slice(2).reduce((a,v)=>a+v,0)>b.realWage.slice(2).reduce((a,v)=>a+v,0)?"grow faster":"grow slower"} than in the baseline; the typical mortgage costs ${fmt(o.mort[i]-b.mort[i],0)} kr/month ${o.mort[i]>=b.mort[i]?"more":"less"} in 2030.`);
+    const pol=[];
+    if(S.spend>3) pol.push("Spending above 3% breaks the fiscal rule. Expect criticism from Norges Bank and economists, higher interest rates, and a shrinking real fund. Popular in the short run with parties favouring tax cuts or more welfare spending.");
+    if(S.spend<2.5) pol.push("Lower fund spending means budget cuts or tax rises. It eases inflation and rates, but is politically hard with a minority government that needs four partner parties.");
+    if(S.oil<=-20) pol.push("An oil-price fall weakens the krone, raises import prices and hits Western Norway's supplier industry hardest. The fund in NOK can still rise because of the weaker krone.");
+    if(S.oil>=20) pol.push("High oil prices boost state revenue and the fund, but strengthen pressure to spend more and delay the transition.");
+    if(S.phase>=5) pol.push("A faster phase-out shrinks the trade surplus and petroleum income; it needs new industries and retraining in oil regions.");
+    if(S.imm>=40) pol.push("Higher immigration lifts the workforce and GDP, but adds pressure on housing and integration services. Immigration is one of the most divided issues between the parties.");
+    if(S.part>0) pol.push("More people in work raises GDP and tax income without adding to inflation pressure, and reduces benefit costs.");
+    if(S.prod>0) pol.push("Higher productivity raises real wages and GDP and makes the welfare state easier to finance.");
+    if(!S.auto) pol.push("Overriding Norges Bank's reaction function is a thought experiment: in reality the central bank is independent.");
+    if(pol.length) lines.push("<b>Political and social effects:</b><ul>"+pol.map(p=>"<li>"+p+"</li>").join("")+"</ul>");
+  }
+  $("readout").innerHTML=lines.map(l=>l.startsWith("<b>Political")?l:"<p style='margin:0 0 6px'>"+l+"</p>").join("");
+}
+function avgR(a,s,e){let t=0,n=0;for(let k=s;k<=e;k++){t+=a[k];n++;}return t/n;}
+function tables(){
+  const hr=[["GDP growth %","gdpG",1],["Mainland GDP growth %","mainG",1],["GDP, NOK bn","gdpNom",0],["Mainland GDP, NOK bn","mainNom",0],["CPI %","cpi",1],["CPI-ATE %","ate",1],["Unemployment (LFS) %","u",1],["Money-market rate %","rate",1],["Policy rate (avg) %","policy",2],["Wages %","wage",1],["House prices %","house",1],["Brent $","oil",0],["Current account % GDP","ca",1],["Oil fund, NOK bn","fund",0],["Immigrants (k)","immig",0],["Norwegian-born to immigrant parents (k)","nb",0]];
+  const vr=[["Population 1 Jan (k)","pop",0],["Births","births",0],["Deaths","deaths",0],["Fertility rate","tfr",2],["Immigration","imm",0],["Emigration","emi",0]];
+  const sc=c=>mode==="year"&&c===selYear?' class="selc"':"";
+  $("histTbl").innerHTML="<tr><th>Series</th>"+HY.map(y=>`<th${sc(y)}>${y}</th>`).join("")+"</tr>"+hr.map(([l,k,d])=>`<tr><td>${l}</td>${HY.map((y,ii)=>`<td${sc(y)}>${fmt(H[k][ii],d)}</td>`).join("")}</tr>`).join("")+vr.map(([l,k,d])=>`<tr><td>${l}</td>${HY.map(y=>`<td${sc(y)}>${fmt(V[k][y-1990],d)}</td>`).join("")}</tr>`).join("");
+  const rows=[["Mainland GDP growth %","mainG",1],["Total GDP growth %","totG",1],["CPI %","cpi",1],["Unemployment %","u",1],["Interest rate %","rate",2],["Wages %","wage",1],["House prices %","house",1],["Krone index","nokIdx",1],["Brent $","oil",0],["Nominal GDP, bn","gdpNom",0],["Mainland GDP, bn","mainNom",0],["Petroleum share %","petroShare",1],["Fund, bn","fund",0],["Petroleum cash flow, bn","cf",0],["Fund spending, bn","wd",0],["Spending % of fund","wdPctFund",2],["Population end-year, k","pop",0],["Employed, k","emp",0],["Exports, bn","xTot",0],["Imports, bn","mTot",0]];
+  $("dataTbl").innerHTML="<tr><th>Series</th>"+Y.map(y=>`<th${sc(y)}>${y}</th>`).join("")+"</tr>"+rows.map(([l,k,d])=>`<tr><td>${l}</td>${Y.map((y,ii)=>`<td${sc(y)}>${fmt(O[k][ii],d)}</td>`).join("")}</tr>`).join("");
+}
+
+/* ===================== CONTROLS ===================== */
+const LEV=[["oil",v=>(v>0?"+":"")+v+" $"],["phase",v=>v+" %/yr"],["spend",v=>(+v).toFixed(1)+" %"],["ret",v=>(+v).toFixed(1)+" %"],["crash",v=>v+" %"],["rate",v=>(v>0?"+":"")+(+v).toFixed(2)+" pp"],["nok",v=>(v>0?"+":"")+v+" %"],["glob",v=>(v>0?"+":"")+(+v).toFixed(1)+" pp"],["prod",v=>(v>0?"+":"")+(+v).toFixed(1)+" pp"],["imm",v=>v+"k"],["part",v=>(v>0?"+":"")+v+"k"],["hs",v=>(v>0?"+":"")+v+" %"]];
+function syncInputs(){
+  LEV.forEach(([k,f])=>{$(k).value=S[k];$(k+"_o").textContent=f(S[k]);});
+  $("rm_auto").classList.toggle("on",S.auto);$("rm_man").classList.toggle("on",!S.auto);
+  $("rate").disabled=S.auto;$("rateLever").style.opacity=S.auto?.45:1;$("rmode_o").textContent=S.auto?"auto":"manual";
+  [...$("presets").children].forEach((b,i)=>b.classList.toggle("on",i===activePreset));
+}
+LEV.forEach(([k])=>$(k).addEventListener("input",e=>{S[k]=+e.target.value;activePreset=-1;recompute();}));
+$("rm_auto").onclick=()=>{S.auto=true;activePreset=-1;recompute();};
+$("rm_man").onclick=()=>{S.auto=false;activePreset=-1;recompute();};
+PRESETS.forEach(([n,p],i)=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{S={...DEF,...p};activePreset=i;recompute();};$("presets").appendChild(b);});
+
+function setMode(m){mode=m;$("m_all").classList.toggle("on",m==="all");$("m_year").classList.toggle("on",m==="year");refreshYear();}
+$("m_all").onclick=()=>setMode("all"); $("m_year").onclick=()=>setMode("year");
+$("year").addEventListener("input",e=>{selYear=+e.target.value;if(mode==="all")setMode("year");else refreshYear();});
+let timer=null;
+$("play").onclick=()=>{
+  if(timer){clearInterval(timer);timer=null;$("play").textContent="▶ Play";return;}
+  if(mode!=="year")setMode("year"); if(selYear>=2035)selYear=1999;
+  $("play").textContent="❚❚ Pause";
+  timer=setInterval(()=>{selYear++;$("year").value=selYear;refreshYear();if(selYear>=2035){clearInterval(timer);timer=null;$("play").textContent="▶ Play";}},650);
+};
+function refreshYear(){
+  $("yrLbl").textContent=mode==="all"?"2000–2035":selYear;
+  const t=$("yrTag"); t.className="tag "+(mode==="all"?"":selYear<=2025?"hist":"sim"); t.textContent=mode==="all"?"all years":selYear<=2025?"history":selYear===2026?"estimate":"simulated";
+  snapshot(); simKpis(); tables();
+  Object.values(charts).forEach(c=>c.draw());
+  if(window.Chart) drawSimYear();
+}
+function showSection(s){
+  section=s;
+  document.querySelectorAll("#mainNav button").forEach(b=>b.classList.toggle("on",b.dataset.s===s));
+  document.querySelectorAll(".section").forEach(x=>x.hidden=x.id!=="s_"+s);
+  try{localStorage.setItem("nes_sec",s)}catch(e){}
+  requestAnimationFrame(()=>Object.values(charts).forEach(c=>c.resize()));
+}
+document.querySelectorAll("#mainNav button").forEach(b=>b.onclick=()=>showSection(b.dataset.s));
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p_"+b.dataset.t);
+  requestAnimationFrame(()=>Object.values(charts).forEach(c=>c.resize()));
+});
+
+function recompute(){ syncInputs(); O=run(S); if(window.__rebuildFund) window.__rebuildFund(); snapshot(); simKpis(); readout(); tables(); if(window.Chart){drawLongView();drawSim();} }
+function drawAll(){ if(window.Chart){drawLongView();drawPeople();drawEngine();drawSim();drawCompanies();} else {drawEngine();} }
+function redrawTheme(){ drawAll(); }
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawTheme);}catch(e){}
+new MutationObserver(redrawTheme).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+O=run(S); syncInputs(); drawFixes(); readout(); refreshYear(); drawAll();
+try{const s=localStorage.getItem("nes_sec"); if(s&&$("s_"+s)) showSection(s);}catch(e){}
+window.__nes={run,DEF,showSection,setMode};
+/* ===================== AURORA / LIVE / COUNT-UP / 3D ===================== */
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+// --- aurora ribbons ---
+(function aurora(){
+  const cv=$("aurora"); if(!cv) return; const ctx=cv.getContext("2d"); let w,h,t=0,vis=true;
+  const fit=()=>{const r=cv.getBoundingClientRect();w=cv.width=Math.max(1,r.width*0.5);h=cv.height=Math.max(1,r.height*0.5);};
+  fit(); addEventListener("resize",fit);
+  const bands=[["61,245,167",.20,0],["79,209,255",.16,2],["169,139,255",.12,4]];
+  function frame(){
+    if(vis){ctx.clearRect(0,0,w,h);
+      bands.forEach(([c,a,o],i)=>{const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,`rgba(${c},0)`);g.addColorStop(.35,`rgba(${c},${a})`);g.addColorStop(1,`rgba(${c},0)`);ctx.fillStyle=g;ctx.beginPath();
+        for(let x=0;x<=w;x+=8){const y=h*(.18+.1*i)+Math.sin(x*.006+t*.6+o)*h*.08+Math.sin(x*.017-t*.9+o)*h*.04;x?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+        for(let x=w;x>=0;x-=8){const y=h*(.55+.1*i)+Math.sin(x*.005+t*.4+o)*h*.12;ctx.lineTo(x,y);}ctx.closePath();ctx.fill();});
+      for(let i=0;i<60;i++){const sx=(i*137.5%w),sy=(i*73.3%(h*.6));ctx.fillStyle=`rgba(255,255,255,${.25+.25*Math.sin(t*2+i)})`;ctx.fillRect(sx,sy,1,1);}
+      t+=0.008;}
+    if(!RM) requestAnimationFrame(frame);
+  }
+  try{new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(cv);}catch(e){}
+  frame();
+})();
+/* ===================== SOURCE REGISTRY & CONFIDENCE ===================== */
+// where each view draws its numbers from
+const VIEWSRC={lv_g:["s09189","s12880","sim"],lv_cpi:["s12880","sim"],lv_u:["s12880","s13760","sim"],lv_r:["s12880","nbRate","sim"],lv_f:["nbim","sim"],lv_p:["s05803","sim"],lv_oil:["s12880","sim"],lv_h:["s12880","sim"],
+ pp_pyr:["s07459"],pp_work:["s13760","s07459","nav"],pp_tfr:["s04232"],pp_bd:["s05803"],pp_mig:["s05803"],pp_ctry:["sImm"],pp_imm:["s05182"],pp_earn:["sEarn"],pp_dis:["nav"],pp_proj:["sProj"],
+ tmap:["sInd"],en_exp:["s09189"],en_emp:["sInd"],flow:["npet","nbim","press"],en_part:["s08804"],en_xp:["s09189"],en_size:["s09189"],
+ co_top:["coRep","agg","usd","eur"],co_sector:["coRep","agg"],co_own:["coRep","agg"],tx_petro:["skPet"],tx_rr:["skRR"],an_elect:["s08092"],
+ ch_g:["s12880","sim"],ch_cpi:["s12880","sim"],ch_u:["s12880","sim"],ch_r:["s12880","sim"],ch_gap:["sim"],ch_nok:["s12880","sim"],ch_fund:["nbim","npet","press","sim"],ch_flows:["npet","press","sim"],ch_oil:["s12880","sim"],ch_fpc:["nbim","sim"],ch_ps:["s09189","sim"],ch_wd:["press","sim"],ch_wdp:["press","sim"],ch_wdg:["press","sim"],ch_cf:["npet","sim"],ch_sec:["sInd","sim"],ch_emp:["s13760","sim"],ch_wage:["s12880","sim"],ch_house:["s12880","sim"],ch_pop:["s05803","sim"],ch_xmix:["s09189","sim"],ch_tb:["s09189","sim"]};
+const used={};Object.values(VIEWSRC).forEach(a=>a.forEach(id=>used[id]=(used[id]||0)+1));
+// 1) source rows under every chart caption
+Object.entries(VIEWSRC).forEach(([id,ids])=>{
+  const el=$(id); if(!el) return; const card=el.closest(".card"); if(!card||card.querySelector(".srcrow")) return;
+  const row=document.createElement("div"); row.className="srcrow";
+  row.innerHTML=ids.map(i=>{const r=SRC[i];return `${badge(r.s,r.why,r.n)} ${r.u?`<a href="${r.u}" target="_blank" rel="noopener">${r.n}</a>`:r.n}`;}).join('<span aria-hidden="true">·</span>');
+  const cap=card.querySelector(".cap"); (cap||card.querySelector("h3")).after(row);
+});
+// 2) badges on the official ribbon and the live tiles
+const RIB=["s05803","nbDec","sCPI","s13760","s09189","nbim","s04232"];
+document.querySelectorAll(".ribbon .rb .k").forEach((k,i)=>{if(RIB[i]) k.insertAdjacentHTML("beforeend",srcBadge(RIB[i]));});
+document.querySelectorAll("#live .lt .k span:first-child").forEach(k=>k.insertAdjacentHTML("afterend",srcBadge("live")));
+// 3) company scores
+function coScore(r){let s=/21st\.ai|proff\.no/.test(r[8])?70:/stockanalysis/.test(r[8])?50:/g3newswire/.test(r[8])?60:/annual|arsrapport|%C3%85rsrapport|annualreport|aarsmelding|Annual/i.test(r[8])?90:85;
+  if(r[6]) s-=10; if(r[4]<2025) s-=5; if(/≈|rounded/i.test(r[5]+r[7])) s-=5; if(/USD|EUR/.test(r[5])) s-=3; return Math.max(20,Math.min(100,s));}
+function coWhy(r){const t=/21st\.ai|proff\.no/.test(r[8])?"Brønnøysund-based aggregator":/stockanalysis/.test(r[8])?"data aggregator":/g3newswire/.test(r[8])?"trade press":"company report";return t+(r[6]?"; basis differs from gross revenue":"")+(r[4]<2025?"; older year":"")+(/USD|EUR/.test(r[5])?"; converted to NOK":"");}
+// 4) registry page
+const RULES=[["Official statistics and registries",95],["Official agency publications",90],["Audited company annual report",90],["Company quarterly report or release",85],["Registry-based aggregator",70],["Press reporting official figures",65],["Polls and data aggregators",50],["Live estimate (extrapolated)",40],["Simulation output",30]];
+const ADJ=[["Preliminary figure","−5"],["Rounded figure","−5"],["Older period than wanted","−10"],["Basis differs (bank income, net revenue…)","−10"],["Consolidation or year label unclear","−10"],["Derived by us from official inputs","−10"],["Confirmed by a second source","+5"]];
+let regType="";
+function ring(s){const [b]=band(s),c={b1:"--good",b2:"--c1",b3:"--warn",b4:"--c5"}[b],C=2*Math.PI*22;return `<svg class="ring" viewBox="0 0 56 56" role="img" aria-label="Confidence ${s} of 100"><circle cx="28" cy="28" r="22" fill="none" stroke="var(--line)" stroke-width="5"/><circle cx="28" cy="28" r="22" fill="none" stroke="var(${c})" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C*s/100} ${C}" transform="rotate(-90 28 28)"/><text x="28" y="33" text-anchor="middle">${s}</text></svg>`;}
+function drawRegistry(){
+  const all=Object.entries(SRC), q=($("regSearch").value||"").toLowerCase();
+  const avg=all.reduce((a,[,r])=>a+r.s,0)/all.length, hi=all.filter(([,r])=>r.s>=90).length;
+  const coAvg=CO.reduce((a,r)=>a+coScore(r),0)/CO.length;
+  $("regKpis").innerHTML=[card("Sources",all.length,"official, company, derived and model"),card("Verified (90+)",hi+" of "+all.length,"official statistics and filings"),card("Average score",fmt(avg,0),"across all sources"),card("Company table",fmt(coAvg,0),"average score of "+CO.length+" companies")].join("");
+  const cnt={b1:0,b2:0,b3:0,b4:0};all.forEach(([,r])=>cnt[band(r.s)[0]]++);
+  $("bands").innerHTML=[["b1","Verified","90–100","Official statistics, central bank, registers, audited reports."],["b2","Reliable","75–89","Official but preliminary or projected; company quarterly reports; derived from official inputs."],["b3","Indicative","55–74","Aggregators of official filings; press reporting official figures."],["b4","Estimate","under 55","Polls, live extrapolations and simulation output."]].map(([b,t,r,d])=>`<div class="band"><div class="t"><span class="cf ${b}">${r}</span>${t}</div><div class="r">${cnt[b]}</div><p>${d}</p></div>`).join("");
+  const types=[...new Set(all.map(([,r])=>r.t))];
+  $("regChips").innerHTML=`<button data-t="" class="${regType?"":"on"}">All</button>`+types.map(t=>`<button data-t="${esc(t)}" class="${regType===t?"on":""}">${t}</button>`).join("");
+  $("regChips").querySelectorAll("button").forEach(b=>b.onclick=()=>{regType=b.dataset.t;drawRegistry();});
+  const rows=all.filter(([,r])=>(!regType||r.t===regType)&&(!q||(r.n+r.use+r.p).toLowerCase().includes(q))).sort((a,b)=>b[1].s-a[1].s);
+  $("regCount").textContent=rows.length+" of "+all.length;
+  $("regGrid").innerHTML=rows.map(([id,r])=>{const [b,l]=band(r.s);return `<div class="src">${ring(r.s)}<div style="min-width:0"><h4>${r.u?`<a href="${r.u}" target="_blank" rel="noopener">${r.n}</a>`:r.n}</h4><p class="meta">${r.p} · ${r.t} · <span class="cf ${b}">${l}</span>${used[id]?` · used in ${used[id]} view${used[id]>1?"s":""}`:""}</p><p class="use">${r.use}</p><p class="why">${r.why}</p></div></div>`;}).join("");
+  $("ruleTbl").innerHTML="<tr><th>Source type</th><th>Base</th></tr>"+RULES.map(([t,s])=>`<tr><td>${t}</td><td>${badge(s,"",t)}</td></tr>`).join("");
+  $("adjTbl").innerHTML="<tr><th>Adjustment</th><th>Points</th></tr>"+ADJ.map(([t,p])=>`<tr><td>${t}</td><td>${p}</td></tr>`).join("");
+  if(window.Chart){const srt=all.slice().sort((a,b)=>b[1].s-a[1].s),cl={b1:"--good",b2:"--c1",b3:"--warn",b4:"--c5"};const op=hbarOpts("/100",0);op.scales.x.max=100;op.scales.x.min=0;
+    mk("reg_bar",{type:"bar",data:{labels:srt.map(([,r])=>r.n.length>34?r.n.slice(0,33)+"…":r.n),datasets:[{label:"Confidence",data:srt.map(([,r])=>r.s),backgroundColor:srt.map(([,r])=>css(cl[band(r.s)[0]]))}]},options:op});}
+}
+$("regSearch").addEventListener("input",drawRegistry);
+drawRegistry();
+// --- live tickers ---
+const LIVE=[
+  {k:"Oil fund value",s:"from NBIM's NOK 22,014 bn on 30 Sep 2026",base:22014e9,t0:Date.UTC(2026,8,30),rate:(22533e9-22014e9)/(92*864e5),fmt:v=>"NOK "+(v/1e9).toLocaleString("en-US",{minimumFractionDigits:4,maximumFractionDigits:4})+" bn",bar:()=>yearFrac()},
+  {k:"Population",s:"from SSB 5,636,904 (1 Jul 2026) at 2025 growth",base:5636904,t0:Date.UTC(2026,6,1),rate:33060/(365.25*864e5),fmt:v=>Math.floor(v).toLocaleString("en-US"),bar:()=>yearFrac()},
+  {k:"GDP produced in 2026",s:"SSB/model 2026 nominal GDP, pro rata",yr:true,total:()=>O.gdpNom[1]*1e9,fmt:v=>"NOK "+(v/1e9).toLocaleString("en-US",{minimumFractionDigits:3,maximumFractionDigits:3})+" bn",bar:()=>yearFrac()},
+  {k:"Oil & gas money to the state, 2026",s:"NOK 671 bn estimate (Norwegianpetroleum.no)",yr:true,total:()=>671e9,fmt:v=>"NOK "+(v/1e9).toLocaleString("en-US",{minimumFractionDigits:3,maximumFractionDigits:3})+" bn",bar:()=>yearFrac()},
+  {k:"Babies born today",s:"at 2025 pace: 55,401 a year (SSB)",day:true,total:()=>55401/365.25,fmt:v=>v.toFixed(1),bar:()=>dayFrac()},
+  {k:"Oil fund money spent, 2026",s:"NOK 583.4 bn in the 2026 budget",yr:true,total:()=>583.4e9,fmt:v=>"NOK "+(v/1e9).toLocaleString("en-US",{minimumFractionDigits:3,maximumFractionDigits:3})+" bn",bar:()=>yearFrac()}
+];
+function osloNow(){return new Date();}
+function yearFrac(){const n=osloNow(),y0=Date.UTC(n.getUTCFullYear(),0,1)-36e5,y1=Date.UTC(n.getUTCFullYear()+1,0,1)-36e5;return (n-y0)/(y1-y0);}
+function dayFrac(){const n=new Date(new Date().toLocaleString("en-US",{timeZone:"Europe/Oslo"}));return (n.getHours()*3600+n.getMinutes()*60+n.getSeconds())/86400;}
+$("live").innerHTML=LIVE.map((l,i)=>`<div class="lt"><div class="k"><span>${l.k}</span><span class="dot" aria-hidden="true"></span></div><div class="v" id="lv${i}">–</div><div class="s">${l.s}</div><div class="bar" id="lb${i}"></div></div>`).join("");
+function tick(){
+  const now=Date.now();
+  LIVE.forEach((l,i)=>{let v;
+    if(l.yr) v=l.total()*yearFrac(); else if(l.day) v=l.total()*dayFrac(); else v=l.base+l.rate*(now-l.t0);
+    const el=$("lv"+i); if(el) el.textContent=l.fmt(v); const b=$("lb"+i); if(b) b.style.width=(l.bar()*100).toFixed(2)+"%";});
+  $("clock").textContent="Oslo "+new Date().toLocaleString("en-GB",{timeZone:"Europe/Oslo",weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+}
+tick(); setInterval(tick,RM?1000:100);
+// --- count-up for ribbon figures ---
+(function countUp(){
+  if(RM) return;
+  document.querySelectorAll(".ribbon .v").forEach(el=>{
+    const txt=el.textContent, m=txt.match(/[\d,.]+/); if(!m) return;
+    const target=parseFloat(m[0].replace(/,/g,"")), dec=(m[0].split(".")[1]||"").length, pre=txt.slice(0,m.index), post=txt.slice(m.index+m[0].length);
+    const t0=performance.now(), dur=1400;
+    (function step(t){const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,4);
+      el.textContent=pre+(target*e).toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec})+post;
+      if(p<1) requestAnimationFrame(step); else el.textContent=txt;})(t0);
+  });
+})();
+// --- 3D economy city ---
+(function city(){
+  const cv=$("city"), stage=$("stage"); if(!cv) return;
+  if(!window.THREE){stage.insertAdjacentHTML("beforeend",'<div class="nogl">3D view could not load in this browser.</div>');return;}
+  let R; try{R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){stage.insertAdjacentHTML("beforeend",'<div class="nogl">3D needs WebGL, which is not available here.</div>');return;}
+  R.setPixelRatio(Math.min(2,devicePixelRatio||1));
+  const S=new THREE.Scene(); S.fog=new THREE.FogExp2(0x050a13,0.018);
+  const cam=new THREE.PerspectiveCamera(45,1,0.1,500);
+  S.add(new THREE.AmbientLight(0x6b86b8,0.55));
+  const d1=new THREE.DirectionalLight(0xffffff,0.9); d1.position.set(20,40,15); S.add(d1);
+  const p1=new THREE.PointLight(0x3df5a7,1.2,120); p1.position.set(-25,18,-20); S.add(p1);
+  const p2=new THREE.PointLight(0x4fd1ff,1.0,120); p2.position.set(25,14,25); S.add(p2);
+  const grid=new THREE.GridHelper(120,60,0x1f4a6e,0x0f2236); grid.material.transparent=true; grid.material.opacity=.55; S.add(grid);
+  const water=new THREE.Mesh(new THREE.CircleGeometry(60,64),new THREE.MeshBasicMaterial({color:0x07152a,transparent:true,opacity:.6})); water.rotation.x=-Math.PI/2; water.position.y=-0.02; S.add(water);
+  // stars
+  const sg=new THREE.BufferGeometry(), sp=[]; for(let i=0;i<900;i++){const r=90+Math.random()*60,t=Math.random()*Math.PI*2,ph=Math.random()*Math.PI*.45;sp.push(r*Math.cos(t)*Math.cos(ph),r*Math.sin(ph)+5,r*Math.sin(t)*Math.cos(ph));}
+  sg.setAttribute("position",new THREE.Float32BufferAttribute(sp,3)); const stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xbfd8ff,size:.5,transparent:true,opacity:.8})); S.add(stars);
+  const group=new THREE.Group(); S.add(group);
+  const col=v=>new THREE.Color(css(v)||"#4fd1ff");
+  let bars=[], mode="ind", tall=[];
+  function data(m){
+    if(m==="ind"){const it=SECT.map(r=>({n:r[0],v:r[1]/1000,c:GROUPC[r[8]],t:"NOK "+fmt(r[1]/1000,0)+" bn value added"}));return {title:"Industries by value added, 2025",cap:"Tower height = value added (SSB table 09170). Amber = oil, gas & shipping.",items:it,layout:"spiral",unit:v=>v/48};}
+    if(m==="co"){const it=CO.slice(0,40).map(r=>({n:r[0],v:r[1],c:SECCOL[r[2]]||"--c1",t:"NOK "+fmt(r[1],1)+" bn revenue · "+r[2]}));return {title:"40 largest companies by revenue, 2025",cap:"Equinor towers over everything: NOK 1.1 trillion. Colour = sector.",items:it,layout:"spiral",unit:v=>Math.pow(v,.62)/2.3};}
+    if(m==="pop"){const it=[];PYR.forEach((r,i)=>{it.push({n:"Men "+r[0],v:r[1],c:"--men",row:0,i,t:fmt(r[1],0)+" men aged "+r[0]});it.push({n:"Women "+r[0],v:r[2],c:"--women",row:1,i,t:fmt(r[2],0)+" women aged "+r[0]});});return {title:"Population by age and sex, 1 Jan 2026",cap:"Two skylines: men (blue) and women (pink), youngest at the front. SSB table 07459.",items:it,layout:"rows",unit:v=>v/14000};}
+    const it=[];for(let y=2000;y<=2035;y++){const hist=y<=2025;const v=hist?H.fund[y-2000]:O.fund[y-2025];it.push({n:String(y),v,c:hist?"--c1":"--c5",i:y-2000,t:"NOK "+fmt(v,0)+" bn · "+(hist?"NBIM":"your scenario")});}
+    return {title:"The oil fund, 2000–2035",cap:"Each tower is one year-end. Blue = history (NBIM), violet = simulation (follows your levers).",items:it,layout:"line",unit:v=>v/1700};
+  }
+  function build(m){
+    mode=m; group.clear(); bars=[]; const D=data(m); $("stageTitle").textContent=D.title; $("stageCap").textContent=D.cap+" · Drag to rotate · scroll to zoom";
+    const items=D.items, n=items.length;
+    const sorted=m==="pop"||m==="fund"?items:items.slice().sort((a,b)=>b.v-a.v);
+    sorted.forEach((it,k)=>{
+      const h=Math.max(.15,D.unit(it.v)), w=m==="fund"?1.1:m==="pop"?1.3:Math.max(1.4,Math.min(3.2,1.2+Math.sqrt(it.v)/(m==="co"?14:9)));
+      let x=0,z=0;
+      if(D.layout==="spiral"){const a=k*2.399963,r=k===0?0:2.6*Math.sqrt(k)+1.5;x=Math.cos(a)*r;z=Math.sin(a)*r;}
+      else if(D.layout==="rows"){x=(it.i-10)*1.6;z=it.row?1.2:-1.2;}
+      else {x=(it.i-17.5)*1.45;z=0;}
+      const c=col(it.c);
+      const mat=new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.35,metalness:.35,roughness:.35,transparent:true,opacity:.92});
+      const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,1,w),mat); mesh.position.set(x,0,z); mesh.scale.y=0.001; mesh.userData={it,h,delay:k*(m==="fund"?40:25)};
+      const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.9})); mesh.add(edges);
+      group.add(mesh); bars.push(mesh);
+    });
+    tall=bars.slice().sort((a,b)=>b.userData.h-a.userData.h).slice(0,m==="pop"?0:6);
+    $("labels").innerHTML=tall.map((b,i)=>`<div class="lbl" id="tl${i}">${b.userData.it.n.replace(/ ASA| AS| SA$/,"")}</div>`).join("");
+    born=performance.now();
+    radius=m==="fund"?60:m==="pop"?38:m==="co"?54:50;
+  }
+  let born=0, theta=0.8, phi=1.02, radius=50, drag=null, autoRot=!RM, lastInteract=0;
+  cv.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY,t:theta,p:phi};cv.setPointerCapture(e.pointerId);lastInteract=Date.now();});
+  cv.addEventListener("pointermove",e=>{ if(drag){theta=drag.t-(e.clientX-drag.x)*0.006;phi=Math.max(0.25,Math.min(1.45,drag.p-(e.clientY-drag.y)*0.005));lastInteract=Date.now();} hover(e);});
+  cv.addEventListener("pointerup",()=>drag=null); cv.addEventListener("pointerleave",()=>{$("tip").hidden=true;});
+  cv.addEventListener("wheel",e=>{e.preventDefault();radius=Math.max(14,Math.min(80,radius*(1+Math.sign(e.deltaY)*0.08)));lastInteract=Date.now();},{passive:false});
+  const ray=new THREE.Raycaster(), mv=new THREE.Vector2();
+  function hover(e){const r=cv.getBoundingClientRect();mv.x=((e.clientX-r.left)/r.width)*2-1;mv.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mv,cam);
+    const hit=ray.intersectObjects(bars,false)[0]; const tip=$("tip");
+    bars.forEach(b=>b.material.emissiveIntensity=.35);
+    if(hit){const it=hit.object.userData.it;hit.object.material.emissiveIntensity=1;tip.hidden=false;tip.innerHTML=`<b>${it.n}</b>${it.t}`;tip.style.left=(e.clientX-r.left)+"px";tip.style.top=(e.clientY-r.top)+"px";} else tip.hidden=true;}
+  document.querySelectorAll(".modes button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".modes button").forEach(x=>x.classList.toggle("on",x===b));build(b.dataset.m);});
+  function size(){const r=stage.getBoundingClientRect();R.setSize(r.width,r.height,false);cam.aspect=r.width/Math.max(1,r.height);cam.updateProjectionMatrix();}
+  size(); addEventListener("resize",size);
+  let visible=true; try{new IntersectionObserver(e=>visible=e[0].isIntersecting).observe(stage);}catch(e){}
+  const v3=new THREE.Vector3();
+  function loop(t){
+    requestAnimationFrame(loop);
+    if(!visible||document.hidden) return;
+    if(autoRot&&!drag&&Date.now()-lastInteract>2500) theta+=0.0022;
+    cam.position.set(radius*Math.sin(phi)*Math.cos(theta),radius*Math.cos(phi),radius*Math.sin(phi)*Math.sin(theta)); cam.lookAt(0,mode==="pop"?3:mode==="fund"?7:8,0);
+    const el=t-born;
+    bars.forEach(b=>{const p=RM?1:Math.min(1,Math.max(0,(el-b.userData.delay)/900)),e=1-Math.pow(1-p,3);b.scale.y=Math.max(.001,b.userData.h*e);b.position.y=b.scale.y/2;});
+    stars.rotation.y+=0.0004; p1.position.x=-25+Math.sin(t*.0005)*10;
+    R.render(S,cam);
+    const r=cv.getBoundingClientRect();
+    tall.forEach((b,i)=>{v3.set(b.position.x,b.scale.y+0.6,b.position.z).project(cam);const l=$("tl"+i);if(!l)return;l.style.left=((v3.x+1)/2*r.width)+"px";l.style.top=((1-v3.y)/2*r.height)+"px";l.style.display=v3.z<1?"block":"none";});
+  }
+  build("ind"); requestAnimationFrame(loop);
+  window.__rebuildFund=()=>{if(mode==="fund") build("fund");};
+})();
+})();
+</script>
+
+</body></html>

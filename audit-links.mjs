@@ -6,9 +6,15 @@ import { resolve, join } from 'node:path';
 
 const root = resolve('dist');
 const pages = ['index.html', '404.html'];
-for (const d of await readdir(root, { withFileTypes: true })) {
-  if (d.isDirectory()) { try { await access(join(root, d.name, 'index.html')); pages.push(`${d.name}/index.html`); } catch {} }
+// every index.html under dist/ (labs live one level deeper), skipping the minified and asset folders
+async function walk(dir, rel = '') {
+  for (const d of await readdir(join(root, dir), { withFileTypes: true })) {
+    const r = rel ? `${rel}/${d.name}` : d.name;
+    if (d.isDirectory() && d.name !== 'min' && d.name !== 'assets') await walk(join(dir, d.name), r);
+    else if (d.isFile() && d.name === 'index.html' && rel) pages.push(`${rel}/index.html`);
+  }
 }
+await walk('');
 const site = 'http://site.local/';
 const docs = new Map();
 for (const p of pages) {
@@ -24,8 +30,9 @@ for (const [url, doc] of docs) {
   // skip JSON-LD and data blocks; check real href/src attributes
   const body = doc.html.replace(/<script type="application\/(?:ld\+)?json"[\s\S]*?<\/script>/g, '')
     .replace(/<link\b[^>]*\brel=["'](?:preconnect|dns-prefetch)["'][^>]*>/g, ''); // connection hints, not links
-  for (const [, attr, ref] of body.matchAll(/\b(href|src)=["']([^"']+)["']/g)) {
-    if (/^(data:|mailto:|tel:|javascript:)/i.test(ref) || ref === '#') continue;
+  for (const [, attr, raw] of body.matchAll(/(?<![\w-])(href|src)=["']([^"']+)["']/g)) { // not data-src="…" filter values
+    const ref = raw.replace(/^https:\/\/hnasr\.com(?=\/|$)/, ''); // our own domain: check the build, not the live site
+    if (/^(data:|mailto:|tel:|javascript:)/i.test(ref) || ref === '#' || ref.includes('${')) continue; // template strings inside scripts, not links
     if (/github\.com/i.test(ref)) { findings.push({ page: doc.page, ref, status: 'github-link' }); continue; }
     const abs = new URL(ref, doc.base);
     if (abs.origin !== new URL(site).origin) {
@@ -36,7 +43,7 @@ for (const [url, doc] of docs) {
     const targetDoc = docs.get(target) || docs.get(target.endsWith('/') ? target : target + '/');
     if (abs.hash && abs.hash.length > 1) {
       const id = decodeURIComponent(abs.hash.slice(1));
-      if (targetDoc && !targetDoc.ids.has(id)) findings.push({ page: doc.page, ref, status: 'missing-anchor', resolvesTo: abs.pathname + abs.hash });
+      if (targetDoc && !/hashchange/.test(targetDoc.html) && !targetDoc.ids.has(id)) findings.push({ page: doc.page, ref, status: 'missing-anchor', resolvesTo: abs.pathname + abs.hash });
       if (targetDoc) continue;
     }
     if (targetDoc) continue;

@@ -48,7 +48,7 @@ const PAGES = [
     sections: ['live-projects', 'work'] },
   { slug: 'credentials', nav: 'Credentials', title: 'Awards & credentials', h1: 'Always learning. <em>Recognised along the way.</em>',
     desc: 'Awards and certifications of Hassan Nasr: Beste AI-Jammer at AI JAM 2025, NASA Space Apps 2025, Andøya Space Hackathon 25, Claude Academy and more.',
-    lead: 'From IT Essentials in 2008 to agentic AI in 2026, with an AI award and two space hackathons along the way. Open any credential for details and a verify link.',
+    lead: 'From IT Essentials in 2008 to agentic AI in 2026, with an AI award and three space hackathons along the way. Open any credential for details and a verify link.',
     sections: ['credentials'] },
   { slug: 'workshops', nav: 'Workshops', title: 'AI workshops for leaders', h1: 'AI workshops <em>for leaders.</em>',
     desc: 'Hands-on AI workshops for CEOs and leadership teams by Hassan Nasr, CTO at Medioteq: AGI briefing, strategy sprint, agentic and responsible AI.',
@@ -69,9 +69,9 @@ const baseHead = home.slice(headStart, headEnd)
   .replace(/\s*<link rel="preload" as="image"[^>]*>/g, '');
 const header = home.slice(home.indexOf('<header class="header">'), home.indexOf('</header>') + 9);
 const tail = home.slice(home.indexOf('</footer>') + 9, home.indexOf('</body>'));
-const pageNav = PAGES.map(p => `<a href="${p.slug}/">${p.nav}</a>`).join('');
+const pageNav = PAGES.map(p => `<a href="${p.slug}/">${p.nav}</a>`).join('') + '<a href="labs/">Labs</a>';
 const subHeader = header.replace(/<nav id="main-nav"([^>]*)>[\s\S]*?<\/nav>/, (m, a) =>
-  `<nav id="main-nav"${a}>${PAGES.map(p => `<a href="${p.slug}/" data-page="${p.slug}">${p.nav}</a>`).join('')}<a href="#contact" class="nav-contact">Let’s talk <span aria-hidden="true">↗</span></a></nav>`)
+  `<nav id="main-nav"${a}>${PAGES.map(p => `<a href="${p.slug}/" data-page="${p.slug}">${p.nav}</a>`).join('')}<a href="labs/" data-page="labs">Labs</a><a href="#contact" class="nav-contact">Let’s talk <span aria-hidden="true">↗</span></a></nav>`)
   .replace('href="#" aria-label="Hassan Nasr home"', 'href="./" aria-label="Hassan Nasr home"');
 const footerFor = () => `<footer class="footer wrap"><a class="brand" href="./" aria-label="Hassan Nasr home"><span class="brand-mark">HN</span><span class="brand-dot" aria-hidden="true"></span></a><p>Hassan Nasr · Oslo, Norway</p><a href="./" class="mono">Home ↑</a><nav class="footer-pages" aria-label="Pages">${pageNav}</nav></footer>`;
 
@@ -110,7 +110,8 @@ const repoName = r => r.full_name || r.fullName || (r.owner ? `${r.owner}/${r.na
 const spaceRepos = repos.filter(r => /space|nasa|galax|orbit|satell|astro|rocket|cosmo|planet/i.test(`${repoName(r)} ${r.description || ''}`)).slice(0, 12);
 const EXTRA = {
   space: () => `<section class="page-block wrap" aria-labelledby="sp-events"><h2 id="sp-events">Space events</h2>
-  <ul class="page-facts"><li><strong>NASA International Space Apps Challenge 2025</strong><span>Oslo, October 4–5, 2025. 2nd place with Eduspaceno.com. Recognised as a “Galactic Problem Solver” for outstanding participation and efforts to address challenges on Earth and in space.</span></li>
+  <ul class="page-facts"><li><strong>NASA International Space Apps Challenge 2026</strong><span>Galactic Problem Solver. Certificate of participation, November 14–15, 2026.</span></li>
+  <li><strong>NASA International Space Apps Challenge 2025</strong><span>Oslo, October 4–5, 2025. 2nd place with Eduspaceno.com. Recognised as a “Galactic Problem Solver” for outstanding participation and efforts to address challenges on Earth and in space.</span></li>
   <li><strong>Space Hackathon 25: Andøya Space</strong><span>14–16 October 2025. Certificate of Attendance (Norwegian Space Cluster / Andøya Space Education).</span></li>
   <li><strong>Galaxy Guide Buddy</strong><span>An exploration project linked from the orbit scene above. <a href="https://galaxy-guide-buddy-rho.vercel.app" rel="noopener" target="_blank">Explore Galaxy Guide Buddy ↗</a></span></li></ul>
   <!-- TODO: Hassan to add: what Eduspaceno.com does in more detail, team members, links to the Space Apps project page. --></section>
@@ -140,11 +141,23 @@ const EXTRA = {
 };
 
 /* ---------- write internal pages ---------- */
+const heroReport = [];
 for (const p of PAGES) {
   const body = p.sections.map(id => id.startsWith('.') ? extractByClass(home, id.slice(1)) : extract(home, id)).filter(Boolean)
     .map(h => h.replace(/<a class="learn-more[\s\S]*?<\/a>|<p class="learn-more">[\s\S]*?<\/p>/g, '')).join('\n');
   const main = p.frontier ? `<section class="frontiers wrap page-section" aria-label="${esc(p.title)}">${body}</section>` : body;
   const cssExtra = baseHead.includes('app.min.css') || baseHead.includes('pages.css') ? '' : '\n  <link rel="stylesheet" href="pages.css">';
+  // Most pages open with a section whose heading and intro are the page's own, which then read twice in a row. When the
+  // page heading appears again in the body, the page header keeps only the breadcrumb and a visually hidden h1 with the
+  // page name (the section's styled heading stays as it is); an intro the body repeats is dropped either way.
+  const ENT = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ', '&rsquo;': '’', '&lsquo;': '‘', '&mdash;': '—', '&ndash;': '–' };
+  const plain = s => s.replace(/<[^>]+>/g, '').replace(/&[a-z#0-9]+;/g, e => ENT[e] ?? e).replace(/\s+/g, ' ').trim();
+  const headingRepeated = [...main.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/g)].some(m => plain(m[1]) === plain(p.h1));
+  const leadRepeated = plain(main).includes(plain(p.lead).slice(0, 60));
+  const heroText = headingRepeated
+    ? `<h1 class="sr-only">${esc(p.title)}</h1>`
+    : `<h1>${p.h1}</h1>${leadRepeated ? '' : `\n      <p class="lead">${p.lead}</p>`}`;
+  heroReport.push(`${p.slug}:${headingRepeated ? 'crumbs' : leadRepeated ? 'title' : 'full'}`);
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -157,10 +170,9 @@ for (const p of PAGES) {
   <div class="progress-bar" aria-hidden="true"><span></span></div>
   ${subHeader.replace(`data-page="${p.slug}"`, `data-page="${p.slug}" aria-current="page"`)}
   <main id="main">
-    <header class="page-hero wrap">
+    <header class="page-hero wrap${headingRepeated ? ' is-crumbs' : ''}">
       <nav aria-label="Breadcrumb"><ol class="crumbs"><li><a href="./">Home</a></li><li aria-current="page">${esc(p.title)}</li></ol></nav>
-      <h1>${p.h1}</h1>
-      <p class="lead">${p.lead}</p>
+      ${heroText}
     </header>
     ${main.replace(/<h1([ >])/g, '<h2$1').replace(/<\/h1>/g, '</h2>')}
     ${p.extra ? EXTRA[p.extra]() : ''}
@@ -168,8 +180,12 @@ for (const p of PAGES) {
   ${footerFor()}${tail}</body>
 </html>
 `;
+  // in-page links: with <base href="/"> a bare href="#x" opens the home page, so point it at this page when x is here
+  // (About's career map and its contact section, Projects' "Open live projects"); links to home-only sections stay as they are
+  const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]));
+  const linked = html.replace(/href="#([^"]+)"/g, (m, id) => ids.has(id) ? `href="/${p.slug}/#${id}"` : m);
   fs.mkdirSync(`${DIST}/${p.slug}`, { recursive: true });
-  fs.writeFileSync(`${DIST}/${p.slug}/index.html`, html);
+  fs.writeFileSync(`${DIST}/${p.slug}/index.html`, linked);
 }
 
 /* ---------- home: learn-more links, footer nav, SEO ---------- */
@@ -249,3 +265,4 @@ ${PAGES.map(p => `- [${p.title}](${abs(`/${p.slug}/`)}): ${p.desc}`).join('\n')}
 - Website contact form: ${abs('/#contact')}
 `);
 console.log(`Pages: ${PAGES.map(p => '/' + p.slug + '/').join(' ')} · ${spaceRepos.length} space repos · ${creds.length} credentials · ${workshops.length} workshops in JSON-LD`);
+console.log(`Page headers (crumbs = heading shown by the section, title = intro dropped): ${heroReport.join(' ')}`);
