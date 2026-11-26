@@ -43,7 +43,7 @@
   transform: rotateY(calc(var(--ry, 45deg) * -1)) rotateX(calc(var(--rx, -30deg) * -1)) scale(calc(.35 + var(--ex, 0) * .65)); }
 
 /* live readout under each description */
-.fx-read { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.fx-read { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
 .fx-read span, .fx-read b { font-weight: 400; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; transition: color .25s, border-color .25s, background .25s; }
 .fx-read .is-on { color: var(--accent); border-color: rgba(255, 91, 38, .45); background: var(--accent-soft); }
 .fx-read i { font-style: normal; min-width: 1.2em; text-align: center; color: var(--muted); }

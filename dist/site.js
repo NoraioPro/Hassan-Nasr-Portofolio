@@ -28,6 +28,22 @@
     if (document.readyState === 'complete') later(); else addEventListener('load', later, { once: true });
   }
 
+  /* ---------- Light / dark theme (theme-light.css; the choice is applied early by a script in <head>) ---------- */
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const darkThemeColor = themeMeta?.content;
+  const applyTheme = light => {
+    if (light) root.dataset.theme = 'light'; else delete root.dataset.theme;
+    $$('[data-theme-toggle]').forEach(b => { b.setAttribute('aria-pressed', String(light)); });
+    if (themeMeta) themeMeta.content = light ? '#f6f4ef' : darkThemeColor;
+  };
+  applyTheme(root.dataset.theme === 'light');
+  document.addEventListener('click', e => {
+    if (!e.target.closest('[data-theme-toggle]')) return;
+    const light = root.dataset.theme !== 'light';
+    applyTheme(light);
+    try { light ? localStorage.setItem('theme', 'light') : localStorage.removeItem('theme'); } catch (err) { /* private mode: the choice lasts for this page only */ }
+  });
+
   /* ---------- Motion control ---------- */
   let paused = reduce.matches;
   const motionButton = $('#motion-toggle');
@@ -277,6 +293,8 @@
   const flip = (card, on) => {
     card.classList.toggle('is-flipped', on);
     const [front, back] = [$('.card-front', card), $('.card-back', card)];
+    const tpl = back.querySelector(':scope > template'); // brand kit is rendered on first flip (site-cards.mjs)
+    if (tpl) tpl.replaceWith(tpl.content.cloneNode(true));
     front.inert = on; back.inert = !on;
     front.toggleAttribute('aria-hidden', on); back.setAttribute('aria-hidden', String(!on));
     const btn = $('.brand-toggle', card);
@@ -639,7 +657,7 @@
     const galleries = {};
     $$('.tl-shot').forEach(shot => {
       const img = $('img', shot);
-      (galleries[shot.dataset.gallery] ||= [])[Number(shot.dataset.index)] = { src: img.currentSrc || img.src, alt: img.alt };
+      (galleries[shot.dataset.gallery] ||= [])[Number(shot.dataset.index)] = { src: img.dataset.full || img.currentSrc || img.src, alt: img.alt }; // the timeline shows a small -thumb; the viewer opens the full photo
     });
     let current = [], index = 0, opener = null;
     const show = (i, dir = 1) => {

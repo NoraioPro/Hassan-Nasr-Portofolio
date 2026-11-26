@@ -30,6 +30,9 @@ dist/                     ← the website (deploy this folder)
   index.html              ← home page (also the source the internal pages are cut from)
   <page>/index.html       ← generated internal pages
   site.css, *.css         ← stylesheets (bundled into app.min.css)
+  fonts.css               ← self-hosted fonts (assets/fonts/) and size-matched fallbacks, first in the bundle
+  ux.css                  ← accessibility pass: 44px tap targets, contrast and focus fixes, rail buttons (last in the bundle)
+  theme-light.css         ← optional light theme (header button); hero, Frontiers worlds and contact stay dark
   site.js, *.js           ← scripts (minified into dist/min/)
   space3d.js, robot3d.js  ← three.js scenes (loaded lazily from jsDelivr)
   portrait.js             ← Neural Portrait (three.js + bloom, voice playback, lip-sync)
@@ -43,7 +46,7 @@ source-assets/            ← large originals not used by the site (kept out of 
 portfolio.json            ← GitHub repositories
 deployments.json          ← own live deployments (status, URL, screenshot, brand kit)
 clients.json              ← client websites (category, screenshot, logo, brand kit)
-site.config.mjs           ← production URL (BASE_URL = https://hnasr.com)
+site.config.mjs           ← production URL (BASE_URL = https://www.hnasr.com)
 update-portfolio.mjs      ← regenerates projects + live section, then runs the two build steps
 build-pages.mjs           ← internal pages, SEO tags, JSON-LD, sitemap.xml, robots.txt, manifest, 404.html, llms.txt
 build-labs.mjs            ← interactive labs: dist/labs/<slug>/ pages, /labs/ gallery, sitemap and llms.txt entries
@@ -126,7 +129,7 @@ See `ROADMAP.md` for the full list of next steps.
 
 ## Third-party services used at runtime
 
-- **Google Fonts:** Inter Tight, Instrument Serif and JetBrains Mono. Brand-kit fonts are loaded on demand.
+- **Fonts:** Inter Tight, Instrument Serif and JetBrains Mono are self-hosted in `dist/assets/fonts/` (no requests to Google). Only the brand-kit previews on project cards load a client's own fonts from Google Fonts, after the visitor flips a card.
 - **jsDelivr:** three.js (plus its bloom/output post-processing add-ons, resolved through an import map) and the Earth textures for the 3D scenes. If they can't load, the scenes fall back to lighter 2D versions.
 - **FormSubmit:** delivers contact form messages by email.
 

@@ -108,11 +108,20 @@
     const mailto = d => `mailto:${TO},${CC}?subject=${encodeURIComponent(`Portfolio enquiry: ${labels[d.topic] || d.topic}`)}&body=${encodeURIComponent(`${d.message}\n\n${d.name}\n${d.email}`)}`;
     const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
     const setState = (st, msg) => { form.dataset.state = st; status.innerHTML = msg; };
+    status.addEventListener('click', e => { const a = e.target.closest('[data-cx-jump]'); if (!a) return; e.preventDefault(); form.querySelector('#' + a.dataset.cxJump)?.focus(); });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const fields = [...form.querySelectorAll('input:not([name="_honey"]), textarea')];
       const ok = fields.map(check).every(Boolean);
-      if (!ok) { fields.find(f => f.getAttribute('aria-invalid') === 'true')?.focus(); setState('invalid', 'Please check the highlighted fields.'); return; }
+      if (!ok) {
+        const bad = fields.filter(f => f.getAttribute('aria-invalid') === 'true');
+        if (bad.length < 2) { bad[0]?.focus(); setState('invalid', 'Please check the highlighted field.'); return; }
+        // several problems: a linked summary takes focus, each link jumps to its field
+        const name = f => esc(form.querySelector(`label[for="${f.id}"]`)?.textContent.trim() || f.name);
+        setState('invalid', `Please fix ${bad.length} fields: ${bad.map(f => `<a href="#${f.id}" data-cx-jump="${f.id}">${name(f)}</a>`).join(', ')}.`);
+        status.tabIndex = -1; status.focus();
+        return;
+      }
       const d = Object.fromEntries(new FormData(form));
       if (d._honey) { setState('success', 'Thanks, your message is on its way.'); return; }
       setState('loading', 'Sending…'); btn.disabled = true;

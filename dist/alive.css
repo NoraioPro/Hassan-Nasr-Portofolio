@@ -68,12 +68,12 @@
 .m-dock-wa::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: 0 0 0 0 rgba(37, 211, 102, .55); }
 .m-dock-wa.ping::after { animation: m-ping .9s ease-out; }
 @keyframes m-ping { to { box-shadow: 0 0 0 12px rgba(37, 211, 102, 0); } }
-.m-dot { position: absolute; top: 7px; left: calc(50% + 7px); width: 8px; height: 8px; border-radius: 50%; background: #e9fff1; box-shadow: 0 0 0 2px #25d366; }
-.m-dock-wa.is-night .m-dot { background: #ffb020; box-shadow: 0 0 0 2px #25d366; }
+.m-dot { position: absolute; top: 7px; left: calc(50% + 7px); width: 8px; height: 8px; border-radius: 50%; background: #e9fff1; box-shadow: 0 0 0 2px var(--wa); }
+.m-dock-wa.is-night .m-dot { background: #ffb020; box-shadow: 0 0 0 2px var(--wa); }
 .m-dock-wa:not(.is-night) .m-dot { animation: m-dot 2.4s ease-in-out infinite; }
 @keyframes m-dot { 50% { transform: scale(.75); } }
 .m-dock.is-mini .m-dot { top: 5px; }
-.m-call-when { justify-self: end; font-size: 11px; letter-spacing: .04em; color: #3ddc97; white-space: nowrap; }
+.m-call-when { justify-self: end; font-size: 12px; letter-spacing: .04em; color: var(--live); white-space: nowrap; }
 .m-call-when.is-late { color: #ffb020; }
 .m-call-when::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
 
@@ -89,12 +89,12 @@
   .ws-cards[data-rail] { --rail-w: 78%; }
   .rail-ui { display: flex; align-items: center; gap: 12px; margin: 8px 0 4px; }
   .rail-ui[hidden] { display: none; }
-  .rail-n { font-size: 11px; letter-spacing: .08em; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rail-n { font-size: 12px; letter-spacing: .08em; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rail-n b { color: var(--text); font-weight: 500; }
   .rail-n i { font-style: normal; margin: 0 4px; opacity: .5; }
   .rail-bar { flex: 1; height: 2px; border-radius: 2px; background: var(--line); overflow: hidden; }
   .rail-bar i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); transition: transform .35s var(--ease); }
-  .rail-tip { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); transition: opacity .4s; }
+  .rail-tip { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); transition: opacity .4s; }
   .rail-ui.is-touched .rail-tip { opacity: 0; }
 
   /* journey: photo strip instead of a tall grid, long lists fold */
@@ -103,7 +103,7 @@
   .tl-media > li { flex: 0 0 42%; height: 112px; scroll-snap-align: start; grid-column: auto !important; grid-row: auto !important; }
   .tl-media > li:first-child { flex-basis: 62%; }
   .tl-points.is-clamp:not(.is-open) > li:nth-child(n+4) { display: none; }
-  .tl-fold { display: inline-flex; align-items: center; margin-top: 10px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  .tl-fold { display: inline-flex; align-items: center; margin-top: 10px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
   .tl-fold:hover { color: var(--text); border-color: var(--line-strong); }
 }
 /* the fold button is .tl-fold, not .tl-more: .tl-more is the "+2" photo badge in site.css (full-tile overlay) */

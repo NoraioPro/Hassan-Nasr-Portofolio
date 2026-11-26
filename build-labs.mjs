@@ -83,6 +83,11 @@ const GALLERY_CSS = `
 .lab-card:hover .lab-open span{transform:translateX(4px)}
 .lab-note{margin-top:28px;font-size:12px;letter-spacing:.04em;color:var(--muted)}
 .lab-h{margin:clamp(40px,6vw,64px) 0 18px;font-size:12px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.lab-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.lab-sec[hidden]{display:none}
+.lab-n{margin-left:6px;color:var(--faint)}
+.lab-size{margin-left:10px;padding:2px 7px;border:1px solid var(--line-strong);border-radius:99px;color:var(--muted);letter-spacing:.06em}
+@media (max-width:600px){.lab-filters{flex-wrap:nowrap;overflow-x:auto;margin-inline:calc(var(--gutter)*-1);padding:2px var(--gutter) 6px;scrollbar-width:none}.lab-filters::-webkit-scrollbar{display:none}.lab-filters .chip{flex:none}}
 @media (prefers-reduced-motion:reduce){.lab-card,.lab-thumb img,.lab-open span{transition:none;transform:none!important}}
 `;
 
@@ -127,16 +132,28 @@ function buildGallery() {
   const url = `${BASE}/labs/`;
   const title = 'Labs & games · Hassan Nasr';
   const desc = 'Interactive 3D labs, space and architecture models, playable games and tools by Hassan Nasr: human anatomy, the history of life, the world’s faiths, Norway’s economy and more. Each one works on its own page.';
+  // download size of each lab (its page plus any files next to it): the big 3D ones get a label, useful on mobile data
+  const dirSize = d => fs.readdirSync(d, { withFileTypes: true }).reduce((a, e) => a + (e.isDirectory() ? dirSize(path.join(d, e.name)) : fs.statSync(path.join(d, e.name)).size), 0);
+  const mb = slug => dirSize(path.join(DIST, 'labs', slug)) / 1048576;
   const card = m => {
     const has = fs.existsSync(path.join(DIST, 'assets', 'labs', `${m.slug}.webp`));
     const img = has ? `<img src="assets/labs/${m.slug}.webp" alt="" width="640" height="400" loading="lazy" decoding="async">` : '';
-    return `<li class="lab-card"><a class="lab-link" href="labs/${m.slug}/"><span class="lab-thumb" aria-hidden="true">${img}</span><span class="lab-body"><span class="lab-kind mono">${esc(m.kind)}</span><strong class="lab-title">${esc(m.title)}</strong><span class="lab-sub">${esc(m.subtitle)}</span><span class="lab-desc">${esc(m.desc)}</span><span class="lab-open mono">Open lab <span aria-hidden="true">→</span></span></span></a></li>`;
+    const size = mb(m.slug);
+    const big = size >= 2 ? `<span class="lab-size mono" title="Download size">${size.toFixed(1)} MB</span>` : '';
+    return `<li class="lab-card"><a class="lab-link" href="labs/${m.slug}/"><span class="lab-thumb" aria-hidden="true">${img}</span><span class="lab-body"><span class="lab-kind mono">${esc(m.kind)}${big}</span><strong class="lab-title">${esc(m.title)}</strong><span class="lab-sub">${esc(m.subtitle)}</span><span class="lab-desc">${esc(m.desc)}</span><span class="lab-open mono">Open lab <span aria-hidden="true">→</span></span></span></a></li>`;
   };
-  const sectionsHtml = SECTIONS.map(([id, label]) => {
+  const used = SECTIONS.filter(([id]) => labs.some(m => m.section === id));
+  const sectionsHtml = used.map(([id, label]) => {
     const items = labs.filter(m => m.section === id);
-    if (!items.length) return '';
-    return `  <h2 class="lab-h mono">${esc(label)}</h2>\n  <ul class="lab-grid">\n      ${items.map(card).join('\n      ')}\n  </ul>\n`;
+    return `  <section class="lab-sec" id="${id}" aria-labelledby="h-${id}">\n  <h2 class="lab-h mono" id="h-${id}">${esc(label)} <span class="lab-n">${items.length}</span></h2>\n  <ul class="lab-grid">\n      ${items.map(card).join('\n      ')}\n  </ul>\n  </section>\n`;
   }).join('');
+  // filter chips: one section at a time, shareable as /labs/#games
+  const filters = `  <div class="lab-filters" role="group" aria-label="Show labs by section"><button type="button" class="chip" data-lab-filter="all" aria-pressed="true">All <b>${labs.length}</b></button>${used.map(([id, label]) => `<button type="button" class="chip" data-lab-filter="${id}" aria-pressed="false">${esc(label)} <b>${labs.filter(m => m.section === id).length}</b></button>`).join('')}</div>\n`;
+  const filterJs = `<script>(()=>{const chips=[...document.querySelectorAll('[data-lab-filter]')],secs=[...document.querySelectorAll('.lab-sec')];
+const set=(id,push)=>{if(!secs.some(s=>s.id===id))id='all';chips.forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.labFilter===id)));secs.forEach(s=>s.hidden=id!=='all'&&s.id!==id);
+if(push)history.replaceState(null,'',id==='all'?location.pathname:'#'+id);};
+chips.forEach(c=>c.addEventListener('click',()=>set(c.dataset.labFilter,true)));
+const h=decodeURIComponent(location.hash.slice(1));if(h)set(h,false);addEventListener('hashchange',()=>set(decodeURIComponent(location.hash.slice(1))||'all',false));})();</script>`;
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><base href="/">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${url}">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${BASE}/assets/og-image.jpg"><meta name="twitter:card" content="summary_large_image">
@@ -144,9 +161,9 @@ function buildGallery() {
 ${pre}${header}
 <main id="main" class="labs wrap">
   <header class="section-head"><span class="kicker mono">Labs &amp; games</span><h1>Learn by <em>exploring.</em></h1><p>Some ideas are easier to understand by touching them: the human body in 3D, the history of life, the world’s faiths, Norway’s economy and the models behind spacecraft and buildings. Some things are better played, so the games and worlds run in your browser too.</p></header>
-${sectionsHtml}  <p class="lab-note mono">Labs run in your browser. Those with 3D graphics need WebGL, which most phones and computers support.</p>
+${filters}${sectionsHtml}  <p class="lab-note mono">Labs run in your browser. Those with 3D graphics need WebGL, which most phones and computers support. Sizes are shown for labs over 2 MB.</p>
 </main>
-${footer}${tail}</body></html>
+${footer}${tail}${filterJs}</body></html>
 `;
   fs.mkdirSync(path.join(DIST, 'labs'), { recursive: true });
   fs.writeFileSync(path.join(DIST, 'labs', 'index.html'), html);
@@ -167,7 +184,7 @@ function buildHomeShowcase() {
   const block = `<!-- labs:home (generated by build-labs.mjs) -->
     <section id="labs" class="home-labs wrap" aria-labelledby="labs-title">
       <header class="section-head"><span class="kicker mono"><i>08</i> Labs &amp; games</span><h2 id="labs-title">Learn by exploring. <em>Built to be touched.</em></h2><p>Interactive 3D labs, space and architecture models and playable worlds. They all run in your browser.</p></header>
-      <ul class="hl-grid">${picks.map(tile).join('')}${more}</ul>
+      <ul class="hl-grid" id="labs-rail" data-rail>${picks.map(tile).join('')}${more}</ul>
     </section>
     <!-- /labs:home -->`;
   home = home.replace(/\s*<!-- labs:home[\s\S]*?<!-- \/labs:home -->/, '');

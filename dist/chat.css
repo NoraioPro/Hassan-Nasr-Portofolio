@@ -1,7 +1,7 @@
 /* ===== chat.css: floating WhatsApp chat (chat.js). On phones the bottom bar carries WhatsApp instead. ===== */
 .wa-float { position: fixed; right: clamp(16px, 2.4vw, 28px); bottom: clamp(16px, 2.4vw, 28px); z-index: 44; display: grid; justify-items: end; gap: 12px; transition: opacity .35s, transform .35s var(--ease); }
 .wa-float.is-quiet { opacity: 0; transform: translateY(12px); pointer-events: none; }
-.wa-float-btn { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: #25d366; color: #062b16; box-shadow: 0 12px 30px -10px rgba(37, 211, 102, .75), inset 0 1px 0 rgba(255, 255, 255, .35); transition: transform .3s var(--ease); -webkit-tap-highlight-color: transparent; }
+.wa-float-btn { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--wa); color: #062b16; box-shadow: 0 12px 30px -10px rgba(37, 211, 102, .75), inset 0 1px 0 rgba(255, 255, 255, .35); transition: transform .3s var(--ease); -webkit-tap-highlight-color: transparent; }
 .wa-float-btn:hover { transform: translateY(-2px) scale(1.04); }
 .wa-float-btn:active { transform: scale(.96); }
 .wa-float-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -12,12 +12,12 @@
 
 .wa-card { width: min(300px, 80vw); padding: 14px 14px 12px; border-radius: 16px; border: 1px solid var(--line-strong); background: rgba(16, 18, 21, .96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 18px 50px rgba(0, 0, 0, .5); color: var(--text); transform-origin: bottom right; animation: wa-in .35s var(--ease); }
 .wa-card[hidden] { display: none; }
-.wa-card-t { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 500 10.5px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.wa-dot { width: 8px; height: 8px; border-radius: 50%; background: #25d366; box-shadow: 0 0 0 3px rgba(37, 211, 102, .2); flex: none; }
+.wa-card-t { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font: 500 12px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.wa-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wa); box-shadow: 0 0 0 3px rgba(37, 211, 102, .2); flex: none; }
 .wa-float.is-away .wa-dot { background: var(--faint); box-shadow: none; }
 .wa-card-m { margin: 0 0 12px; font-size: 14px; line-height: 1.5; color: var(--text); }
 .wa-card-row { display: flex; align-items: center; gap: 8px; }
-.wa-card-go { flex: 1; display: inline-flex; justify-content: center; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; background: #25d366; color: #062b16; font-weight: 600; font-size: 14px; text-decoration: none; transition: filter .2s; }
+.wa-card-go { flex: 1; display: inline-flex; justify-content: center; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--wa); color: #062b16; font-weight: 600; font-size: 14px; text-decoration: none; transition: filter .2s; }
 .wa-card-go:hover { filter: brightness(1.06); }
 .wa-card-x { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
 .wa-card-x:hover { color: var(--text); border-color: var(--line-strong); }

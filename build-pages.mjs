@@ -113,7 +113,7 @@ const EXTRA = {
   <ul class="page-facts"><li><strong>NASA International Space Apps Challenge 2026</strong><span>Galactic Problem Solver. Certificate of participation, November 14–15, 2026.</span></li>
   <li><strong>NASA International Space Apps Challenge 2025</strong><span>Oslo, October 4–5, 2025. 2nd place with Eduspaceno.com. Recognised as a “Galactic Problem Solver” for outstanding participation and efforts to address challenges on Earth and in space.</span></li>
   <li><strong>Space Hackathon 25: Andøya Space</strong><span>14–16 October 2025. Certificate of Attendance (Norwegian Space Cluster / Andøya Space Education).</span></li>
-  <li><strong>Galaxy Guide Buddy</strong><span>An exploration project linked from the orbit scene above. <a href="https://galaxy-guide-buddy-rho.vercel.app" rel="noopener" target="_blank">Explore Galaxy Guide Buddy ↗</a></span></li></ul>
+  <li><strong>Galaxy Guide Buddy</strong><span>An AI space-education project built around the orbit scene above. The public demo is offline for now.</span></li></ul>
   <!-- TODO: Hassan to add: what Eduspaceno.com does in more detail, team members, links to the Space Apps project page. --></section>
   <section class="page-block wrap"><div class="page-cta"><a class="button button-primary" href="credentials/">See the space credentials</a><a class="button button-ghost" href="#contact">Start a conversation</a></div></section>`,
   medical: () => `<section class="page-block wrap" aria-labelledby="md-focus"><h2 id="md-focus">Focus areas</h2>

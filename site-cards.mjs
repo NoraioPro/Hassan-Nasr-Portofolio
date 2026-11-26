@@ -24,11 +24,12 @@ export function siteCard({ site, dir, meta, attrs = '', vt = 'client', extraClas
   const type = fonts.length
     ? `<span class="bk-aa" data-fonts="${esc(fonts.join('|'))}" style="font-family:'${esc(fonts[0])}', var(--sans)">Aa</span><span class="bk-type-meta"><span class="mono">Typography</span><strong style="font-family:'${esc(fonts[0])}', var(--sans)">${esc(fonts[0])}</strong>${fonts[1] ? `<span style="font-family:'${esc(fonts[1])}', var(--sans)">${esc(fonts[1])}</span>` : ''}</span>`
     : `<span class="bk-aa">Aa</span><span class="bk-type-meta"><span class="mono">Typography</span><strong>System font stack</strong></span>`;
-  const back = `<div class="card-face card-back brand-kit" style="--k1:${colors[0] || '#15171b'};--k-accent:${accent}" aria-hidden="true" inert>` +
+  // the back face stays in a <template> until the card is flipped (site.js), which keeps ~800 elements out of the page
+  const back = `<div class="card-face card-back brand-kit" style="--k1:${colors[0] || '#15171b'};--k-accent:${accent}" aria-hidden="true" inert><template>` +
     `<span class="bk-head">${logo(site, dir, true)}<span><strong>${esc(site.name)}</strong><span class="mono">Brand kit · extracted from ${esc(host)}</span></span></span>` +
     `<span class="bk-label mono">Palette <em>tap to copy</em></span><span class="bk-palette">${swatches}</span>` +
     `<span class="bk-type">${type}</span>` +
-    `<a class="bk-visit mono" href="${esc(site.url)}" target="_blank" rel="noopener noreferrer">Visit site ↗</a></div>`;
+    `<a class="bk-visit mono" href="${esc(site.url)}" target="_blank" rel="noopener noreferrer">Visit site ↗</a></template></div>`;
   const front = `<a class="card-face card-front" href="${esc(site.url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(site.name)}, ${esc(meta)} (opens in a new tab)">` +
     `<span class="client-frame"><span class="client-bar" aria-hidden="true"><i></i><i></i><i></i><span class="mono">${esc(host)}</span></span>` +
     `<span class="client-shot"><img src="${dir}/${site.slug}.webp" alt="Screenshot of the ${esc(site.name)} website" width="${w}" height="${h}" loading="lazy" decoding="async"></span></span>` +

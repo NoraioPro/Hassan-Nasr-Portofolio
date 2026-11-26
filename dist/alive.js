@@ -96,24 +96,38 @@
   /* ---------- phones: swipe rails with a live counter ---------- */
   const pad = n => String(n).padStart(2, '0');
   for (const rail of document.querySelectorAll('[data-rail]')) {
+    // previous / next buttons: swiping is not the only way through (touch-target and "dragging movements" rules)
+    if (!rail.id) rail.id = 'rail-' + Math.random().toString(36).slice(2, 8);
+    const chev = d => `<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
     const ui = document.createElement('div');
-    ui.className = 'rail-ui'; ui.setAttribute('aria-hidden', 'true');
-    ui.innerHTML = '<span class="rail-n mono"><b>01</b><i>/</i><span>01</span></span><span class="rail-bar"><i></i></span><span class="rail-tip mono">Swipe</span>';
+    ui.className = 'rail-ui';
+    ui.innerHTML = `<button type="button" class="rail-btn" data-step="-1" aria-controls="${rail.id}" aria-label="Previous">${chev('M15 6l-6 6 6 6')}</button>` +
+      '<span class="rail-n mono" aria-hidden="true"><b>01</b><i>/</i><span>01</span></span><span class="rail-bar" aria-hidden="true"><i></i></span><span class="rail-tip mono" aria-hidden="true">Swipe</span>' +
+      `<button type="button" class="rail-btn" data-step="1" aria-controls="${rail.id}" aria-label="Next">${chev('M9 6l6 6-6 6')}</button>`;
     rail.after(ui);
     const nEl = ui.querySelector('b'), totEl = ui.querySelector('.rail-n span'), bar = ui.querySelector('.rail-bar i');
-    let queued = false, hinted = false;
+    const [prevBtn, nextBtn] = ui.querySelectorAll('.rail-btn');
+    let queued = false, hinted = false, idx = 0;
+    const visible = () => [...rail.children].filter(c => c.getClientRects().length);
     const update = () => {
       queued = false;
       if (!phone.matches) return;
-      const items = [...rail.children].filter(c => c.getClientRects().length);
+      const items = visible();
       const mid = rail.scrollLeft + rail.clientWidth / 2;
-      let idx = 0, best = Infinity;
+      let best = Infinity; idx = 0;
       items.forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < best) { best = d; idx = i; } });
-      if (rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4) idx = items.length - 1;
+      const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 4;
+      if (atEnd) idx = items.length - 1;
       nEl.textContent = pad(items.length ? idx + 1 : 0); totEl.textContent = pad(items.length);
       bar.style.transform = `scaleX(${items.length ? (idx + 1) / items.length : 0})`;
-      ui.hidden = items.length < 2;
+      ui.hidden = items.length < 2 || rail.scrollWidth <= rail.clientWidth + 4; // not a scrolling row at this width
+      prevBtn.disabled = rail.scrollLeft <= 4; nextBtn.disabled = atEnd;
     };
+    ui.addEventListener('click', e => {
+      const btn = e.target.closest('.rail-btn'); if (!btn) return;
+      const items = visible(); const target = items[Math.max(0, Math.min(items.length - 1, idx + Number(btn.dataset.step)))];
+      if (target) target.scrollIntoView({ inline: 'center', block: 'nearest', behavior: still() ? 'auto' : 'smooth' });
+    });
     rail.addEventListener('scroll', () => { ui.classList.add('is-touched'); if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
     // filters show/hide cards: start again from the first one
     new MutationObserver(recs => { if (recs.some(r => r.target.parentElement === rail && r.attributeName === 'hidden')) { rail.scrollLeft = 0; update(); } })
